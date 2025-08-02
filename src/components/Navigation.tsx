@@ -10,7 +10,7 @@ const Navigation: React.FC = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <pre className="text-[4px] md:text-[6px] font-mono text-white drop-shadow-lg leading-none whitespace-pre max-h-12 overflow-hidden">
+            <pre className="text-[4px] md:text-[4px] font-mono text-white drop-shadow-lg leading-none whitespace-pre max-h-12 overflow-hidden">
 {`   ||                                            '||              '||  '||  
   ...  ....    ....  ... ...    ....  ... ..      || ..    ....    ||   ||  
    || '' .||  ||. '   ||'  || .|...||  ||' ''     ||' ||  '' .||   ||   ||  
