@@ -359,7 +359,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       p5.textFont(customFont, isMobile ? 10 : 12); // Smaller font for mobile
 
       const logoX = centerX;
-      const logoY = isMobile ? 80 : 100; // Moved up to create space for bezier curves
+      const logoY = isMobile ? 60 : 80; // Moved up from 80/100 to 60/80
       const logoSize = isMobile ? 60 : 80; // Smaller logo for mobile
 
       // Draw animated central logo with individual element pulsing
