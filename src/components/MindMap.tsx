@@ -34,6 +34,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     let radiusY = 0;
     let curveHeight = 0;
     let isMobile = false;
+    let activeSectionIndex = -1; // Track which section is currently open
 
     p5.preload = () => {
       customFont = p5.loadFont("/JetBrainsMono-Medium.ttf");
@@ -133,6 +134,17 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           // Smaller touch area to prevent accidental triggering
           const touchRadius = isMobile ? 25 : 30;
           if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
+            // Single-open logic: close all other sections first
+            if (isMobile) {
+              sections.forEach((s, i) => {
+                if (i !== index) {
+                  s.isVisible = false;
+                  s.branchAnimProgress = 0;
+                }
+              });
+              activeSectionIndex = section.isVisible ? -1 : index;
+            }
+            
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
           }
@@ -151,6 +163,17 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           // Smaller touch area to prevent accidental triggering
           const touchRadius = isMobile ? 25 : 30;
           if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
+            // Single-open logic: close all other sections first
+            if (isMobile) {
+              sections.forEach((s, i) => {
+                if (i !== index) {
+                  s.isVisible = false;
+                  s.branchAnimProgress = 0;
+                }
+              });
+              activeSectionIndex = section.isVisible ? -1 : index;
+            }
+            
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
           }
@@ -276,8 +299,17 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           section.adjustedDistances = [];
 
           section.branches.forEach((branch: string, idx: number) => {
-            const distance = section.distances![idx];
-            const branchAngle = section.angles![idx];
+            let distance = section.distances![idx];
+            let branchAngle = section.angles![idx];
+            
+            // On mobile, if this is the only open section, use more space
+            if (isMobile && activeSectionIndex !== -1) {
+              distance = distance * 1.5;
+              const baseAngle = branchAngle;
+              const spreadFactor = 0.3;
+              branchAngle = baseAngle + (idx - (section.branches.length - 1) / 2) * spreadFactor;
+            }
+            
             const subX = x + distance * p5.cos(branchAngle);
 
             p5.textFont(customFont, isMobile ? 8 : 8); // Match the font size used in sub-branches
@@ -382,6 +414,14 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         p5.fill(0);
         p5.noStroke();
         p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
+        
+        // Highlight active section on mobile
+        if (isMobile && activeSectionIndex === index) {
+          p5.fill(0, 100, 200); // Blue color for active section
+        } else {
+          p5.fill(0);
+        }
+        
         p5.text(section.name, x, y + (isMobile ? 55 : 75)); // Adjusted position for mobile
 
         if (section.branches.length > 0) {
@@ -406,8 +446,20 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       const branchPositions: Array<{x: number, y: number, width: number, height: number}> = [];
 
       section.branches.forEach((branch: string, idx: number) => {
-        const distance = section.adjustedDistances![idx];
-        const angle = section.angles![idx];
+        let distance = section.adjustedDistances![idx];
+        let angle = section.angles![idx];
+        
+        // On mobile, if this is the only open section, use more space
+        if (isMobile && activeSectionIndex !== -1) {
+          // Increase distance for better spacing when only one section is open
+          distance = distance * 1.5;
+          
+          // Adjust angles to use more horizontal space
+          const baseAngle = angle;
+          const spreadFactor = 0.3; // How much to spread out the angles
+          angle = baseAngle + (idx - (section.branches.length - 1) / 2) * spreadFactor;
+        }
+        
         const subX = x + section.branchAnimProgress * distance * p5.cos(angle);
         const subY = y + section.branchAnimProgress * distance * p5.sin(angle);
 
