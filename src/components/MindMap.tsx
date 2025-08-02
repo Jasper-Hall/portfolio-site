@@ -76,7 +76,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     };
 
     p5.draw = () => {
-      p5.background(220);
+      p5.clear(); // Use clear instead of background to maintain transparency
       
       // Update individual logo element pulse values for line width and circle diameter
       for (let i = 0; i < logoElementScales.length; i++) {
@@ -373,7 +373,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
         // Draw connection line
         p5.strokeWeight(0.7);
-        p5.stroke(0);
+        p5.stroke(255, 255, 255, 180); // White lines with transparency
         p5.noFill();
         p5.beginShape();
         // The logo is centered at logoY, so the bottom edge is logoY + logoSize/2
@@ -420,15 +420,15 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           p5.image(section.logo, x, y + (isMobile ? 30 : 40), isMobile ? 45 : 60, isMobile ? 45 : 60); // Smaller logos for mobile
         }
 
-        p5.fill(0);
+        p5.fill(255, 255, 255, 220); // White text with transparency
         p5.noStroke();
         p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
         
         // Highlight active section on mobile
         if (isMobile && activeSectionIndex === index) {
-          p5.fill(0, 100, 200); // Blue color for active section
+          p5.fill(255, 255, 255, 255); // Full white for active section
         } else {
-          p5.fill(0);
+          p5.fill(255, 255, 255, 220); // Semi-transparent white
         }
         
         p5.text(section.name, x, y + (isMobile ? 55 : 75)); // Adjusted position for mobile
@@ -507,7 +507,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         });
 
         // Draw connection line
-        p5.stroke(0, alpha);
+        p5.stroke(255, 255, 255, alpha); // White lines with transparency
         p5.strokeWeight(0.7);
         p5.noFill();
         p5.beginShape();
@@ -524,20 +524,20 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
         if (section.branchAnimProgress >= 1) {
           if (p5.dist(p5.mouseX, p5.mouseY, subX, adjustedY) < textW / 2) {
-            p5.fill(220, 220, 255, alpha);
+            p5.fill(255, 255, 255, alpha * 0.8); // Slightly transparent white for hover
             p5.cursor(p5.HAND);
           } else {
-            p5.fill(255, alpha);
+            p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
             p5.cursor(p5.ARROW);
           }
         } else {
-          p5.fill(255, alpha);
+          p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
           p5.cursor(p5.ARROW);
         }
 
         p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 8 : 10); // Larger radius for mobile
 
-        p5.fill(0, alpha);
+        p5.fill(255, 255, 255, alpha); // White text with transparency
         p5.noStroke();
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.text(branch, subX, adjustedY);
