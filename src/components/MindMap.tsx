@@ -302,12 +302,21 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
             let distance = section.distances![idx];
             let branchAngle = section.angles![idx];
             
-            // On mobile, if this is the only open section, use more space
+            // On mobile, if this is the only open section, use more space and better angles
             if (isMobile && activeSectionIndex !== -1) {
-              distance = distance * 1.5;
-              const baseAngle = branchAngle;
-              const spreadFactor = 0.3;
-              branchAngle = baseAngle + (idx - (section.branches.length - 1) / 2) * spreadFactor;
+              distance = distance * 1.8;
+              
+              // Calculate better fan-out angles based on the number of branches
+              const totalBranches = section.branches.length;
+              const angleSpread = p5.PI / 3; // 60-degree spread
+              const startAngle = p5.PI / 2 - angleSpread / 2; // Start from 30 degrees
+              
+              // Distribute branches evenly across the spread
+              if (totalBranches === 1) {
+                branchAngle = p5.PI / 2; // Straight down for single branch
+              } else {
+                branchAngle = startAngle + (idx / (totalBranches - 1)) * angleSpread;
+              }
             }
             
             const subX = x + distance * p5.cos(branchAngle);
@@ -449,15 +458,22 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         let distance = section.adjustedDistances![idx];
         let angle = section.angles![idx];
         
-        // On mobile, if this is the only open section, use more space
+        // On mobile, if this is the only open section, use more space and better angles
         if (isMobile && activeSectionIndex !== -1) {
           // Increase distance for better spacing when only one section is open
-          distance = distance * 1.5;
+          distance = distance * 1.8;
           
-          // Adjust angles to use more horizontal space
-          const baseAngle = angle;
-          const spreadFactor = 0.3; // How much to spread out the angles
-          angle = baseAngle + (idx - (section.branches.length - 1) / 2) * spreadFactor;
+          // Calculate better fan-out angles based on the number of branches
+          const totalBranches = section.branches.length;
+          const angleSpread = p5.PI / 3; // 60-degree spread
+          const startAngle = p5.PI / 2 - angleSpread / 2; // Start from 30 degrees
+          
+          // Distribute branches evenly across the spread
+          if (totalBranches === 1) {
+            angle = p5.PI / 2; // Straight down for single branch
+          } else {
+            angle = startAngle + (idx / (totalBranches - 1)) * angleSpread;
+          }
         }
         
         const subX = x + section.branchAnimProgress * distance * p5.cos(angle);
