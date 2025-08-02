@@ -56,7 +56,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       // Adjust layout for mobile
       if (isMobile) {
         radiusX = p5.width * 0.25; // Smaller radius for mobile
-        radiusY = (p5.height - 64) * 0.25; // Smaller vertical radius
+        radiusY = (p5.height - 64) * 0.4; // Increased vertical radius to use more space
         curveHeight = 50 + 64; // Reduced height for mobile
       } else {
         radiusX = p5.width * 0.3;
@@ -111,7 +111,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       // Adjust layout for mobile
       if (isMobile) {
         radiusX = p5.width * 0.25;
-        radiusY = (p5.height - 64) * 0.25;
+        radiusY = (p5.height - 64) * 0.4; // Increased vertical radius to use more space
         curveHeight = 50 + 64;
       } else {
         radiusX = p5.width * 0.3;
@@ -130,8 +130,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           const x = centerX + radiusX * p5.cos(angle) + movement;
           const y = curveHeight + 50 + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
 
-          // Larger touch area for mobile
-          const touchRadius = isMobile ? 50 : 40;
+          // Smaller touch area to prevent accidental triggering
+          const touchRadius = isMobile ? 25 : 30;
           if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
@@ -148,8 +148,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           const x = centerX + radiusX * p5.cos(angle) + movement;
           const y = curveHeight + 50 + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
 
-          // Larger touch area for mobile
-          const touchRadius = isMobile ? 50 : 40;
+          // Smaller touch area to prevent accidental triggering
+          const touchRadius = isMobile ? 25 : 30;
           if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
@@ -162,13 +162,13 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     function initSections() {
       // Adjust angles and distances for mobile
       const mobileAngles = isMobile ? {
-        purgeFiles: [p5.PI / 6, p5.PI / 2], // More downward angles
-        jaece: [p5.PI / 8, p5.PI / 1.5, p5.PI / 2.2],
-        xtsui: [p5.PI / 5, p5.PI / 2],
-        photography: [p5.PI / 6, p5.PI / 4, p5.PI / 3],
-        technology: [p5.PI / 6, p5.PI / 5, p5.PI / 2.5],
-        art: [p5.PI / 6, p5.PI / 5, p5.PI / 2.2],
-        design: [p5.PI / 6, p5.PI / 4, p5.PI / 3]
+        purgeFiles: [p5.PI / 2, p5.PI / 1.8], // More downward angles, fixed upward spawning
+        jaece: [p5.PI / 1.8, p5.PI / 1.5, p5.PI / 2.2],
+        xtsui: [p5.PI / 1.6, p5.PI / 2],
+        photography: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2],
+        technology: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.5],
+        art: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.2],
+        design: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2]
       } : {
         purgeFiles: [p5.PI / 27, p5.PI / 1.5],
         jaece: [p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7],
@@ -180,13 +180,13 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       };
 
       const mobileDistances = isMobile ? {
-        purgeFiles: [-60, 40],
-        jaece: [-40, 60, 50],
-        xtsui: [60, 50],
-        photography: [50, 50, 70],
-        technology: [40, 50, 80],
-        art: [40, 50, 100],
-        design: [50, 50, 70]
+        purgeFiles: [-50, 35],
+        jaece: [-35, 50, 40],
+        xtsui: [50, 40],
+        photography: [40, 40, 60],
+        technology: [35, 40, 70],
+        art: [35, 40, 85],
+        design: [40, 40, 60]
       } : {
         purgeFiles: [-80, 50],
         jaece: [-50, 80, 70],
@@ -280,8 +280,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
             const branchAngle = section.angles![idx];
             const subX = x + distance * p5.cos(branchAngle);
 
-            p5.textFont(customFont, isMobile ? 6 : 8); // Smaller font for mobile
-            const textW = p5.textWidth(branch) + (isMobile ? 6 : 10);
+            p5.textFont(customFont, isMobile ? 8 : 8); // Match the font size used in sub-branches
+            const textW = p5.textWidth(branch) + (isMobile ? 12 : 10); // Match the padding used in sub-branches
             const rectLeft = subX - textW / 2;
             const rectRight = subX + textW / 2;
 
@@ -411,14 +411,14 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         const subX = x + section.branchAnimProgress * distance * p5.cos(angle);
         const subY = y + section.branchAnimProgress * distance * p5.sin(angle);
 
-        p5.textFont(customFont, isMobile ? 6 : 8); // Smaller font for mobile
-        const textW = p5.textWidth(branch) + (isMobile ? 6 : 10);
-        const textH = isMobile ? 16 : 20; // Smaller height for mobile
+        p5.textFont(customFont, isMobile ? 8 : 8); // Larger font for mobile sub-branches
+        const textW = p5.textWidth(branch) + (isMobile ? 12 : 10); // More padding for mobile
+        const textH = isMobile ? 22 : 20; // Larger height for mobile
         const alpha = p5.map(Math.abs(section.branchAnimProgress), 0, 1, 0, 255);
 
         // Check for overlaps and adjust position if needed
         let adjustedY = subY;
-        const minSpacing = isMobile ? 25 : 30; // Minimum vertical spacing between branches
+        const minSpacing = isMobile ? 30 : 30; // Increased spacing for mobile
         
         for (const pos of branchPositions) {
           const verticalOverlap = Math.abs(adjustedY - pos.y) < minSpacing;
@@ -467,7 +467,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           p5.cursor(p5.ARROW);
         }
 
-        p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 6 : 10); // Smaller radius for mobile
+        p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 8 : 10); // Larger radius for mobile
 
         p5.fill(0, alpha);
         p5.noStroke();
