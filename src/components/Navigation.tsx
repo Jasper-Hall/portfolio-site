@@ -10,7 +10,15 @@ const Navigation: React.FC = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <span className="text-lg font-semibold text-white drop-shadow-lg">Jasper Hall</span>
+            <pre className="text-[10px] md:text-xs font-mono text-white drop-shadow-lg leading-tight whitespace-pre">
+{`   ||                                            '||              '||  '||  
+  ...  ....    ....  ... ...    ....  ... ..      || ..    ....    ||   ||  
+   || '' .||  ||. '   ||'  || .|...||  ||' ''     ||' ||  '' .||   ||   ||  
+   || .|' ||  . '|..  ||    | ||       ||         ||  ||  .|' ||   ||   ||  
+   || '|..'|' |'..|'  ||...'   '|...' .||.       .||. ||. '|..'|' .||. .||. 
+.. |'                 ||                                                    
+ ''                  ''''`}
+            </pre>
           </div>
           
           {/* Desktop Navigation */}
