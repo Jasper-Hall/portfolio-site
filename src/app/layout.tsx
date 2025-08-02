@@ -7,10 +7,13 @@ export const metadata: Metadata = {
   keywords: ["portfolio", "jasper hall", "creative", "music", "design", "digital art"],
   authors: [{ name: "Jasper Hall" }],
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: [
+      { url: '/favicons/favicon.ico', sizes: 'any' },
+      { url: '/favicons/icon.svg', type: 'image/svg+xml' }
+    ],
+    apple: '/favicons/apple-touch-icon.png',
   },
+  manifest: '/favicons/manifest.webmanifest',
 };
 
 export const viewport: Viewport = {
@@ -25,11 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="alternate icon" href="/favicon.ico" />
-        <link rel="shortcut icon" href="/favicon.svg" />
-      </head>
+                   <head>
+               <link rel="icon" href="/favicons/favicon.ico" sizes="any" />
+               <link rel="icon" href="/favicons/icon.svg" type="image/svg+xml" />
+               <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+               <link rel="manifest" href="/favicons/manifest.webmanifest" />
+             </head>
       <body className="antialiased">{children}</body>
     </html>
   );
