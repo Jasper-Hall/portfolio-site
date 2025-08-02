@@ -222,7 +222,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
       sections = [
         {
-          name: "purgeFiles",
+          name: "film",
           logo: purgeFilesLogo,
           branches: ["archives", "youtube"],
           isVisible: false,
@@ -231,7 +231,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           distances: mobileDistances.purgeFiles,
         },
         {
-          name: "jæce",
+          name: "sound",
           logo: jaeceLogo,
           branches: ["live/bookings", "releases", "links"],
           isVisible: false,
@@ -240,7 +240,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           distances: mobileDistances.jaece,
         },
         {
-          name: "xtsui",
+          name: "cloth",
           logo: xtsuiLogo,
           branches: ["xtsuimart", "archives"],
           isVisible: false,
@@ -249,7 +249,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           distances: mobileDistances.xtsui,
         },
         {
-          name: "photography",
+          name: "image",
           logo: null,
           branches: ["portraits", "landscapes", "events"],
           isVisible: false,
@@ -258,7 +258,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           distances: mobileDistances.photography,
         },
         {
-          name: "technology",
+          name: "tech",
           logo: null,
           branches: ["web", "mobile", "ai"],
           isVisible: false,
