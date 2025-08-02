@@ -129,7 +129,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
           const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
           const x = centerX + radiusX * p5.cos(angle) + movement;
-          const y = curveHeight + 50 + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
+          const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
 
           // Smaller touch area to prevent accidental triggering
           const touchRadius = isMobile ? 25 : 30;
@@ -158,7 +158,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
           const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
           const x = centerX + radiusX * p5.cos(angle) + movement;
-          const y = curveHeight + 50 + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
+          const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
 
           // Smaller touch area to prevent accidental triggering
           const touchRadius = isMobile ? 25 : 30;
@@ -359,7 +359,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       p5.textFont(customFont, isMobile ? 10 : 12); // Smaller font for mobile
 
       const logoX = centerX;
-      const logoY = isMobile ? 100 : 120; // Lower position for mobile
+      const logoY = isMobile ? 80 : 100; // Moved up to create space for bezier curves
       const logoSize = isMobile ? 60 : 80; // Smaller logo for mobile
 
       // Draw animated central logo with individual element pulsing
@@ -369,7 +369,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
         const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
         const x = centerX + radiusX * p5.cos(angle) + movement;
-        const y = curveHeight + (isMobile ? 60 : 80) + radiusY * p5.sin(angle) + movement;
+        const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + movement; // Adjusted for moved logo
 
         // Draw connection line
         p5.strokeWeight(0.7);
