@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description: "Interactive portfolio showcasing creative work across various mediums including music, design, and digital art.",
   keywords: ["portfolio", "jasper hall", "creative", "music", "design", "digital art"],
   authors: [{ name: "Jasper Hall" }],
+  icons: {
+    icon: '/logos/ogJaceLogo.svg',
+    shortcut: '/logos/ogJaceLogo.svg',
+    apple: '/logos/ogJaceLogo.svg',
+  },
 };
 
 export const viewport: Viewport = {
