@@ -537,7 +537,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
         p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 8 : 10); // Larger radius for mobile
 
-        p5.fill(255, 255, 255, alpha); // White text with transparency
+        p5.fill(0, alpha); // Black text for contrast against the white/grey background rectangles
         p5.noStroke();
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.text(branch, subX, adjustedY);

@@ -17,7 +17,7 @@ export default function Home() {
       
       {/* Glassmorphic Panel */}
       <div className="relative z-10 min-h-screen">
-        <div className="absolute inset-4 md:inset-8 lg:inset-12 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
+        <div className="absolute inset-4 md:inset-8 lg:inset-12 bottom-20 md:bottom-24 lg:bottom-28 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
           <MindMap className="w-full h-screen" />
         </div>
       </div>
