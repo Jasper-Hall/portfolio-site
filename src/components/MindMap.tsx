@@ -484,27 +484,35 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         const textH = isMobile ? 22 : 20; // Larger height for mobile
         const alpha = p5.map(Math.abs(section.branchAnimProgress), 0, 1, 0, 255);
 
-        // Check for overlaps and adjust position if needed
-        let adjustedY = subY;
+        // Calculate the final target position for collision detection
+        const finalSubX = x + distance * p5.cos(angle);
+        const finalSubY = y + distance * p5.sin(angle);
+        
+        // Check for overlaps and adjust final position if needed
+        let finalAdjustedY = finalSubY;
         const minSpacing = isMobile ? 30 : 30; // Increased spacing for mobile
         
         for (const pos of branchPositions) {
-          const verticalOverlap = Math.abs(adjustedY - pos.y) < minSpacing;
-          const horizontalOverlap = Math.abs(subX - pos.x) < (textW + pos.width) / 2 + 5;
+          const verticalOverlap = Math.abs(finalAdjustedY - pos.y) < minSpacing;
+          const horizontalOverlap = Math.abs(finalSubX - pos.x) < (textW + pos.width) / 2 + 5;
           
           if (verticalOverlap && horizontalOverlap) {
             // Move this branch down to avoid overlap
-            adjustedY = pos.y + minSpacing;
+            finalAdjustedY = pos.y + minSpacing;
           }
         }
 
-        // Store this branch's position for future collision detection
+        // Store this branch's final position for future collision detection
         branchPositions.push({
-          x: subX,
-          y: adjustedY,
+          x: finalSubX,
+          y: finalAdjustedY,
           width: textW,
           height: textH
         });
+        
+        // Interpolate between start position and final adjusted position based on animation progress
+        const startY = y;
+        const adjustedY = p5.lerp(startY, finalAdjustedY, section.branchAnimProgress);
 
         // Draw connection line
         p5.stroke(255, 255, 255, alpha); // White lines with transparency
