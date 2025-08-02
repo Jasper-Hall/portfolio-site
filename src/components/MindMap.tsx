@@ -58,11 +58,11 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       if (isMobile) {
         radiusX = p5.width * 0.25; // Smaller radius for mobile
         radiusY = (p5.height - 64) * 0.4; // Increased vertical radius to use more space
-        curveHeight = 50 + 64; // Reduced height for mobile
+        curveHeight = 50; // Reduced height for mobile (no top nav)
       } else {
         radiusX = p5.width * 0.3;
         radiusY = (p5.height - 64) * 0.33;
-        curveHeight = 70 + 64;
+        curveHeight = 70; // No top nav on desktop
       }
 
       // Initialize logo element scales for individual pulsing (22 elements in the SVG)
@@ -113,11 +113,11 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       if (isMobile) {
         radiusX = p5.width * 0.25;
         radiusY = (p5.height - 64) * 0.4; // Increased vertical radius to use more space
-        curveHeight = 50 + 64;
+        curveHeight = 50; // No top nav on mobile
       } else {
         radiusX = p5.width * 0.3;
         radiusY = (p5.height - 64) * 0.33;
-        curveHeight = 70 + 64;
+        curveHeight = 70; // No top nav on desktop
       }
       
       computeScalingFactorAndAdjustDistances();
@@ -545,9 +545,9 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
       // Update animation progress
       if (section.isVisible && section.branchAnimProgress < 1) {
-        section.branchAnimProgress += 0.07;
+        section.branchAnimProgress += isMobile ? 0.07 : 0.15; // Faster on desktop
       } else if (!section.isVisible && section.branchAnimProgress > 0) {
-        section.branchAnimProgress -= 0.07;
+        section.branchAnimProgress -= isMobile ? 0.07 : 0.15; // Faster on desktop
       }
     }
 
