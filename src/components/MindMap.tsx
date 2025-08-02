@@ -33,6 +33,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     let radiusX = 0;
     let radiusY = 0;
     let curveHeight = 0;
+    let isMobile = false;
 
     p5.preload = () => {
       customFont = p5.loadFont("/JetBrainsMono-Medium.ttf");
@@ -47,10 +48,21 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       p5.noFill();
       p5.strokeWeight(1);
 
+      // Detect mobile screen
+      isMobile = p5.width < 768;
+
       centerX = p5.width / 2;
-      radiusX = p5.width * 0.3;
-      radiusY = (p5.height - 64) * 0.33; // Account for navigation bar height
-      curveHeight = 70 + 64; // Add navigation bar height
+      
+      // Adjust layout for mobile
+      if (isMobile) {
+        radiusX = p5.width * 0.25; // Smaller radius for mobile
+        radiusY = (p5.height - 64) * 0.25; // Smaller vertical radius
+        curveHeight = 50 + 64; // Reduced height for mobile
+      } else {
+        radiusX = p5.width * 0.3;
+        radiusY = (p5.height - 64) * 0.33;
+        curveHeight = 70 + 64;
+      }
 
       // Initialize logo element scales for individual pulsing (22 elements in the SVG)
       logoElementScales = Array(22).fill(1);
@@ -90,10 +102,23 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
     p5.windowResized = () => {
       p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+      
+      // Update mobile detection
+      isMobile = p5.width < 768;
+      
       centerX = p5.width / 2;
-      radiusX = p5.width * 0.3;
-      radiusY = (p5.height - 64) * 0.33; // Account for navigation bar height
-      curveHeight = 70 + 64; // Add navigation bar height
+      
+      // Adjust layout for mobile
+      if (isMobile) {
+        radiusX = p5.width * 0.25;
+        radiusY = (p5.height - 64) * 0.25;
+        curveHeight = 50 + 64;
+      } else {
+        radiusX = p5.width * 0.3;
+        radiusY = (p5.height - 64) * 0.33;
+        curveHeight = 70 + 64;
+      }
+      
       computeScalingFactorAndAdjustDistances();
     };
 
@@ -105,7 +130,9 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           const x = centerX + radiusX * p5.cos(angle) + movement;
           const y = curveHeight + 50 + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
 
-          if (p5.dist(p5.mouseX, p5.mouseY, x, y) < 40) {
+          // Larger touch area for mobile
+          const touchRadius = isMobile ? 50 : 40;
+          if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
           }
@@ -121,7 +148,9 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           const x = centerX + radiusX * p5.cos(angle) + movement;
           const y = curveHeight + 50 + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
 
-          if (p5.dist(p5.mouseX, p5.mouseY, x, y) < 40) {
+          // Larger touch area for mobile
+          const touchRadius = isMobile ? 50 : 40;
+          if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
           }
@@ -131,6 +160,43 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     };
 
     function initSections() {
+      // Adjust angles and distances for mobile
+      const mobileAngles = isMobile ? {
+        purgeFiles: [p5.PI / 6, p5.PI / 2], // More downward angles
+        jaece: [p5.PI / 8, p5.PI / 1.5, p5.PI / 2.2],
+        xtsui: [p5.PI / 5, p5.PI / 2],
+        photography: [p5.PI / 6, p5.PI / 4, p5.PI / 3],
+        technology: [p5.PI / 6, p5.PI / 5, p5.PI / 2.5],
+        art: [p5.PI / 6, p5.PI / 5, p5.PI / 2.2],
+        design: [p5.PI / 6, p5.PI / 4, p5.PI / 3]
+      } : {
+        purgeFiles: [p5.PI / 27, p5.PI / 1.5],
+        jaece: [p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7],
+        xtsui: [p5.PI / 4, p5.PI / 1.5],
+        photography: [p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5],
+        technology: [p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8],
+        art: [p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9],
+        design: [p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5]
+      };
+
+      const mobileDistances = isMobile ? {
+        purgeFiles: [-60, 40],
+        jaece: [-40, 60, 50],
+        xtsui: [60, 50],
+        photography: [50, 50, 70],
+        technology: [40, 50, 80],
+        art: [40, 50, 100],
+        design: [50, 50, 70]
+      } : {
+        purgeFiles: [-80, 50],
+        jaece: [-50, 80, 70],
+        xtsui: [80, 66],
+        photography: [70, 70, 90],
+        technology: [50, 70, 100],
+        art: [50, 70, 120],
+        design: [70, 70, 90]
+      };
+
       sections = [
         {
           name: "purgeFiles",
@@ -138,8 +204,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["archives", "youtube"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 27, p5.PI / 1.5],
-          distances: [-80, 50],
+          angles: mobileAngles.purgeFiles,
+          distances: mobileDistances.purgeFiles,
         },
         {
           name: "jæce",
@@ -147,8 +213,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["live/bookings", "releases", "links"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7],
-          distances: [-50, 80, 70],
+          angles: mobileAngles.jaece,
+          distances: mobileDistances.jaece,
         },
         {
           name: "xtsui",
@@ -156,8 +222,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["xtsuimart", "archives"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 4, p5.PI / 1.5],
-          distances: [80, 66],
+          angles: mobileAngles.xtsui,
+          distances: mobileDistances.xtsui,
         },
         {
           name: "photography",
@@ -165,8 +231,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["portraits", "landscapes", "events"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5],
-          distances: [70, 70, 90],
+          angles: mobileAngles.photography,
+          distances: mobileDistances.photography,
         },
         {
           name: "technology",
@@ -174,8 +240,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["web", "mobile", "ai"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8],
-          distances: [50, 70, 100],
+          angles: mobileAngles.technology,
+          distances: mobileDistances.technology,
         },
         {
           name: "art",
@@ -183,8 +249,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["digital", "traditional", "mixed"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9],
-          distances: [50, 70, 120],
+          angles: mobileAngles.art,
+          distances: mobileDistances.art,
         },
         {
           name: "design",
@@ -192,15 +258,15 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           branches: ["graphic", "ui/ux", "branding"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: [p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5],
-          distances: [70, 70, 90],
+          angles: mobileAngles.design,
+          distances: mobileDistances.design,
         },
       ];
     }
 
     function computeScalingFactorAndAdjustDistances() {
       const scalingFactors: number[] = [];
-      const margin = 20;
+      const margin = isMobile ? 15 : 20; // Smaller margin for mobile
 
       sections.forEach((section, index) => {
         const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
@@ -214,8 +280,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
             const branchAngle = section.angles![idx];
             const subX = x + distance * p5.cos(branchAngle);
 
-            p5.textFont(customFont, 8);
-            const textW = p5.textWidth(branch) + 10;
+            p5.textFont(customFont, isMobile ? 6 : 8); // Smaller font for mobile
+            const textW = p5.textWidth(branch) + (isMobile ? 6 : 10);
             const rectLeft = subX - textW / 2;
             const rectRight = subX + textW / 2;
 
@@ -249,11 +315,11 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       p5.fill(0);
       p5.noStroke();
       p5.textAlign(p5.CENTER, p5.CENTER);
-      p5.textFont(customFont, 12);
+      p5.textFont(customFont, isMobile ? 10 : 12); // Smaller font for mobile
 
       const logoX = centerX;
-      const logoY = 120; // Back to original height
-      const logoSize = 80; // Increased from 60 to 80
+      const logoY = isMobile ? 100 : 120; // Lower position for mobile
+      const logoSize = isMobile ? 60 : 80; // Smaller logo for mobile
 
       // Draw animated central logo with individual element pulsing
       drawAnimatedLogo(logoX, logoY, logoSize);
@@ -262,7 +328,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
         const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
         const x = centerX + radiusX * p5.cos(angle) + movement;
-        const y = curveHeight + 80 + radiusY * p5.sin(angle) + movement;
+        const y = curveHeight + (isMobile ? 60 : 80) + radiusY * p5.sin(angle) + movement;
 
         // Draw connection line
         p5.strokeWeight(0.7);
@@ -270,7 +336,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         p5.noFill();
         p5.beginShape();
         // The logo is centered at logoY, so the bottom edge is logoY + logoSize/2
-        const logoBottomY = 120 + 40; // logoY + logoSize/2 (updated for new size)
+        const logoBottomY = logoY + logoSize/2;
         p5.vertex(centerX, logoBottomY);
         p5.bezierVertex(
           centerX,
@@ -299,36 +365,36 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           // Draw the signal dot
           p5.fill(255, 0, 0); // Bright red signal dot
           p5.noStroke();
-          p5.circle(curveX, curveY, 10); // Increased from 6 to 10
+          p5.circle(curveX, curveY, isMobile ? 8 : 10); // Smaller dot for mobile
           
           // Add a glow effect
           p5.fill(255, 0, 0, 100); // Brighter glow
-          p5.circle(curveX, curveY, 20); // Increased from 12 to 20
+          p5.circle(curveX, curveY, isMobile ? 16 : 20); // Smaller glow for mobile
         }
 
         p5.imageMode(p5.CENTER);
-        p5.image(blueCircle, x, y, 30, 22); // Increased from 20x15 to 30x22
+        p5.image(blueCircle, x, y, isMobile ? 24 : 30, isMobile ? 18 : 22); // Smaller circles for mobile
 
         if (section.logo) {
-          p5.image(section.logo, x, y + 40, 60, 60); // Increased from 50x50 to 60x60
+          p5.image(section.logo, x, y + (isMobile ? 30 : 40), isMobile ? 45 : 60, isMobile ? 45 : 60); // Smaller logos for mobile
         }
 
         p5.fill(0);
         p5.noStroke();
-        p5.textFont(customFont, 14); // Increased from 12 to 14
-        p5.text(section.name, x, y + 75); // Moved down from y + 60 to y + 75
+        p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
+        p5.text(section.name, x, y + (isMobile ? 55 : 75)); // Adjusted position for mobile
 
         if (section.branches.length > 0) {
           p5.drawingContext.filter = "blur(3px)";
           p5.strokeWeight(0.5);
           p5.stroke(0, 0, 128 * p5.sin(p5.millis() / 1000));
           p5.fill(200, 200, 150, 200 + 128 * p5.sin(p5.millis() / 1000));
-          p5.ellipse(x, y + 95, 8, 8); // Moved down from y + 80 to y + 95
+          p5.ellipse(x, y + (isMobile ? 75 : 95), 8, 8); // Adjusted position for mobile
           p5.drawingContext.filter = "none";
         }
 
         if (section.isVisible || section.branchAnimProgress > 0) {
-          animateSubBranches(x, y + 100, section);
+          animateSubBranches(x, y + (isMobile ? 80 : 100), section);
         }
       });
     }
@@ -336,16 +402,41 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     function animateSubBranches(x: number, y: number, section: typeof sections[0]) {
       if (!section.adjustedDistances || !section.angles) return;
 
+      // Store positions to check for overlaps
+      const branchPositions: Array<{x: number, y: number, width: number, height: number}> = [];
+
       section.branches.forEach((branch: string, idx: number) => {
         const distance = section.adjustedDistances![idx];
         const angle = section.angles![idx];
         const subX = x + section.branchAnimProgress * distance * p5.cos(angle);
         const subY = y + section.branchAnimProgress * distance * p5.sin(angle);
 
-        p5.textFont(customFont, 8);
-        const textW = p5.textWidth(branch) + 10;
-        const textH = 20;
+        p5.textFont(customFont, isMobile ? 6 : 8); // Smaller font for mobile
+        const textW = p5.textWidth(branch) + (isMobile ? 6 : 10);
+        const textH = isMobile ? 16 : 20; // Smaller height for mobile
         const alpha = p5.map(Math.abs(section.branchAnimProgress), 0, 1, 0, 255);
+
+        // Check for overlaps and adjust position if needed
+        let adjustedY = subY;
+        const minSpacing = isMobile ? 25 : 30; // Minimum vertical spacing between branches
+        
+        for (const pos of branchPositions) {
+          const verticalOverlap = Math.abs(adjustedY - pos.y) < minSpacing;
+          const horizontalOverlap = Math.abs(subX - pos.x) < (textW + pos.width) / 2 + 5;
+          
+          if (verticalOverlap && horizontalOverlap) {
+            // Move this branch down to avoid overlap
+            adjustedY = pos.y + minSpacing;
+          }
+        }
+
+        // Store this branch's position for future collision detection
+        branchPositions.push({
+          x: subX,
+          y: adjustedY,
+          width: textW,
+          height: textH
+        });
 
         // Draw connection line
         p5.stroke(0, alpha);
@@ -355,16 +446,16 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         p5.vertex(x, y);
         p5.bezierVertex(
           x,
-          subY + (y - subY) / 2,
+          adjustedY + (y - adjustedY) / 2,
           subX,
-          y + (subY - y) / 2,
+          y + (adjustedY - y) / 2,
           subX,
-          subY
+          adjustedY
         );
         p5.endShape();
 
         if (section.branchAnimProgress >= 1) {
-          if (p5.dist(p5.mouseX, p5.mouseY, subX, subY) < textW / 2) {
+          if (p5.dist(p5.mouseX, p5.mouseY, subX, adjustedY) < textW / 2) {
             p5.fill(220, 220, 255, alpha);
             p5.cursor(p5.HAND);
           } else {
@@ -376,12 +467,12 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           p5.cursor(p5.ARROW);
         }
 
-        p5.rect(subX - textW / 2, subY - textH / 2, textW, textH, 10);
+        p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 6 : 10); // Smaller radius for mobile
 
         p5.fill(0, alpha);
         p5.noStroke();
         p5.textAlign(p5.CENTER, p5.CENTER);
-        p5.text(branch, subX, subY);
+        p5.text(branch, subX, adjustedY);
       });
 
       // Update animation progress
