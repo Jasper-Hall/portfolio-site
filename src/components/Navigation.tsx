@@ -24,16 +24,16 @@ const Navigation: React.FC = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8">
             <a href="/work" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
-              Work
+              Let's Work
             </a>
-            <a href="/contact" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
-              Contact
+            <a href="/cv" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
+              CV
             </a>
-            <a href="/shop" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
-              Shop
+            <a href="/links" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
+              Links
             </a>
-            <a href="/blog" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
-              Blog
+            <a href="/about" className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm">
+              About
             </a>
           </div>
 
@@ -64,28 +64,28 @@ const Navigation: React.FC = () => {
                 className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors duration-200"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Work
+                Let's Work
               </a>
               <a
-                href="/contact"
+                href="/cv"
                 className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors duration-200"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Contact
+                CV
               </a>
               <a
-                href="/shop"
+                href="/links"
                 className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors duration-200"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Shop
+                Links
               </a>
               <a
-                href="/blog"
+                href="/about"
                 className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors duration-200"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Blog
+                About
               </a>
             </div>
           </div>
