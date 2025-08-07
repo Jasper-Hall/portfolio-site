@@ -45,12 +45,13 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     };
 
     p5.setup = () => {
-      p5.createCanvas(p5.windowWidth, p5.windowHeight);
+      const canvasW = p5.windowWidth > p5.windowHeight ? p5.windowWidth / 2 : p5.windowWidth;
+      p5.createCanvas(canvasW, p5.windowHeight);
       p5.noFill();
       p5.strokeWeight(1);
 
-      // Detect mobile screen
-      isMobile = p5.width < 768;
+      // Detect mobile screen using full window width
+      isMobile = p5.windowWidth < 768;
 
       centerX = p5.width / 2;
       
@@ -102,10 +103,11 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     };
 
     p5.windowResized = () => {
-      p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+      const newCanvasW = p5.windowWidth > p5.windowHeight ? p5.windowWidth / 2 : p5.windowWidth;
+      p5.resizeCanvas(newCanvasW, p5.windowHeight);
       
-      // Update mobile detection
-      isMobile = p5.width < 768;
+      // Update mobile detection using window width
+      isMobile = p5.windowWidth < 768;
       
       centerX = p5.width / 2;
       
@@ -154,6 +156,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
     p5.touchStarted = () => {
       if (p5.touches.length > 0) {
+        let touchHandled = false;
+        
         sections.forEach((section, index) => {
           const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
           const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
@@ -163,6 +167,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           // Smaller touch area to prevent accidental triggering
           const touchRadius = isMobile ? 25 : 30;
           if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
+            touchHandled = true;
+            
             // Single-open logic: close all other sections first
             if (isMobile) {
               sections.forEach((s, i) => {
@@ -178,8 +184,14 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
             section.branchAnimProgress = section.isVisible ? 0 : 1;
           }
         });
-        return false;
+        
+        // Only prevent default behavior if we actually handled a touch on a mind map node
+        if (touchHandled) {
+          return false;
+        }
       }
+      // Allow default behavior (scrolling) for touches outside mind map nodes
+      return true;
     };
 
     function initSections() {

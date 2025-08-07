@@ -19,3 +19,75 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Archive Viewer Custom Animations */
+@keyframes scanner-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes data-flow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(34, 211, 238, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.8), 0 0 30px rgba(34, 211, 238, 0.4); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+  75% { opacity: 0.9; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(500px); }
+}
+
+.archive-scanner-grid {
+  animation: scanner-pulse 3s ease-in-out infinite;
+}
+
+.archive-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.archive-flicker {
+  animation: flicker 4s ease-in-out infinite;
+}
+
+.data-stream {
+  animation: data-flow 2s linear infinite;
+}
+
+.scan-line {
+  animation: scan-line 3s linear infinite;
+}
+
+/* Custom scrollbar for archive viewer */
+.archive-viewer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.archive-viewer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.archive-viewer::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.6);
+  border-radius: 2px;
+}
+
+.archive-viewer::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.8);
+}
+
+/* Utility: force grid to single column in portrait orientation */
+@media (orientation: portrait) {
+  .grid-portrait-single {
+    grid-template-columns: 1fr !important;
+  }
+}
