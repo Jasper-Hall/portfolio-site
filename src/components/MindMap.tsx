@@ -154,6 +154,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
     p5.touchStarted = () => {
       if (p5.touches.length > 0) {
+        let touchHandled = false;
+        
         sections.forEach((section, index) => {
           const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
           const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
@@ -163,6 +165,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           // Smaller touch area to prevent accidental triggering
           const touchRadius = isMobile ? 25 : 30;
           if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
+            touchHandled = true;
+            
             // Single-open logic: close all other sections first
             if (isMobile) {
               sections.forEach((s, i) => {
@@ -178,8 +182,14 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
             section.branchAnimProgress = section.isVisible ? 0 : 1;
           }
         });
-        return false;
+        
+        // Only prevent default behavior if we actually handled a touch on a mind map node
+        if (touchHandled) {
+          return false;
+        }
       }
+      // Allow default behavior (scrolling) for touches outside mind map nodes
+      return true;
     };
 
     function initSections() {
