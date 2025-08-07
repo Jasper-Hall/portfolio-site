@@ -11,7 +11,9 @@ interface ProjectData {
   dateRecovered: string;
   medium: string[];
   status: 'Active' | 'Prototype' | 'Retired';
-  image: string;
+  contentType: 'image' | 'video' | 'interactive' | 'embed' | 'iframe';
+  content: string; // URL, embed code, or path
+  aspectRatio?: string; // For responsive content
   tags: string[];
 }
 
@@ -25,7 +27,9 @@ const sampleProjects: ProjectData[] = [
     dateRecovered: "2023.06.14",
     medium: ["Audio-visual", "Web tool", "Ritual interface"],
     status: "Active",
-    image: "/api/placeholder/600/400",
+    contentType: "interactive",
+    content: "https://example.com/mutax-demo",
+    aspectRatio: "16:9",
     tags: ["sound", "ritual device", "2023"]
   },
   {
@@ -37,7 +41,9 @@ const sampleProjects: ProjectData[] = [
     dateRecovered: "2023.09.22",
     medium: ["Interactive", "Data visualization", "P5.js"],
     status: "Prototype",
-    image: "/api/placeholder/600/400",
+    contentType: "video",
+    content: "/videos/neural-cartography-demo.mp4",
+    aspectRatio: "16:9",
     tags: ["visualization", "consciousness", "interactive"]
   },
   {
@@ -49,7 +55,9 @@ const sampleProjects: ProjectData[] = [
     dateRecovered: "2023.03.15",
     medium: ["Narrative", "Digital art", "Time-based media"],
     status: "Retired",
-    image: "/api/placeholder/600/400",
+    contentType: "image",
+    content: "/images/temporal-threads-screenshot.jpg",
+    aspectRatio: "4:3",
     tags: ["time", "narrative", "archaeology"]
   },
   {
@@ -61,7 +69,9 @@ const sampleProjects: ProjectData[] = [
     dateRecovered: "2023.11.08",
     medium: ["Audio", "Generative", "Quantum interface"],
     status: "Active",
-    image: "/api/placeholder/600/400",
+    contentType: "embed",
+    content: '<iframe src="https://example.com/void-resonance" frameborder="0"></iframe>',
+    aspectRatio: "1:1",
     tags: ["ambient", "quantum", "generative"]
   },
   {
@@ -73,7 +83,9 @@ const sampleProjects: ProjectData[] = [
     dateRecovered: "2023.07.29",
     medium: ["Protocol", "Mixed reality", "Interface design"],
     status: "Prototype", 
-    image: "/api/placeholder/600/400",
+    contentType: "iframe",
+    content: "https://membrane-protocol-demo.netlify.app",
+    aspectRatio: "16:10",
     tags: ["protocol", "mixed reality", "boundaries"]
   }
 ];
@@ -88,6 +100,8 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
   const [connectionStatus, setConnectionStatus] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const [scannerPosition, setScannerPosition] = useState(0);
+  const [startX, setStartX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Scanner animation
   useEffect(() => {
@@ -104,7 +118,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
       const timeout = setTimeout(() => {
         setConnectionStatus('');
         setIsTransitioning(false);
-      }, 1500);
+      }, 300);
       return () => clearTimeout(timeout);
     }
   }, [isTransitioning, currentIndex]);
@@ -125,6 +139,62 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
     if (isTransitioning || index === currentIndex) return;
     setIsTransitioning(true);
     setCurrentIndex(index);
+  };
+
+  // Touch/swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartX(e.touches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    e.preventDefault(); // Prevent scrolling while swiping
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    const endX = e.changedTouches[0].clientX;
+    const diffX = startX - endX;
+    const threshold = 50; // Minimum swipe distance
+
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        goToNext(); // Swipe left = next
+      } else {
+        goToPrevious(); // Swipe right = previous
+      }
+    }
+  };
+
+  // Mouse handlers for desktop drag
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setStartX(e.clientX);
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    const endX = e.clientX;
+    const diffX = startX - endX;
+    const threshold = 50;
+
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        goToNext();
+      } else {
+        goToPrevious();
+      }
+    }
   };
 
   const currentProject = sampleProjects[currentIndex];
@@ -170,16 +240,30 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
       {/* Main Archive Viewer */}
       <div 
         ref={containerRef}
-        className="relative w-full h-[450px] md:h-[500px] rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden group archive-viewer"
+        className="relative w-full h-[420px] md:h-[460px] rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden group archive-viewer"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        style={{ userSelect: 'none' }}
       >
-        {/* Project Image Container */}
-        <div className="relative w-full h-48 md:h-64 overflow-hidden">
+        {/* Content Container - Flexible for different media types */}
+        <div className="relative w-full h-48 md:h-56 overflow-hidden bg-gray-900/50">
+          {/* Placeholder for actual content - will be replaced with real portfolio items */}
           <div 
-            className={`absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center text-white/60 text-sm font-mono transition-all duration-1000 ease-out ${
-              isTransitioning ? 'blur-sm scale-105' : 'blur-0 scale-100'
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out ${
+              isTransitioning ? 'blur-sm scale-105 opacity-50' : 'blur-0 scale-100 opacity-100'
             }`}
           >
-            [ARTIFACT VISUAL DATA]
+            {/* This area will support: images, videos, iframes, interactive demos, etc. */}
+            <div className="text-center space-y-2">
+              <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
+              <div className="text-white/40 text-xs font-mono">
+                Supports: Images • Videos • Interactive Demos • Embeds
+              </div>
+            </div>
           </div>
           
           {/* Scanning Grid Overlay */}
@@ -221,17 +305,11 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
           <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-cyan-400/60 archive-glow"></div>
           <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-cyan-400/60 archive-glow"></div>
           
-          {/* HUD Elements */}
-          <div className="absolute top-4 left-4 text-xs font-mono text-cyan-400/70 archive-flicker">
-            ◉ ACTIVE
-          </div>
-          <div className="absolute top-4 right-4 text-xs font-mono text-green-400/70 archive-flicker">
-            ⚡ SYNCED
-          </div>
+
         </div>
 
         {/* Project Information Panel */}
-        <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+        <div className="p-4 md:p-5 space-y-2 md:space-y-3">
           {/* Archive Reference & Title */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -309,7 +387,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
       </div>
 
       {/* Archive Index Dots */}
-      <div className="flex justify-center space-x-2 mt-6">
+      <div className="flex justify-center space-x-2 mt-4 pb-2">
         {sampleProjects.map((_, index) => (
           <button
             key={index}
