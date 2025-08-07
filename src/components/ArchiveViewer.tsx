@@ -30,6 +30,7 @@ interface ArchiveViewerProps {
 
 export interface ArchiveViewerRef {
   handleHover: (branchName: string | null) => void;
+  updatePath: (path: NavigationPath) => void;
 }
 
 // Mock project data for all 7 categories
@@ -405,11 +406,12 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   const [lastHoveredIndex, setLastHoveredIndex] = useState<number>(0);
   const autoPlayInterval = useRef<NodeJS.Timeout | null>(null);
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
+  const [internalPath, setInternalPath] = useState<NavigationPath>(currentPath);
 
-  // Expose handleHover method to parent component
+  // Expose handleHover and updatePath methods to parent component
   useImperativeHandle(ref, () => ({
     handleHover: (branchName: string | null) => {
-      if (branchName && currentPath.level === 'home') {
+      if (branchName && internalPath.level === 'home') {
         // Find the index of the hovered branch's featured project in the filtered projects
         const featuredProjects = projectData.filter(p => p.featured);
         const hoveredIndex = featuredProjects.findIndex(p => p.category === branchName);
@@ -418,12 +420,15 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         }
       }
       setHoveredBranch(branchName);
+    },
+    updatePath: (path: NavigationPath) => {
+      setInternalPath(path);
     }
   }));
 
   // Get filtered projects based on current path and hover state
   const getFilteredProjects = (): ProjectData[] => {
-    if (currentPath.level === 'home') {
+    if (internalPath.level === 'home') {
       // Map MindMap sections to their corresponding featured project categories
       // MindMap order: film, sound, cloth, image, tech, art, design
       // Featured project categories: sound, cloth, rheome, image, tech, design, art
@@ -443,15 +448,15 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
       return mindMapToFeaturedMapping
         .map(category => featuredProjects.find(p => p.category === category))
         .filter(Boolean) as ProjectData[];
-    } else if (currentPath.sublevel) {
+    } else if (internalPath.sublevel) {
       // Show projects from specific subcategory
       return projectData.filter(p => 
-        p.category === currentPath.level && p.subcategory === currentPath.sublevel
+        p.category === internalPath.level && p.subcategory === internalPath.sublevel
       );
     } else {
       // Show featured projects from specific category
       return projectData.filter(p => 
-        p.category === currentPath.level && p.featured
+        p.category === internalPath.level && p.featured
       );
     }
   };
@@ -498,7 +503,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   // Reset index when path changes
   useEffect(() => {
     setCurrentIndex(0);
-  }, [currentPath]);
+  }, [internalPath]);
 
   const goToNext = () => {
     if (filteredProjects.length > 1) {
@@ -530,35 +535,35 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   };
 
   const getCategoryTitle = () => {
-    if (currentPath.level === 'home') {
+    if (internalPath.level === 'home') {
       return 'FEATURED PROJECTS';
-    } else if (currentPath.sublevel) {
-      const categoryName = mindMapStructure[currentPath.level as keyof typeof mindMapStructure]?.name || currentPath.level.toUpperCase();
-      const subcategoryName = currentPath.sublevel.toUpperCase();
+    } else if (internalPath.sublevel) {
+      const categoryName = mindMapStructure[internalPath.level as keyof typeof mindMapStructure]?.name || internalPath.level.toUpperCase();
+      const subcategoryName = internalPath.sublevel.toUpperCase();
       return `${categoryName} > ${subcategoryName}`;
-    } else {
-      const categoryName = mindMapStructure[currentPath.level as keyof typeof mindMapStructure]?.name || currentPath.level.toUpperCase();
+      } else {
+      const categoryName = mindMapStructure[internalPath.level as keyof typeof mindMapStructure]?.name || internalPath.level.toUpperCase();
       return `${categoryName} PROJECTS`;
     }
   };
 
   const generateBreadcrumbs = () => {
     const breadcrumbs = [
-      { name: 'HOME', path: { level: 'home' } as NavigationPath, isActive: currentPath.level === 'home' }
+      { name: 'HOME', path: { level: 'home' } as NavigationPath, isActive: internalPath.level === 'home' }
     ];
 
-    if (currentPath.level !== 'home') {
-      const categoryName = mindMapStructure[currentPath.level as keyof typeof mindMapStructure]?.name || currentPath.level.toUpperCase();
+    if (internalPath.level !== 'home') {
+      const categoryName = mindMapStructure[internalPath.level as keyof typeof mindMapStructure]?.name || internalPath.level.toUpperCase();
       breadcrumbs.push({
         name: categoryName,
-        path: { level: currentPath.level } as NavigationPath,
-        isActive: currentPath.level !== 'home' && !currentPath.sublevel
+        path: { level: internalPath.level } as NavigationPath,
+        isActive: internalPath.level !== 'home' && !internalPath.sublevel
       });
 
-      if (currentPath.sublevel) {
+      if (internalPath.sublevel) {
         breadcrumbs.push({
-          name: currentPath.sublevel.toUpperCase(),
-          path: { level: currentPath.level, sublevel: currentPath.sublevel } as NavigationPath,
+          name: internalPath.sublevel.toUpperCase(),
+          path: { level: internalPath.level, sublevel: internalPath.sublevel } as NavigationPath,
           isActive: true
         });
       }
@@ -568,6 +573,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   };
 
   const handleTabClick = (path: NavigationPath) => {
+    setInternalPath(path);
     onPathChange(path);
   };
 
@@ -581,7 +587,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
               <button
                 onClick={() => handleTabClick(breadcrumb.path)}
                 className={`
-                  px-4 py-2 text-xs font-mono tracking-wider transition-all duration-200
+                  px-4 py-2 text-xs tracking-wider transition-all duration-200
                   ${breadcrumb.isActive 
                     ? 'border-t-2 border-l-2 border-r-2 rounded-t-lg shadow-sm' 
                     : 'border-t-2 border-l-2 border-r-2 rounded-t-lg'
@@ -601,7 +607,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                   style={{ backgroundColor: '#E8DCC6' }}
                 ></div>
               )}
-            </div>
+          </div>
           ))}
         </div>
         
@@ -613,24 +619,24 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
             borderColor: '#B8A082'
           }}
         >
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3">
               <span 
-                className="text-sm font-mono font-semibold"
+                className="text-sm font-semibold"
                 style={{ color: '#3A3428' }}
               >
                 {getCategoryTitle()}
               </span>
                             <div className="flex items-center space-x-2">
                 <span 
-                  className="text-xs font-mono"
+                  className="text-xs"
                   style={{ color: '#5C5347' }}
                 >
                   {filteredProjects.length > 0 ? `${displayIndex + 1} / ${filteredProjects.length}` : '0 / 0'}
                 </span>
         </div>
-            </div>
-            
+      </div>
+
             {/* Project Card */}
             {currentProject && (
               <div 
@@ -641,53 +647,53 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                 }}
               >
                 {/* Project Content */}
-                <div className="relative w-full h-48 md:h-56 overflow-hidden bg-gray-900/50">
+        <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-900/50">
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center space-y-2">
-                      <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
-                      <div className="text-white/40 text-xs font-mono">
-                        Supports: Images • Videos • Interactive Demos • Embeds
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+            <div className="text-center space-y-2">
+              <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
+              <div className="text-white/40 text-xs font-mono">
+                Supports: Images • Videos • Interactive Demos • Embeds
+              </div>
+            </div>
+            </div>
+          </div>
+          
                 {/* Project Information */}
-                <div className="p-4 md:p-5 space-y-2 md:space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-cyan-600 tracking-widest">
-                        {currentProject.archiveRef}
-                      </span>
-                      <span className={`text-xs font-mono px-2 py-1 rounded border ${getStatusColor(currentProject.status)}`}>
-                        {currentProject.status}
-                      </span>
-                    </div>
-                    
+                <div className="p-3 md:p-4 space-y-1 md:space-y-2">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+                      <span className="text-xs text-cyan-600 tracking-widest">
+                {currentProject.archiveRef}
+              </span>
+              <span className={`text-xs px-2 py-1 rounded border ${getStatusColor(currentProject.status)}`}>
+                {currentProject.status}
+              </span>
+            </div>
+            
                     <h3 
-                      className="text-xl font-mono font-bold tracking-wide"
+                      className="text-lg font-bold tracking-wide"
                       style={{ color: '#2A2419' }}
                     >
-                      {currentProject.title}
-                    </h3>
-                    
+              {currentProject.title}
+            </h3>
+            
                     <p 
-                      className="text-sm font-mono italic"
+                      className="text-xs font-mono italic"
                       style={{ color: '#4A4235' }}
                     >
-                      {currentProject.subtitle}
-                    </p>
-                  </div>
+              {currentProject.subtitle}
+            </p>
+          </div>
 
                   <p 
-                    className="text-sm leading-relaxed"
+                    className="text-xs leading-relaxed"
                     style={{ color: '#3A3428' }}
                   >
-                    {currentProject.description}
-                  </p>
+            {currentProject.description}
+          </p>
 
-                  <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-                    <div>
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div>
                       <span 
                         className="block"
                         style={{ color: '#5C5347' }}
@@ -695,8 +701,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         DATE RECOVERED:
                       </span>
                       <span style={{ color: '#3A3428' }}>{currentProject.dateRecovered}</span>
-                    </div>
-                    <div>
+            </div>
+            <div>
                       <span 
                         className="block"
                         style={{ color: '#5C5347' }}
@@ -704,32 +710,32 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         MEDIUM:
                       </span>
                       <span style={{ color: '#3A3428' }}>{currentProject.medium.join(' | ')}</span>
-                    </div>
-                  </div>
+            </div>
+          </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {currentProject.tags.map((tag, index) => (
-                      <span 
-                        key={index}
-                        className="text-xs font-mono px-2 py-1 border rounded"
+          <div className="flex flex-wrap gap-1">
+            {currentProject.tags.map((tag, index) => (
+              <span 
+                key={index}
+                        className="text-xs px-1 py-0.5 border rounded"
                         style={{
                           backgroundColor: '#F2EFE7',
                           borderColor: '#D4C4A8',
                           color: '#3A3428'
                         }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
 
-                {/* Navigation Controls */}
+        {/* Navigation Controls */}
                 {filteredProjects.length > 1 && (
                   <>
-                    <div className="absolute inset-y-0 left-0 flex items-center">
-                      <button
-                        onClick={goToPrevious}
+        <div className="absolute inset-y-0 left-0 flex items-center">
+          <button
+            onClick={goToPrevious}
                         className="ml-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300"
                         style={{
                           backgroundColor: '#FEFCF8',
@@ -744,16 +750,16 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           e.currentTarget.style.backgroundColor = '#FEFCF8';
                           e.currentTarget.style.color = '#5C5347';
                         }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="15,18 9,12 15,6"></polyline>
-                        </svg>
-                      </button>
-                    </div>
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15,18 9,12 15,6"></polyline>
+            </svg>
+          </button>
+        </div>
 
-                    <div className="absolute inset-y-0 right-0 flex items-center">
-                      <button
-                        onClick={goToNext}
+        <div className="absolute inset-y-0 right-0 flex items-center">
+          <button
+            onClick={goToNext}
                         className="mr-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300"
                         style={{
                           backgroundColor: '#FEFCF8',
@@ -768,24 +774,24 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           e.currentTarget.style.backgroundColor = '#FEFCF8';
                           e.currentTarget.style.color = '#5C5347';
                         }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="9,18 15,12 9,6"></polyline>
-                        </svg>
-                      </button>
-                    </div>
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+          </button>
+        </div>
                   </>
                 )}
-              </div>
+      </div>
             )}
 
-            {/* Archive Index Dots */}
+      {/* Archive Index Dots */}
             {filteredProjects.length > 1 && (
-              <div className="flex justify-center space-x-2 mt-4">
+              <div className="flex justify-center space-x-2 mt-3">
                 {filteredProjects.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToSlide(index)}
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
                     className="w-2 h-2 rounded-full transition-all duration-300"
                     style={{
                       backgroundColor: index === displayIndex ? '#8B7355' : '#C9B991'
@@ -800,8 +806,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         e.currentTarget.style.backgroundColor = '#C9B991';
                       }
                     }}
-                  />
-                ))}
+          />
+        ))}
               </div>
             )}
           </div>
@@ -811,4 +817,4 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   );
 });
 
-export default ArchiveViewer; 
+export default ArchiveViewer;

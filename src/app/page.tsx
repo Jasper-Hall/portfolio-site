@@ -1,9 +1,10 @@
 'use client';
 
-import MindMap from '@/components/MindMap';
+import MindMap, { MindMapRef } from '@/components/MindMap';
 import Navigation from '@/components/Navigation';
 import RippleShader from '@/components/RippleShader';
 import ArchiveViewer, { ArchiveViewerRef } from '@/components/ArchiveViewer';
+import { RippleShaderRef } from '@/components/RippleShader';
 import { useState, useRef, useEffect } from 'react';
 
 interface NavigationPath {
@@ -14,23 +15,42 @@ interface NavigationPath {
 export default function Home() {
   const [currentPath, setCurrentPath] = useState<NavigationPath>({ level: 'home' });
   const archiveViewerRef = useRef<ArchiveViewerRef>(null);
+  const rippleShaderRef = useRef<RippleShaderRef>(null);
+  const mindMapRef = useRef<MindMapRef>(null);
 
   const handlePathChange = (path: NavigationPath) => {
     setCurrentPath(path);
+    // Clear active section in MindMap when navigating to home
+    if (path.level === 'home' && mindMapRef.current) {
+      mindMapRef.current.clearActiveSection();
+    }
   };
 
   const handleSectionClick = (sectionName: string) => {
-    setCurrentPath({ level: sectionName });
+    const newPath = { level: sectionName };
+    // Update ArchiveViewer directly via ref to avoid re-rendering MindMap
+    if (archiveViewerRef.current) {
+      archiveViewerRef.current.updatePath(newPath);
+    }
   };
 
   const handleSubBranchClick = (sectionName: string, subBranchName: string) => {
-    setCurrentPath({ level: sectionName, sublevel: subBranchName });
+    const newPath = { level: sectionName, sublevel: subBranchName };
+    // Update ArchiveViewer directly via ref to avoid re-rendering MindMap
+    if (archiveViewerRef.current) {
+      archiveViewerRef.current.updatePath(newPath);
+    }
   };
 
   const handleBranchHover = (branchName: string | null) => {
     // Use ref to directly call method on ArchiveViewer without re-rendering
     if (archiveViewerRef.current && archiveViewerRef.current.handleHover) {
       archiveViewerRef.current.handleHover(branchName);
+    }
+    
+    // Update RippleShader directly via ref instead of causing re-render
+    if (rippleShaderRef.current) {
+      rippleShaderRef.current.setHoverState(branchName !== null);
     }
   };
 
@@ -52,9 +72,10 @@ export default function Home() {
         <div className="p-2 md:p-4 lg:p-6 grid grid-cols-2 gap-4 grid-portrait-single xl:h-screen xl:overflow-hidden">
           
           {/* Left Panel - Mind Map with RippleShader Background */}
-          <div className="rounded-3xl relative overflow-hidden min-h-[500px] max-h-[80vh]">
-            <RippleShader />
+          <div className="rounded-3xl relative overflow-hidden min-h-[500px] max-h-[85vh]">
+            <RippleShader ref={rippleShaderRef} />
             <MindMap 
+              ref={mindMapRef}
               className="w-full h-full" 
               onSectionClick={handleSectionClick}
               onSubBranchClick={handleSubBranchClick}
@@ -63,7 +84,7 @@ export default function Home() {
           </div>
           
           {/* Right Panel - Archive Viewer */}
-          <div className="rounded-3xl relative overflow-hidden min-h-[500px] max-h-[80vh]">
+          <div className="rounded-3xl relative overflow-hidden min-h-[500px] max-h-[85vh]">
             <ArchiveViewer 
               ref={archiveViewerRef}
               className="w-full h-full" 

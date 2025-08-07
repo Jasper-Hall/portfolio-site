@@ -1,14 +1,20 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
 
 interface RippleShaderProps {
   className?: string;
 }
 
-const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
+export interface RippleShaderRef {
+  setHoverState: (isHovering: boolean) => void;
+}
+
+const RippleShader = forwardRef<RippleShaderRef, RippleShaderProps>(({ className = '' }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const simMaterialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const renderMaterialRef = useRef<THREE.ShaderMaterial | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -79,6 +85,7 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
       uniform vec2 resolution;
       uniform float time;
       uniform int frame;
+      uniform float isHovering;
       varying vec2 vUv;
     
     void main() {
@@ -138,7 +145,9 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         float pathLength = distance(mouseUV, prevMouseUV);
 
         if (mouse.x > 0.0 && prevMouse.x > 0.0 && pathLength > minMove) {
-          float trailWidth = 0.04;
+          float trailWidth = 0.04 + isHovering * 0.02; // Wider trail when hovering
+          float intensityMultiplier = 0.5 + isHovering * 0.3; // Stronger effect when hovering
+          
           for (int i = 0; i < 4; i++) {
             float t = float(i) / 3.0;
             vec2 trailPoint = mix(prevMouseUV, mouseUV, t);
@@ -146,11 +155,19 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
             if (dist <= trailWidth) {
               float intensity = 1.0 - smoothstep(0.0, trailWidth, dist);
               intensity *= 1.0 - t * 0.7;
-              pressure += intensity * 0.5; // Increased prominence
-              vec2 flowDir = normalize(mouseUV - prevMouseUV) * intensity * 0.05;
+              pressure += intensity * intensityMultiplier;
+              vec2 flowDir = normalize(mouseUV - prevMouseUV) * intensity * (0.05 + isHovering * 0.03);
               velocity += flowDir;
             }
           }
+        }
+        
+        // Add subtle ambient effects when hovering
+        if (isHovering > 0.0) {
+          vec2 center = vec2(0.5, 0.5);
+          float distFromCenter = distance(uv, center);
+          float ambientRipple = sin(time * 2.0 + distFromCenter * 10.0) * 0.1 * isHovering;
+          pressure += ambientRipple * (1.0 - distFromCenter);
         }
 
         gl_FragColor = vec4(pressure, pVel, velocity);
@@ -169,6 +186,7 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
     const renderFragmentShader = `
       uniform sampler2D textureA;
       uniform sampler2D textureB;
+      uniform float isHovering;
       varying vec2 vUv;
 
       void main() {
@@ -191,9 +209,16 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         // Combine panel color with directional specular highlights
         vec4 finalColor = panelColor + vec4(specular * 0.6);
         
-        // Add more ripple visibility
-        float rippleVisibility = length(distortion) * 0.7;
-        finalColor.rgb += rippleVisibility * vec3(0.1, 0.15, 0.2);
+        // Add more ripple visibility with hover enhancement
+        float rippleVisibility = length(distortion) * (0.7 + isHovering * 0.3);
+        vec3 rippleColor = mix(vec3(0.1, 0.15, 0.2), vec3(0.2, 0.25, 0.3), isHovering);
+        finalColor.rgb += rippleVisibility * rippleColor;
+        
+        // Add subtle color tint when hovering
+        if (isHovering > 0.0) {
+          vec3 hoverTint = vec3(0.1, 0.2, 0.3) * isHovering * 0.3;
+          finalColor.rgb += hoverTint;
+        }
         
         gl_FragColor = finalColor;
       }
@@ -207,20 +232,24 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         resolution: { value: new THREE.Vector2(width, height) },
         time: { value: 0 },
         frame: { value: 0 },
+        isHovering: { value: 0.0 },
       },
       vertexShader: simulationVertexShader,
       fragmentShader: simulationFragmentShader,
     });
+    simMaterialRef.current = simMaterial;
 
     const renderMaterial = new THREE.ShaderMaterial({
       uniforms: {
         textureA: { value: null },
         textureB: { value: panelTexture },
+        isHovering: { value: 0.0 },
       },
       vertexShader: renderVertexShader,
       fragmentShader: renderFragmentShader,
       transparent: true,
     });
+    renderMaterialRef.current = renderMaterial;
 
     const plane = new THREE.PlaneGeometry(2, 2);
     const simQuad = new THREE.Mesh(plane, simMaterial);
@@ -269,6 +298,10 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
       // Update timing uniforms
       simMaterial.uniforms.frame.value = frame++;
       simMaterial.uniforms.time.value = performance.now() / 1000;
+      
+      // Update hover state - will be controlled via ref
+      // simMaterial.uniforms.isHovering.value and renderMaterial.uniforms.isHovering.value 
+      // will be updated through the exposed setHoverState method
 
       // Simulation pass
       simMaterial.uniforms.textureA.value = rta.texture;
@@ -303,6 +336,17 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
     };
   }, []);
 
+  // Expose hover control method
+  useImperativeHandle(ref, () => ({
+    setHoverState: (isHovering: boolean) => {
+      if (simMaterialRef.current && renderMaterialRef.current) {
+        const hoverValue = isHovering ? 1.0 : 0.0;
+        simMaterialRef.current.uniforms.isHovering.value = hoverValue;
+        renderMaterialRef.current.uniforms.isHovering.value = hoverValue;
+      }
+    }
+  }));
+
   return (
     <div 
       ref={containerRef} 
@@ -317,6 +361,6 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
       }}
     />
   );
-};
+});
 
 export default RippleShader; 

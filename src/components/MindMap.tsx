@@ -1,9 +1,13 @@
 'use client';
 
-import React from "react";
+import React, { useImperativeHandle, useRef } from "react";
 import { type Sketch } from "@p5-wrapper/react";
 import { NextReactP5Wrapper } from "@p5-wrapper/next";
 import p5 from "p5";
+
+export interface MindMapRef {
+  clearActiveSection: () => void;
+}
 
 interface MindMapProps {
   className?: string;
@@ -12,12 +16,15 @@ interface MindMapProps {
   onBranchHover?: (branchName: string | null) => void;
 }
 
-const MindMap: React.FC<MindMapProps> = ({ 
+const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({ 
   className = '', 
   onSectionClick,
   onSubBranchClick,
   onBranchHover
-}) => {
+}, ref) => {
+  const activeSectionRef = useRef<string | null>(null);
+  const sectionsRef = useRef<any[]>([]);
+  
   const sketch: Sketch = (p5) => {
     // Global variables with proper types
     let customFont: p5.Font;
@@ -43,6 +50,7 @@ const MindMap: React.FC<MindMapProps> = ({
     let curveHeight = 0;
     let isMobile = false;
     let activeSectionIndex = -1; // Track which section is currently open
+    let activeSectionName: string | null = null; // Track which section is active in ArchiveViewer (local to sketch)
     let subBranchPositions: Array<{x: number, y: number, sectionName: string, branchName: string}> = []; // Track sub-branch positions for clicks
 
     p5.preload = () => {
@@ -83,7 +91,13 @@ const MindMap: React.FC<MindMapProps> = ({
 
       initSections();
       computeScalingFactorAndAdjustDistances();
+      
+      // Store sections reference for external access
+      sectionsRef.current = sections;
     };
+
+    // Initialize active section name
+    activeSectionName = activeSectionRef.current;
 
     p5.draw = () => {
       p5.clear(); // Use clear instead of background to maintain transparency
@@ -139,6 +153,21 @@ const MindMap: React.FC<MindMapProps> = ({
 
     p5.mouseClicked = () => {
       if (p5.touches.length === 0) {
+        // First check for sub-branch clicks (higher priority)
+        for (const subBranch of subBranchPositions) {
+          const clickRadius = isMobile ? 25 : 30;
+          if (p5.dist(p5.mouseX, p5.mouseY, subBranch.x, subBranch.y) < clickRadius) {
+            if (onSubBranchClick) {
+              onSubBranchClick(subBranch.sectionName, subBranch.branchName);
+              // Set the parent section as active for highlighting
+              activeSectionName = subBranch.sectionName;
+              activeSectionRef.current = subBranch.sectionName;
+            }
+            return; // Exit early if sub-branch was clicked
+          }
+        }
+        
+        // Then check for main section clicks
         sections.forEach((section, index) => {
           const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
           const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
@@ -159,12 +188,23 @@ const MindMap: React.FC<MindMapProps> = ({
               activeSectionIndex = section.isVisible ? -1 : index;
             }
             
+            // Single-open logic: close all other sections first
+            sections.forEach((s, i) => {
+              if (i !== index) {
+                s.isVisible = false;
+                s.branchAnimProgress = 0;
+              }
+            });
+            
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
             
-            // Call onSectionClick when section is opened
+            // Call onSectionClick when section is opened (no delay needed now)
             if (section.isVisible && onSectionClick) {
               onSectionClick(section.name);
+              // Set this as the active section for highlighting
+              activeSectionName = section.name;
+              activeSectionRef.current = section.name;
             }
           }
         });
@@ -175,6 +215,8 @@ const MindMap: React.FC<MindMapProps> = ({
     let currentHoverState: string | null = null;
     let lastHoverCheck = 0;
     const hoverThrottle = 50; // Only check hover every 50ms
+    let hoveredSectionIndex = -1;
+    let hoveredSubBranch: {sectionName: string, branchName: string} | null = null;
     
     p5.mouseMoved = () => {
       // Throttle hover checks to reduce performance impact
@@ -190,10 +232,14 @@ const MindMap: React.FC<MindMapProps> = ({
           currentHoverState = null;
           onBranchHover(null);
         }
+        hoveredSectionIndex = -1;
+        hoveredSubBranch = null;
         return;
       }
 
       let hoveredBranchName: string | null = null;
+      let newHoveredSectionIndex = -1;
+      let newHoveredSubBranch: {sectionName: string, branchName: string} | null = null;
       
       // Check for section hover
       sections.forEach((section, index) => {
@@ -205,6 +251,7 @@ const MindMap: React.FC<MindMapProps> = ({
         const hoverRadius = isMobile ? 35 : 40;
         if (p5.dist(p5.mouseX, p5.mouseY, x, y) < hoverRadius) {
           hoveredBranchName = section.name;
+          newHoveredSectionIndex = index;
         }
       });
       
@@ -214,10 +261,15 @@ const MindMap: React.FC<MindMapProps> = ({
           const hoverRadius = isMobile ? 35 : 40;
           if (p5.dist(p5.mouseX, p5.mouseY, subBranch.x, subBranch.y) < hoverRadius) {
             hoveredBranchName = `${subBranch.sectionName}-${subBranch.branchName}`;
+            newHoveredSubBranch = {sectionName: subBranch.sectionName, branchName: subBranch.branchName};
             break;
           }
         }
       }
+      
+      // Update hover states for visual highlighting
+      hoveredSectionIndex = newHoveredSectionIndex;
+      hoveredSubBranch = newHoveredSubBranch;
       
       // Only call onBranchHover if the hover state has actually changed
       if (currentHoverState !== hoveredBranchName && onBranchHover) {
@@ -230,32 +282,58 @@ const MindMap: React.FC<MindMapProps> = ({
       if (p5.touches.length > 0) {
         let touchHandled = false;
         
-        sections.forEach((section, index) => {
-          const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
-          const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
-          const x = centerX + radiusX * p5.cos(angle) + movement;
-          const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
-
-          // Smaller touch area to prevent accidental triggering
+        // First check for sub-branch touches (higher priority)
+        for (const subBranch of subBranchPositions) {
           const touchRadius = isMobile ? 25 : 30;
-          if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
+          if (p5.dist(p5.mouseX, p5.mouseY, subBranch.x, subBranch.y) < touchRadius) {
             touchHandled = true;
-            
-            // Single-open logic: close all other sections first
-            if (isMobile) {
+            if (onSubBranchClick) {
+              onSubBranchClick(subBranch.sectionName, subBranch.branchName);
+              // Set the parent section as active for highlighting
+              activeSectionName = subBranch.sectionName;
+              activeSectionRef.current = subBranch.sectionName;
+            }
+            break;
+          }
+        }
+        
+        // Then check for main section touches
+        if (!touchHandled) {
+          sections.forEach((section, index) => {
+            const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
+            const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
+            const x = centerX + radiusX * p5.cos(angle) + movement;
+            const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + movement + 95; // Match the grey circle position
+
+            // Smaller touch area to prevent accidental triggering
+            const touchRadius = isMobile ? 25 : 30;
+            if (p5.dist(p5.mouseX, p5.mouseY, x, y) < touchRadius) {
+              touchHandled = true;
+              
+              // Single-open logic: close all other sections first
+              if (isMobile) {
+                sections.forEach((s, i) => {
+                  if (i !== index) {
+                    s.isVisible = false;
+                    s.branchAnimProgress = 0;
+                  }
+                });
+                activeSectionIndex = section.isVisible ? -1 : index;
+              }
+              
+              // Single-open logic: close all other sections first
               sections.forEach((s, i) => {
                 if (i !== index) {
                   s.isVisible = false;
                   s.branchAnimProgress = 0;
                 }
               });
-              activeSectionIndex = section.isVisible ? -1 : index;
+              
+              section.isVisible = !section.isVisible;
+              section.branchAnimProgress = section.isVisible ? 0 : 1;
             }
-            
-            section.isVisible = !section.isVisible;
-            section.branchAnimProgress = section.isVisible ? 0 : 1;
-          }
-        });
+          });
+        }
         
         // Only prevent default behavior if we actually handled a touch on a mind map node
         if (touchHandled) {
@@ -497,6 +575,26 @@ const MindMap: React.FC<MindMapProps> = ({
           p5.circle(curveX, curveY, isMobile ? 16 : 20); // Smaller glow for mobile
         }
 
+        // Add subtle hover glow to connection line
+        if (hoveredSectionIndex === index || activeSectionName === section.name) {
+          // Redraw the connection line with a glow
+          p5.strokeWeight(3);
+          p5.stroke(255, 255, 255, 80); // Subtle white glow
+          p5.noFill();
+          p5.beginShape();
+          const logoBottomY = logoY + logoSize/2;
+          p5.vertex(centerX, logoBottomY);
+          p5.bezierVertex(
+            centerX,
+            y + (logoBottomY - y) / 2,
+            x,
+            logoBottomY + (y - logoBottomY) / 2,
+            x,
+            y
+          );
+          p5.endShape();
+        }
+
         p5.imageMode(p5.CENTER);
         p5.image(blueCircle, x, y, isMobile ? 24 : 30, isMobile ? 18 : 22); // Smaller circles for mobile
 
@@ -504,17 +602,15 @@ const MindMap: React.FC<MindMapProps> = ({
           p5.image(section.logo, x, y + (isMobile ? 30 : 40), isMobile ? 45 : 60, isMobile ? 45 : 60); // Smaller logos for mobile
         }
 
-        p5.fill(255, 255, 255, 220); // White text with transparency
-        p5.noStroke();
-        p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
-        
-        // Highlight active section on mobile
+        // Text color - keep simple
         if (isMobile && activeSectionIndex === index) {
           p5.fill(255, 255, 255, 255); // Full white for active section
         } else {
           p5.fill(255, 255, 255, 220); // Semi-transparent white
         }
         
+        p5.noStroke();
+        p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
         p5.text(section.name, x, y + (isMobile ? 55 : 75)); // Adjusted position for mobile
 
         if (section.branches.length > 0) {
@@ -624,23 +720,31 @@ const MindMap: React.FC<MindMapProps> = ({
         );
         p5.endShape();
 
-        // Determine if the mouse is hovering over the branch
-        const isHovering = p5.dist(p5.mouseX, p5.mouseY, subX, adjustedY) < textW / 2;
+        // Check if this sub-branch is being hovered
+        const isThisSubBranchHovered = hoveredSubBranch && 
+          hoveredSubBranch.sectionName === section.name && 
+          hoveredSubBranch.branchName === branch;
 
-        if (section.branchAnimProgress >= 1) {
-          if (isHovering) {
-            p5.fill(255, 255, 255, alpha * 0.8); // Slightly transparent white for hover
-            p5.cursor(p5.HAND);
-            (p5 as any).canvas.parentElement.style.pointerEvents = 'auto'; // Enable pointer events for clickable node
-          } else {
-            p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
-            p5.cursor(p5.ARROW);
-            (p5 as any).canvas.parentElement.style.pointerEvents = 'none'; // Disable to pass events to shader
-          }
-        } else {
-          p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
-          p5.cursor(p5.ARROW);
+        // Add subtle glow to connection line for hovered sub-branch
+        if (isThisSubBranchHovered && section.branchAnimProgress >= 1) {
+          p5.stroke(255, 255, 255, alpha * 1.2); // Slightly brighter connection line
+          p5.strokeWeight(1.5);
+          p5.noFill();
+          p5.beginShape();
+          p5.vertex(x, y);
+          p5.bezierVertex(
+            x,
+            adjustedY + (y - adjustedY) / 2,
+            subX,
+            y + (adjustedY - y) / 2,
+            subX,
+            adjustedY
+          );
+          p5.endShape();
         }
+
+        // Standard fill for sub-branch rectangles
+        p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
 
         p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 8 : 10); // Larger radius for mobile
 
@@ -724,11 +828,23 @@ const MindMap: React.FC<MindMapProps> = ({
     }
   };
 
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    clearActiveSection: () => {
+      activeSectionRef.current = null;
+      // Close all open branches when navigating to home
+      sectionsRef.current.forEach((section: any) => {
+        section.isVisible = false;
+        section.branchAnimProgress = 0;
+      });
+    }
+  }));
+
   return (
-    <div className={className} style={{ zIndex: 20, position: 'relative', pointerEvents: 'auto' }}>
+    <div className={className} style={{ zIndex: 20, position: 'relative', pointerEvents: 'none' }}>
       <NextReactP5Wrapper sketch={sketch} />
     </div>
   );
-};
+});
 
 export default MindMap; 
