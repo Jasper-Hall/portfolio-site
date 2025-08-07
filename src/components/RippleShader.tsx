@@ -1,281 +1,319 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
+import * as THREE from 'three';
 
 interface RippleShaderProps {
   className?: string;
 }
 
-interface WebGLProgramWithUniforms extends WebGLProgram {
-  uniforms: {
-    resolution: WebGLUniformLocation | null;
-    mouse: WebGLUniformLocation | null;
-    time: WebGLUniformLocation | null;
-    mouseDown: WebGLUniformLocation | null;
-  };
-}
-
 const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const glRef = useRef<WebGLRenderingContext | null>(null);
-  const programRef = useRef<WebGLProgramWithUniforms | null>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isMouseDown, setIsMouseDown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Vertex shader - positions the vertices
-  const vertexShaderSource = `
-    attribute vec2 a_position;
-    attribute vec2 a_texCoord;
-    
-    varying vec2 v_texCoord;
-    
-    void main() {
-      gl_Position = vec4(a_position, 0.0, 1.0);
-      v_texCoord = a_texCoord;
-    }
-  `;
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  // Fragment shader - creates the ripple effect
-  const fragmentShaderSource = `
-    precision mediump float;
-    
-    uniform vec2 u_mouse;
-    uniform vec2 u_resolution;
-    uniform float u_time;
-    uniform float u_mouseDown;
-    
-    varying vec2 v_texCoord;
-    
-    void main() {
-      vec2 uv = v_texCoord;
-      vec2 mouse = u_mouse / u_resolution;
-      
-      // Calculate distance from mouse
-      float dist = distance(uv, mouse);
-      
-      // Create ripple effect
-      float ripple = sin(dist * 30.0 - u_time * 4.0) * exp(-dist * 8.0) * 0.08;
-      
-      // Add extra ripple when mouse is down
-      float clickRipple = 0.0;
-      if (u_mouseDown > 0.0) {
-        clickRipple = sin(dist * 50.0 - u_time * 8.0) * exp(-dist * 12.0) * 0.15;
-      }
-      
-      // Combine ripples
-      float totalRipple = ripple + clickRipple;
-      
-      // Apply distortion
-      vec2 distorted = uv + totalRipple * normalize(uv - mouse);
-      
-      // Sample the background (we'll use a simple color for now)
-      vec3 background = vec3(0.1, 0.1, 0.1); // Dark grey to match glassmorphic panel
-      
-      // Add some transparency based on ripple intensity
-      float alpha = 0.1 + totalRipple * 0.3;
-      
-      gl_FragColor = vec4(background, alpha);
-    }
-  `;
+    // Scene setup
+    const scene = new THREE.Scene();
+    const simScene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  // Initialize WebGL
-  const initWebGL = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const renderer = new THREE.WebGLRenderer({ 
+      alpha: true, 
+      antialias: true,
+      preserveDrawingBuffer: true 
+    });
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    container.appendChild(renderer.domElement);
 
-    const gl = canvas.getContext('webgl');
-    if (!gl) {
-      console.error('WebGL not supported');
-      return;
-    }
+    const mouse = new THREE.Vector2(0, 0);
+    const prevMouse = new THREE.Vector2(0, 0);
+    let frame = 0;
 
-    glRef.current = gl;
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
 
-    // Create shaders
-    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
-    // Create program
-    const program = createProgram(gl, vertexShader, fragmentShader) as WebGLProgramWithUniforms;
-    programRef.current = program;
-
-    // Set up geometry (full-screen quad)
-    const positions = new Float32Array([
-      -1, -1, 0, 0,  // bottom left
-       1, -1, 1, 0,  // bottom right
-      -1,  1, 0, 1,  // top left
-       1,  1, 1, 1   // top right
-    ]);
-
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
-
-    // Set up attributes
-    const positionLocation = gl.getAttribLocation(program, 'a_position');
-    const texCoordLocation = gl.getAttribLocation(program, 'a_texCoord');
-
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 16, 0);
-
-    gl.enableVertexAttribArray(texCoordLocation);
-    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 16, 8);
-
-    // Set up uniforms
-    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
-    const mouseLocation = gl.getUniformLocation(program, 'u_mouse');
-    const timeLocation = gl.getUniformLocation(program, 'u_time');
-    const mouseDownLocation = gl.getUniformLocation(program, 'u_mouseDown');
-
-    // Store uniform locations
-    program.uniforms = {
-      resolution: resolutionLocation,
-      mouse: mouseLocation,
-      time: timeLocation,
-      mouseDown: mouseDownLocation
+    const options = {
+      format: THREE.RGBAFormat,
+      type: THREE.FloatType,
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      stencilBuffer: false,
+      depthBuffer: false,
     };
 
-    // Set initial resolution
-    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+    let rta = new THREE.WebGLRenderTarget(width, height, options);
+    let rtb = new THREE.WebGLRenderTarget(width, height, options);
 
-    // Enable blending for transparency
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  };
+    // Create a canvas to capture the glassmorphic panel background
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: true });
 
-  // Create shader helper
-  const createShader = (gl: WebGLRenderingContext, type: number, source: string) => {
-    const shader = gl.createShader(type);
-    if (!shader) throw new Error('Failed to create shader');
-    
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
-      gl.deleteShader(shader);
-      throw new Error('Shader compilation failed');
+    if (ctx) {
+      // Draw the glassmorphic panel background (simple rectangle)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.1)"; // bg-white/10 equivalent
+      ctx.fillRect(0, 0, width, height);
     }
-    
-    return shader;
-  };
 
-  // Create program helper
-  const createProgram = (gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) => {
-    const program = gl.createProgram();
-    if (!program) throw new Error('Failed to create program');
-    
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Program linking error:', gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-      throw new Error('Program linking failed');
+    const panelTexture = new THREE.CanvasTexture(canvas);
+    panelTexture.minFilter = THREE.LinearFilter;
+    panelTexture.magFilter = THREE.LinearFilter;
+    panelTexture.format = THREE.RGBAFormat;
+
+    // Simulation Shader - calculates the fluid dynamics
+    const simulationVertexShader = `
+      varying vec2 vUv;
+    void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
+  `;
+
+    const simulationFragmentShader = `
+      uniform sampler2D textureA;
+      uniform vec2 mouse;
+      uniform vec2 prevMouse;
+      uniform vec2 resolution;
+      uniform float time;
+      uniform int frame;
+      varying vec2 vUv;
     
-    return program;
-  };
+    void main() {
+        vec2 uv = vUv;
+        if (frame == 0) {
+          gl_FragColor = vec4(0.0);
+          return;
+        }
 
-  // Render function
-  const render = (time: number) => {
-    const gl = glRef.current;
-    const program = programRef.current;
-    const canvas = canvasRef.current;
-    
-    if (!gl || !program || !canvas) return;
+        vec4 data = texture2D(textureA, uv);
+        float pressure = data.x;
+        float pVel = data.y;
+        vec2 velocity = data.zw;
 
-    // Clear canvas
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+        // Viscous liquid behavior - gradual settling
+        float viscosity = 0.95; // Controls how quickly the liquid settles (slower fade)
+        float surfaceTension = 0.99; // Controls how much the surface wants to flatten (slower fade)
+        
+        // Apply viscosity to velocity (creates resistance)
+        velocity *= viscosity;
+        
+        // Apply surface tension - pressure gradually equalizes
+        pressure *= surfaceTension;
+        pVel *= viscosity;
+        
+        // Add subtle diffusion to simulate liquid spreading
+        float diffusion = 0.001;
+        vec2 neighborPressure = vec2(0.0);
+        
+        // Sample neighboring pixels for diffusion
+        for (int i = -1; i <= 1; i++) {
+          for (int j = -1; j <= 1; j++) {
+            if (i == 0 && j == 0) continue;
+            vec2 offset = vec2(float(i), float(j)) / resolution;
+            vec4 neighborData = texture2D(textureA, uv + offset);
+            neighborPressure += neighborData.zw * diffusion;
+          }
+        }
+        
+        // Apply diffusion to velocity
+        velocity += neighborPressure;
+        
+        // Dampen very small movements (prevents infinite oscillation)
+        if (length(velocity) < 0.0001) {
+          velocity = vec2(0.0);
+        }
+        
+        if (abs(pressure) < 0.001) {
+          pressure = 0.0;
+          pVel = 0.0;
+        }
 
-    // Use shader program
-    gl.useProgram(program);
+        // Only add pressure if the mouse has moved a minimum distance
+        vec2 mouseUV = mouse / resolution;
+        vec2 prevMouseUV = prevMouse / resolution;
+        float minMove = 0.01;
+        float pathLength = distance(mouseUV, prevMouseUV);
 
-    // Update uniforms
-    const uniforms = program.uniforms;
-    gl.uniform2f(uniforms.mouse, mousePosition.x, mousePosition.y);
-    gl.uniform1f(uniforms.time, time * 0.001); // Convert to seconds
-    gl.uniform1f(uniforms.mouseDown, isMouseDown ? 1.0 : 0.0);
+        if (mouse.x > 0.0 && prevMouse.x > 0.0 && pathLength > minMove) {
+          float trailWidth = 0.04;
+          for (int i = 0; i < 4; i++) {
+            float t = float(i) / 3.0;
+            vec2 trailPoint = mix(prevMouseUV, mouseUV, t);
+            float dist = distance(uv, trailPoint);
+            if (dist <= trailWidth) {
+              float intensity = 1.0 - smoothstep(0.0, trailWidth, dist);
+              intensity *= 1.0 - t * 0.7;
+              pressure += intensity * 0.5; // Increased prominence
+              vec2 flowDir = normalize(mouseUV - prevMouseUV) * intensity * 0.05;
+              velocity += flowDir;
+            }
+          }
+        }
 
-    // Draw
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl_FragColor = vec4(pressure, pVel, velocity);
+      }
+    `;
 
-    // Continue animation
-    requestAnimationFrame(render);
-  };
+    // Render Shader - applies distortion to panel background with specular highlights
+    const renderVertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
 
-  // Handle mouse events
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const renderFragmentShader = `
+      uniform sampler2D textureA;
+      uniform sampler2D textureB;
+      varying vec2 vUv;
+
+      void main() {
+        vec4 data = texture2D(textureA, vUv);
+        
+        // Apply more prominent distortion to the panel texture
+        vec2 distortion = 0.2 * data.zw;
+        vec4 panelColor = texture2D(textureB, vUv + distortion);
+        
+        // Multi-directional specular highlights for smear effect
+        vec3 normal = normalize(vec3(-data.z * 1.0, 0.5, -data.w * 1.0));
+        vec3 lightDir1 = normalize(vec3(-3.0, 10.0, 3.0));
+        vec3 lightDir2 = normalize(vec3(3.0, 10.0, 3.0)); // Second light source
+        vec3 lightDir3 = normalize(vec3(0.0, -10.0, 3.0)); // Third light source from bottom
+        float specular1 = pow(max(0.0, dot(normal, lightDir1)), 35.0) * 0.4;
+        float specular2 = pow(max(0.0, dot(normal, lightDir2)), 35.0) * 0.4;
+        float specular3 = pow(max(0.0, dot(normal, lightDir3)), 35.0) * 0.4;
+        float specular = specular1 + specular2 + specular3; // Combine all three highlights
+        
+        // Combine panel color with directional specular highlights
+        vec4 finalColor = panelColor + vec4(specular * 0.6);
+        
+        // Add more ripple visibility
+        float rippleVisibility = length(distortion) * 0.7;
+        finalColor.rgb += rippleVisibility * vec3(0.1, 0.15, 0.2);
+        
+        gl_FragColor = finalColor;
+      }
+    `;
+
+    const simMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        textureA: { value: null },
+        mouse: { value: mouse },
+        prevMouse: { value: prevMouse },
+        resolution: { value: new THREE.Vector2(width, height) },
+        time: { value: 0 },
+        frame: { value: 0 },
+      },
+      vertexShader: simulationVertexShader,
+      fragmentShader: simulationFragmentShader,
+    });
+
+    const renderMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        textureA: { value: null },
+        textureB: { value: panelTexture },
+      },
+      vertexShader: renderVertexShader,
+      fragmentShader: renderFragmentShader,
+      transparent: true,
+    });
+
+    const plane = new THREE.PlaneGeometry(2, 2);
+    const simQuad = new THREE.Mesh(plane, simMaterial);
+    simScene.add(simQuad);
+    const renderQuad = new THREE.Mesh(plane, renderMaterial);
+    scene.add(renderQuad);
+
+    // Event handlers
+    const handleResize = () => {
+      const newWidth = container.offsetWidth;
+      const newHeight = container.offsetHeight;
+      renderer.setSize(newWidth, newHeight);
+      rta.setSize(newWidth, newHeight);
+      rtb.setSize(newWidth, newHeight);
+      simMaterial.uniforms.resolution.value.set(newWidth, newHeight);
+
+      // Update panel texture
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      if (ctx) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+        ctx.fillRect(0, 0, newWidth, newHeight);
+      }
+      panelTexture.needsUpdate = true;
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      setMousePosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
+      const rect = renderer.domElement.getBoundingClientRect();
+      // Store previous mouse position before updating current
+      prevMouse.copy(mouse);
+      mouse.x = e.clientX - rect.left;
+      mouse.y = rect.height - (e.clientY - rect.top); // Flip Y coordinate
     };
 
-    const handleMouseDown = () => setIsMouseDown(true);
-    const handleMouseUp = () => setIsMouseDown(false);
-
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('mouseup', handleMouseUp);
+    const handleMouseLeave = () => {
+      mouse.set(0, 0);
+      prevMouse.set(0, 0);
     };
-  }, []);
 
-  // Initialize and start rendering
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    window.addEventListener('resize', handleResize);
+    renderer.domElement.addEventListener('mousemove', handleMouseMove);
+    renderer.domElement.addEventListener('mouseleave', handleMouseLeave);
 
-    // Set canvas size
-    const resizeCanvas = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+    // Animation loop
+    const animate = () => {
+      // Update timing uniforms
+      simMaterial.uniforms.frame.value = frame++;
+      simMaterial.uniforms.time.value = performance.now() / 1000;
+
+      // Simulation pass
+      simMaterial.uniforms.textureA.value = rta.texture;
+      renderer.setRenderTarget(rtb);
+      renderer.render(simScene, camera);
       
-      const gl = glRef.current;
-      if (gl) {
-        gl.viewport(0, 0, canvas.width, canvas.height);
-        const program = programRef.current;
-        if (program) {
-          const uniforms = program.uniforms;
-          gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
-        }
-      }
+      // Render pass
+      renderMaterial.uniforms.textureA.value = rtb.texture;
+      renderer.setRenderTarget(null);
+      renderer.render(scene, camera);
+
+      // Swap render targets
+      const temp = rta;
+      rta = rtb;
+      rtb = temp;
+
+      requestAnimationFrame(animate);
     };
 
-    // Initialize WebGL
-    initWebGL();
-    resizeCanvas();
+    animate();
 
-    // Start rendering
-    requestAnimationFrame(render);
-
-    // Handle resize
-    window.addEventListener('resize', resizeCanvas);
-    return () => window.removeEventListener('resize', resizeCanvas);
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousemove', handleMouseMove);
+      renderer.domElement.removeEventListener('mouseleave', handleMouseLeave);
+      container.removeChild(renderer.domElement);
+      renderer.dispose();
+      rta.dispose();
+      rtb.dispose();
+      panelTexture.dispose();
+    };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={`absolute inset-0 pointer-events-none ${className}`}
+    <div 
+      ref={containerRef} 
+      className={`absolute top-2 left-2 right-2 bottom-20 md:top-4 md:left-4 md:right-4 md:bottom-20 lg:top-6 lg:left-6 lg:right-6 lg:bottom-20 xl:top-8 xl:left-8 xl:right-8 xl:bottom-20 rounded-3xl border border-white/20 overflow-hidden ${className}`}
       style={{
-        zIndex: 5, // Above the glassmorphic panel but below the mind map
-        mixBlendMode: 'overlay'
+        zIndex: 15,
+        pointerEvents: 'auto',
+        mixBlendMode: 'normal',
+        opacity: 1,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)'
       }}
     />
   );

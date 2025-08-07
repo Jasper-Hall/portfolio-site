@@ -530,13 +530,18 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
         );
         p5.endShape();
 
+        // Determine if the mouse is hovering over the branch
+        const isHovering = p5.dist(p5.mouseX, p5.mouseY, subX, adjustedY) < textW / 2;
+
         if (section.branchAnimProgress >= 1) {
-          if (p5.dist(p5.mouseX, p5.mouseY, subX, adjustedY) < textW / 2) {
+          if (isHovering) {
             p5.fill(255, 255, 255, alpha * 0.8); // Slightly transparent white for hover
             p5.cursor(p5.HAND);
+            (p5 as any).canvas.parentElement.style.pointerEvents = 'auto'; // Enable pointer events for clickable node
           } else {
             p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
             p5.cursor(p5.ARROW);
+            (p5 as any).canvas.parentElement.style.pointerEvents = 'none'; // Disable to pass events to shader
           }
         } else {
           p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
@@ -626,7 +631,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={className}>
+    <div className={className} style={{ zIndex: 20, position: 'relative', pointerEvents: 'none' }}>
       <NextReactP5Wrapper sketch={sketch} />
     </div>
   );

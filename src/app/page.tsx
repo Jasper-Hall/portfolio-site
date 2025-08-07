@@ -16,12 +16,10 @@ export default function Home() {
         }}
       />
       
-      {/* Glassmorphic Panel */}
+      {/* Panel Container - RippleShader will handle the glassmorphic background */}
       <div className="relative z-10 min-h-screen">
-        <div className="absolute inset-2 md:inset-4 lg:inset-6 bottom-20 md:bottom-24 lg:bottom-28 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl relative">
-          <RippleShader />
-          <MindMap className="w-full h-screen" />
-        </div>
+        <RippleShader />
+        <MindMap className="w-full h-screen" />
       </div>
       
       {/* Navigation */}
