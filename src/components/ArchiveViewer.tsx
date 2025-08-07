@@ -96,8 +96,6 @@ interface ArchiveViewerProps {
 
 const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const [scannerPosition, setScannerPosition] = useState(0);
   const [startX, setStartX] = useState(0);
@@ -111,33 +109,18 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Connection status animation
-  useEffect(() => {
-    if (isTransitioning) {
-      setConnectionStatus(`Retrieving Artifact ${currentIndex + 1}/${sampleProjects.length}...`);
-      const timeout = setTimeout(() => {
-        setConnectionStatus('');
-        setIsTransitioning(false);
-      }, 300);
-      return () => clearTimeout(timeout);
-    }
-  }, [isTransitioning, currentIndex]);
+
 
   const goToNext = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
     setCurrentIndex((prev) => (prev + 1) % sampleProjects.length);
   };
 
   const goToPrevious = () => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
     setCurrentIndex((prev) => (prev - 1 + sampleProjects.length) % sampleProjects.length);
   };
 
   const goToSlide = (index: number) => {
-    if (isTransitioning || index === currentIndex) return;
-    setIsTransitioning(true);
+    if (index === currentIndex) return;
     setCurrentIndex(index);
   };
 
@@ -228,13 +211,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
             style={{ left: `${scannerPosition}%`, transform: 'translateX(-50%)' }}
           />
         </div>
-        
-        {/* Connection Status */}
-        {connectionStatus && (
-          <div className="mt-2 text-xs font-mono text-cyan-400/80 animate-pulse">
-            {connectionStatus}
-          </div>
-        )}
+
       </div>
 
       {/* Main Archive Viewer */}
@@ -251,12 +228,8 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
       >
         {/* Content Container - Flexible for different media types */}
         <div className="relative w-full h-48 md:h-56 overflow-hidden bg-gray-900/50">
-          {/* Placeholder for actual content - will be replaced with real portfolio items */}
-          <div 
-            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out ${
-              isTransitioning ? 'blur-sm scale-105 opacity-50' : 'blur-0 scale-100 opacity-100'
-            }`}
-          >
+                     {/* Placeholder for actual content - will be replaced with real portfolio items */}
+           <div className="absolute inset-0 flex items-center justify-center transition-all duration-200 ease-out">
             {/* This area will support: images, videos, iframes, interactive demos, etc. */}
             <div className="text-center space-y-2">
               <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
@@ -309,7 +282,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
         </div>
 
         {/* Project Information Panel */}
-        <div className="p-4 md:p-5 space-y-2 md:space-y-3">
+        <div className="p-4 md:p-5 pb-6 md:pb-8 space-y-2 md:space-y-3">
           {/* Archive Reference & Title */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -364,8 +337,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
         <div className="absolute inset-y-0 left-0 flex items-center">
           <button
             onClick={goToPrevious}
-            disabled={isTransitioning}
-            className="ml-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all duration-300 disabled:opacity-50"
+            className="ml-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all duration-300"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="15,18 9,12 15,6"></polyline>
@@ -376,8 +348,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
         <div className="absolute inset-y-0 right-0 flex items-center">
           <button
             onClick={goToNext}
-            disabled={isTransitioning}
-            className="mr-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all duration-300 disabled:opacity-50"
+            className="mr-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all duration-300"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="9,18 15,12 9,6"></polyline>
@@ -392,7 +363,6 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({ className = '' }) => {
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            disabled={isTransitioning}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
               index === currentIndex 
                 ? 'bg-cyan-400 shadow-lg shadow-cyan-400/50' 
