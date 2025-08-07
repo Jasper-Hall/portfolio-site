@@ -45,7 +45,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     };
 
     p5.setup = () => {
-      p5.createCanvas(p5.windowWidth, p5.windowHeight);
+      const canvasW = p5.windowWidth > p5.windowHeight ? p5.windowWidth / 2 : p5.windowWidth;
+      p5.createCanvas(canvasW, p5.windowHeight);
       p5.noFill();
       p5.strokeWeight(1);
 
@@ -102,7 +103,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     };
 
     p5.windowResized = () => {
-      p5.resizeCanvas(p5.windowWidth, p5.windowHeight);
+      const newCanvasW = p5.windowWidth > p5.windowHeight ? p5.windowWidth / 2 : p5.windowWidth;
+      p5.resizeCanvas(newCanvasW, p5.windowHeight);
       
       // Update mobile detection
       isMobile = p5.width < 768;

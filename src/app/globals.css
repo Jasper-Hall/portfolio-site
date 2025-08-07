@@ -84,3 +84,10 @@ body {
 .archive-viewer::-webkit-scrollbar-thumb:hover {
   background: rgba(34, 211, 238, 0.8);
 }
+
+/* Utility: force grid to single column in portrait orientation */
+@media (orientation: portrait) {
+  .grid-portrait-single {
+    grid-template-columns: 1fr !important;
+  }
+}
