@@ -7,9 +7,17 @@ import p5 from "p5";
 
 interface MindMapProps {
   className?: string;
+  onSectionClick?: (sectionName: string) => void;
+  onSubBranchClick?: (sectionName: string, subBranchName: string) => void;
+  onBranchHover?: (branchName: string | null) => void;
 }
 
-const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
+const MindMap: React.FC<MindMapProps> = ({ 
+  className = '', 
+  onSectionClick,
+  onSubBranchClick,
+  onBranchHover
+}) => {
   const sketch: Sketch = (p5) => {
     // Global variables with proper types
     let customFont: p5.Font;
@@ -35,6 +43,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
     let curveHeight = 0;
     let isMobile = false;
     let activeSectionIndex = -1; // Track which section is currently open
+    let subBranchPositions: Array<{x: number, y: number, sectionName: string, branchName: string}> = []; // Track sub-branch positions for clicks
 
     p5.preload = () => {
       customFont = p5.loadFont("/JetBrainsMono-Medium.ttf");
@@ -78,6 +87,9 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
 
     p5.draw = () => {
       p5.clear(); // Use clear instead of background to maintain transparency
+      
+      // Clear sub-branch positions for this frame
+      subBranchPositions = [];
       
       // Update individual logo element pulse values for line width and circle diameter
       for (let i = 0; i < logoElementScales.length; i++) {
@@ -149,8 +161,68 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
             
             section.isVisible = !section.isVisible;
             section.branchAnimProgress = section.isVisible ? 0 : 1;
+            
+            // Call onSectionClick when section is opened
+            if (section.isVisible && onSectionClick) {
+              onSectionClick(section.name);
+            }
           }
         });
+      }
+    };
+
+    // Track current hover state to prevent unnecessary callbacks
+    let currentHoverState: string | null = null;
+    let lastHoverCheck = 0;
+    const hoverThrottle = 50; // Only check hover every 50ms
+    
+    p5.mouseMoved = () => {
+      // Throttle hover checks to reduce performance impact
+      const now = Date.now();
+      if (now - lastHoverCheck < hoverThrottle) {
+        return;
+      }
+      lastHoverCheck = now;
+      
+      // Check if mouse is outside canvas bounds
+      if (p5.mouseX < 0 || p5.mouseX > p5.width || p5.mouseY < 0 || p5.mouseY > p5.height) {
+        if (currentHoverState !== null && onBranchHover) {
+          currentHoverState = null;
+          onBranchHover(null);
+        }
+        return;
+      }
+
+      let hoveredBranchName: string | null = null;
+      
+      // Check for section hover
+      sections.forEach((section, index) => {
+        const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
+        const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
+        const x = centerX + radiusX * p5.cos(angle) + movement;
+        const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + movement + 95;
+
+        const hoverRadius = isMobile ? 35 : 40;
+        if (p5.dist(p5.mouseX, p5.mouseY, x, y) < hoverRadius) {
+          hoveredBranchName = section.name;
+        }
+      });
+      
+      // Check for sub-branch hover
+      if (!hoveredBranchName) {
+        for (const subBranch of subBranchPositions) {
+          const hoverRadius = isMobile ? 35 : 40;
+          if (p5.dist(p5.mouseX, p5.mouseY, subBranch.x, subBranch.y) < hoverRadius) {
+            hoveredBranchName = `${subBranch.sectionName}-${subBranch.branchName}`;
+            break;
+          }
+        }
+      }
+      
+      // Only call onBranchHover if the hover state has actually changed
+      if (currentHoverState !== hoveredBranchName && onBranchHover) {
+        currentHoverState = hoveredBranchName;
+        onBranchHover(hoveredBranchName);
       }
     };
 
@@ -522,6 +594,16 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
           height: textH
         });
         
+        // Track sub-branch position for hover detection
+        if (section.branchAnimProgress >= 1) {
+          subBranchPositions.push({
+            x: finalSubX,
+            y: finalAdjustedY,
+            sectionName: section.name,
+            branchName: branch
+          });
+        }
+        
         // Interpolate between start position and final adjusted position based on animation progress
         const startY = y;
         const adjustedY = p5.lerp(startY, finalAdjustedY, section.branchAnimProgress);
@@ -643,7 +725,7 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={className} style={{ zIndex: 20, position: 'relative', pointerEvents: 'none' }}>
+    <div className={className} style={{ zIndex: 20, position: 'relative', pointerEvents: 'auto' }}>
       <NextReactP5Wrapper sketch={sketch} />
     </div>
   );

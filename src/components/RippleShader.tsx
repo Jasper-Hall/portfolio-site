@@ -94,8 +94,8 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         vec2 velocity = data.zw;
 
         // Viscous liquid behavior - gradual settling
-        float viscosity = 0.95; // Controls how quickly the liquid settles (slower fade)
-        float surfaceTension = 0.99; // Controls how much the surface wants to flatten (slower fade)
+        float viscosity = 0.96; // Controls how quickly the liquid settles (slower fade)
+        float surfaceTension = 0.95; // Controls how much the surface wants to flatten (slower fade)
         
         // Apply viscosity to velocity (creates resistance)
         velocity *= viscosity;
@@ -105,7 +105,7 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         pVel *= viscosity;
         
         // Add subtle diffusion to simulate liquid spreading
-        float diffusion = 0.001;
+        float diffusion = 0.002;
         vec2 neighborPressure = vec2(0.0);
         
         // Sample neighboring pixels for diffusion
@@ -134,7 +134,7 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         // Only add pressure if the mouse has moved a minimum distance
         vec2 mouseUV = mouse / resolution;
         vec2 prevMouseUV = prevMouse / resolution;
-        float minMove = 0.01;
+        float minMove = 0.005;
         float pathLength = distance(mouseUV, prevMouseUV);
 
         if (mouse.x > 0.0 && prevMouse.x > 0.0 && pathLength > minMove) {
@@ -175,7 +175,7 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
         vec4 data = texture2D(textureA, vUv);
         
         // Apply more prominent distortion to the panel texture
-        vec2 distortion = 0.2 * data.zw;
+        vec2 distortion = 0.1 * data.zw;
         vec4 panelColor = texture2D(textureB, vUv + distortion);
         
         // Multi-directional specular highlights for smear effect
@@ -306,9 +306,9 @@ const RippleShader: React.FC<RippleShaderProps> = ({ className = '' }) => {
   return (
     <div 
       ref={containerRef} 
-      className={`absolute top-2 left-2 right-2 bottom-20 md:top-4 md:left-4 md:right-4 md:bottom-20 lg:top-6 lg:left-6 lg:right-6 lg:bottom-20 xl:top-8 xl:left-8 xl:right-8 xl:bottom-20 rounded-3xl border border-white/20 overflow-hidden ${className}`}
+      className={`absolute inset-0 rounded-3xl border border-white/20 overflow-hidden ${className}`}
       style={{
-        zIndex: 15,
+        zIndex: 1,
         pointerEvents: 'auto',
         mixBlendMode: 'normal',
         opacity: 1,
