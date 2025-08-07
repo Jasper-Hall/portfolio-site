@@ -50,8 +50,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       p5.noFill();
       p5.strokeWeight(1);
 
-      // Detect mobile screen
-      isMobile = p5.width < 768;
+      // Detect mobile screen using full window width
+      isMobile = p5.windowWidth < 768;
 
       centerX = p5.width / 2;
       
@@ -106,8 +106,8 @@ const MindMap: React.FC<MindMapProps> = ({ className = '' }) => {
       const newCanvasW = p5.windowWidth > p5.windowHeight ? p5.windowWidth / 2 : p5.windowWidth;
       p5.resizeCanvas(newCanvasW, p5.windowHeight);
       
-      // Update mobile detection
-      isMobile = p5.width < 768;
+      // Update mobile detection using window width
+      isMobile = p5.windowWidth < 768;
       
       centerX = p5.width / 2;
       

@@ -19,7 +19,7 @@ export default function Home() {
       
       {/* Main Content Grid */}
       <div className="relative z-10 min-h-screen pb-20 md:pb-24 lg:pb-28">
-        <div className="p-2 md:p-4 lg:p-6 space-y-4 lg:space-y-0 xl:grid xl:grid-cols-2 xl:gap-6 xl:h-screen xl:overflow-hidden">
+        <div className="p-2 md:p-4 lg:p-6 grid grid-cols-2 gap-4 grid-portrait-single xl:h-screen xl:overflow-hidden">
           
           {/* Left Panel - Mind Map */}
           <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl relative overflow-hidden h-[500px] xl:h-auto">
