@@ -54,7 +54,7 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
     let subBranchPositions: Array<{x: number, y: number, sectionName: string, branchName: string}> = []; // Track sub-branch positions for clicks
 
     p5.preload = () => {
-      customFont = p5.loadFont("/JetBrainsMono-Medium.ttf");
+      customFont = p5.loadFont("/fonts/JetBrainsMono-Medium.ttf");
       blueCircle = p5.loadImage("/blueCircle.png");
       jaeceLogo = p5.loadImage("/logos/jaeceYtlogonotext.png");
       xtsuiLogo = p5.loadImage("/logos/portfoliologo1.png");

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-
 interface NavigationPath {
   level: string;
   sublevel?: string;
@@ -366,31 +365,31 @@ const projectData: ProjectData[] = [
 
 const mindMapStructure = {
   film: {
-    name: 'FILM',
+    name: 'film',
     subcategories: ['archives', 'youtube']
   },
   sound: {
-    name: 'SOUND',
+    name: 'sound',
     subcategories: ['live/bookings', 'releases', 'links']
   },
   cloth: {
-    name: 'CLOTH',
+    name: 'cloth',
     subcategories: ['xtsuimart', 'archives']
   },
   image: {
-    name: 'IMAGE',
+    name: 'image',
     subcategories: ['portraits', 'landscapes', 'events']
   },
   tech: {
-    name: 'TECH',
+    name: 'tech',
     subcategories: ['web', 'mobile', 'ai']
   },
   art: {
-    name: 'ART',
+    name: 'art',
     subcategories: ['digital', 'traditional', 'mixed']
   },
   design: {
-    name: 'DESIGN',
+    name: 'design',
     subcategories: ['graphic', 'ui/ux', 'branding']
   }
 };
@@ -524,13 +523,13 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'text-green-600 bg-green-100 border-green-200';
+        return 'status-active';
       case 'archived':
-        return 'text-gray-600 bg-gray-100 border-gray-200';
+        return 'status-archived';
       case 'in-progress':
-        return 'text-blue-600 bg-blue-100 border-blue-200';
+        return 'status-in-progress';
       default:
-        return 'text-gray-600 bg-gray-100 border-gray-200';
+        return 'status-archived';
     }
   };
 
@@ -549,11 +548,11 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
   const generateBreadcrumbs = () => {
     const breadcrumbs = [
-      { name: 'HOME', path: { level: 'home' } as NavigationPath, isActive: internalPath.level === 'home' }
+      { name: 'home', path: { level: 'home' } as NavigationPath, isActive: internalPath.level === 'home' }
     ];
 
     if (internalPath.level !== 'home') {
-      const categoryName = mindMapStructure[internalPath.level as keyof typeof mindMapStructure]?.name || internalPath.level.toUpperCase();
+      const categoryName = mindMapStructure[internalPath.level as keyof typeof mindMapStructure]?.name || internalPath.level;
       breadcrumbs.push({
         name: categoryName,
         path: { level: internalPath.level } as NavigationPath,
@@ -562,7 +561,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
       if (internalPath.sublevel) {
         breadcrumbs.push({
-          name: internalPath.sublevel.toUpperCase(),
+          name: internalPath.sublevel,
           path: { level: internalPath.level, sublevel: internalPath.sublevel } as NavigationPath,
           isActive: true
         });
@@ -582,120 +581,117 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
       {/* Manila Folder Tabs */}
       <div className="mb-4">
         <div className="flex items-end space-x-1">
-          {generateBreadcrumbs().map((breadcrumb, index) => (
-            <div key={index} className="relative">
-              <button
-                onClick={() => handleTabClick(breadcrumb.path)}
-                className={`
-                  px-4 py-2 text-xs tracking-wider transition-all duration-200
-                  ${breadcrumb.isActive 
-                    ? 'border-t-2 border-l-2 border-r-2 rounded-t-lg shadow-sm' 
-                    : 'border-t-2 border-l-2 border-r-2 rounded-t-lg'
-                  }
-                `}
-                style={{
-                  backgroundColor: breadcrumb.isActive ? '#E8DCC6' : '#D4C4A8',
-                  borderColor: '#B8A082',
-                  color: '#3A3428'
-                }}
-              >
-                {breadcrumb.name}
-              </button>
-              {breadcrumb.isActive && (
-                <div 
-                  className="absolute -bottom-1 left-0 right-0 h-1 rounded-b-sm"
-                  style={{ backgroundColor: '#E8DCC6' }}
-                ></div>
-              )}
-          </div>
-          ))}
+                    {(() => {
+            const crumbs = generateBreadcrumbs();
+            const total = crumbs.length;
+            return crumbs.map((breadcrumb, index) => {
+              // Three-tier shade: darkest HOME, medium middle, lightest active
+              let tierBg: string | undefined;
+              if (!breadcrumb.isActive && total === 3) {
+                if (index === 0) tierBg = '#D8C9AE'; // darkest
+                if (index === 1) tierBg = '#E3D6BC'; // medium (default)
+              }
+              return (
+                <div key={index} className="relative">
+                  <button
+                    onClick={() => handleTabClick(breadcrumb.path)}
+                    className={`
+                      tab-button ink-bleed-text
+                      px-6 py-2.5 text-sm tracking-wider transition-all duration-200
+                      ${breadcrumb.isActive ? 'tab-active shadow-sm' : ''}
+                    `}
+                    style={{
+                      color: '#2F2A1F',
+                      ...(tierBg ? ({ ['--tab-bg' as any]: tierBg } as React.CSSProperties) : {})
+                    }}
+                  >
+                    {breadcrumb.name}
+                  </button>
+                  {breadcrumb.isActive && (
+                    <div 
+                      className="absolute -bottom-1 left-0 right-0 h-1 rounded-b-sm"
+                      style={{ backgroundColor: '#E8DCC6' }}
+                    ></div>
+                  )}
+                </div>
+              );
+            });
+          })()}
         </div>
         
-        {/* Folder Container */}
-        <div 
-          className="border-2 rounded-b-lg rounded-tr-lg shadow-lg h-full"
-          style={{
-            backgroundColor: '#E8DCC6',
-            borderColor: '#B8A082'
-          }}
-        >
+                {/* Folder Container */}
+         <div 
+           className="rounded-b-2xl rounded-tr-2xl shadow-lg h-full folder-container"
+         >
           <div className="p-4 md:p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span 
-                className="text-sm font-semibold"
-                style={{ color: '#3A3428' }}
-              >
-                {getCategoryTitle()}
-              </span>
-                            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-end mb-2">
+              <div className="flex items-center space-x-2">
                 <span 
                   className="text-xs"
                   style={{ color: '#5C5347' }}
                 >
                   {filteredProjects.length > 0 ? `${displayIndex + 1} / ${filteredProjects.length}` : '0 / 0'}
                 </span>
-        </div>
-      </div>
+              </div>
+            </div>
 
             {/* Project Card */}
             {currentProject && (
               <div 
-                className="border rounded-lg shadow-sm overflow-hidden relative"
+                className="rounded-lg overflow-hidden relative"
                 style={{
                   backgroundColor: '#FEFCF8',
-                  borderColor: '#D4C4A8'
+                  boxShadow: '0 4px 12px rgba(184, 160, 130, 0.25), 0 2px 6px rgba(184, 160, 130, 0.15)'
                 }}
               >
                 {/* Project Content */}
-        <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-900/50">
+                <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-900/50">
                   <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center space-y-2">
-              <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
-              <div className="text-white/40 text-xs font-mono">
-                Supports: Images • Videos • Interactive Demos • Embeds
-              </div>
-            </div>
-            </div>
-          </div>
-          
+                    <div className="text-center space-y-2">
+                      <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
+                      <div className="text-white/40 text-xs font-mono">
+                        Supports: Images • Videos • Interactive Demos • Embeds
+                      </div>
+                    </div>
+                  </div>
+                </div>
+ 
                 {/* Project Information */}
                 <div className="p-3 md:p-4 space-y-1 md:space-y-2">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
                       <span className="text-xs text-cyan-600 tracking-widest">
-                {currentProject.archiveRef}
-              </span>
-              <span className={`text-xs px-2 py-1 rounded border ${getStatusColor(currentProject.status)}`}>
-                {currentProject.status}
-              </span>
-            </div>
-            
+                        {currentProject.archiveRef}
+                      </span>
+                      <span className={`text-xs px-2 py-1 status-indicator ${getStatusColor(currentProject.status)}`}>
+                        {currentProject.status}
+                      </span>
+                    </div>
                     <h3 
-                      className="text-lg font-bold tracking-wide"
+                      className="text-lg font-bold tracking-wide project-title"
                       style={{ color: '#2A2419' }}
                     >
-              {currentProject.title}
-            </h3>
-            
+                      {currentProject.title}
+                    </h3>
                     <p 
                       className="text-xs font-mono italic"
                       style={{ color: '#4A4235' }}
                     >
-              {currentProject.subtitle}
-            </p>
-          </div>
+                      {currentProject.subtitle}
+                    </p>
+                  </div>
 
                   <p 
                     className="text-xs leading-relaxed"
                     style={{ color: '#3A3428' }}
                   >
-            {currentProject.description}
-          </p>
+                    {currentProject.description}
+                  </p>
 
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
             <div>
                       <span 
-                        className="block"
+                        className="block metadata-label"
                         style={{ color: '#5C5347' }}
                       >
                         DATE RECOVERED:
@@ -704,7 +700,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
             </div>
             <div>
                       <span 
-                        className="block"
+                        className="block metadata-label"
                         style={{ color: '#5C5347' }}
                       >
                         MEDIUM:
@@ -713,29 +709,24 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1">
             {currentProject.tags.map((tag, index) => (
               <span 
                 key={index}
-                        className="text-xs px-1 py-0.5 border rounded"
-                        style={{
-                          backgroundColor: '#F2EFE7',
-                          borderColor: '#D4C4A8',
-                          color: '#3A3428'
-                        }}
+                        className="text-xs px-1 py-0.5 tag-label"
               >
                 {tag}
               </span>
             ))}
           </div>
-        </div>
+                </div>
 
-        {/* Navigation Controls */}
+                {/* Navigation Controls */}
                 {filteredProjects.length > 1 && (
                   <>
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          <button
-            onClick={goToPrevious}
+                    <div className="absolute inset-y-0 left-0 flex items-center">
+                      <button
+                        onClick={goToPrevious}
                         className="ml-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300"
                         style={{
                           backgroundColor: '#FEFCF8',
@@ -750,16 +741,16 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           e.currentTarget.style.backgroundColor = '#FEFCF8';
                           e.currentTarget.style.color = '#5C5347';
                         }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15,18 9,12 15,6"></polyline>
-            </svg>
-          </button>
-        </div>
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                      </button>
+                    </div>
 
-        <div className="absolute inset-y-0 right-0 flex items-center">
-          <button
-            onClick={goToNext}
+                    <div className="absolute inset-y-0 right-0 flex items-center">
+                      <button
+                        onClick={goToNext}
                         className="mr-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300"
                         style={{
                           backgroundColor: '#FEFCF8',
@@ -774,24 +765,24 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           e.currentTarget.style.backgroundColor = '#FEFCF8';
                           e.currentTarget.style.color = '#5C5347';
                         }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
-          </button>
-        </div>
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="9,18 15,12 9,6"></polyline>
+                        </svg>
+                      </button>
+                    </div>
                   </>
                 )}
-      </div>
+              </div>
             )}
 
-      {/* Archive Index Dots */}
+            {/* Archive Index Dots */}
             {filteredProjects.length > 1 && (
               <div className="flex justify-center space-x-2 mt-3">
                 {filteredProjects.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
                     className="w-2 h-2 rounded-full transition-all duration-300"
                     style={{
                       backgroundColor: index === displayIndex ? '#8B7355' : '#C9B991'
@@ -806,13 +797,136 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         e.currentTarget.style.backgroundColor = '#C9B991';
                       }
                     }}
-          />
-        ))}
+                  />
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
+             <style jsx>{`
+                            .tab-button {
+           position: relative;
+           z-index: 1;
+           --tab-bg: #E3D6BC;
+           background: var(--tab-bg);
+           border: none;
+           border-top-left-radius: 18px;
+           border-top-right-radius: 18px;
+           color: #2F2A1F;
+           min-width: 140px;
+           padding: 10px 22px 8px 22px; /* increased padding to compensate for scaleY */
+           transition: none;
+         }
+                   /* Outward flares with no inner rectangle using gradients */
+          .tab-button::before,
+          .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: -6px; /* nudge downward */
+            width: 22px;
+            height: 22px;
+            z-index: 0; /* keep behind the tab face to avoid bleed */
+            pointer-events: none;
+            transition: none;
+          }
+                    .tab-button::before {
+            left: -16.5px; /* further inward to align */
+            background: radial-gradient(circle at 0 0, transparent 16.49px, var(--tab-bg) 16.5px);
+            -webkit-mask: radial-gradient(circle at 0 0, transparent 16.49px, #000 16.5px);
+            mask: radial-gradient(circle at 0 0, transparent 16.49px, #000 16.5px);
+          }
+          .tab-button::after {
+            right: -16px; /* further inward to align */
+            background: radial-gradient(circle at 100% 0, transparent 15.99px, var(--tab-bg) 16px);
+            -webkit-mask: radial-gradient(circle at 100% 0, transparent 15.99px, #000 16px);
+            mask: radial-gradient(circle at 100% 0, transparent 15.99px, #000 16px);
+          }
+           .tab-button:hover { --tab-bg: #D8C9AE; background: var(--tab-bg); }
+                    .tab-active { 
+           --tab-bg: #EDE3CE;
+           background: var(--tab-bg);
+           z-index: 2; 
+         }
+         .ink-bleed-text {
+           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+           letter-spacing: 0.12em;
+           font-weight: normal;
+           text-transform: lowercase;
+           font-size: 1rem;
+           text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.1), 1px 1px 0px rgba(0,0,0,0.05);
+           color: #1a1a1a;
+           transform: scaleY(0.8);
+           transform-origin: center;
+         }
+         .project-title {
+           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+           letter-spacing: 0.05em;
+           font-size: 1.4rem;
+           transform: scaleY(0.9);
+           transform-origin: center;
+         }
+         .metadata-label {
+           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+           letter-spacing: 0.08em;
+           transform: scaleY(0.8);
+           transform-origin: center;
+         }
+         .status-indicator {
+           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+           letter-spacing: 0.05em;
+           transform: scaleY(0.8);
+           transform-origin: center;
+           border: 1px solid;
+           border-radius: 2px;
+           padding: 6px 6px 4px 6px;
+         }
+         .status-active {
+           background-color: #F0E8D8;
+           border-color: #B8A082;
+           color: #3A3428;
+         }
+         .status-archived {
+           background-color: #F5F5F5;
+           border-color: #B8B8B8;
+           color: #5A5A5A;
+         }
+         .status-in-progress {
+           background-color: #E8F0F8;
+           border-color: #87CEEB;
+           color: #2E5A7A;
+         }
+         .tag-label {
+           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+           letter-spacing: 0.05em;
+           transform: scaleY(0.8);
+           transform-origin: center;
+           background-color: #F8F6F0;
+           border: 1px solid #D4C4A8;
+           border-radius: 1px;
+           color: #3A3428;
+           padding: 5px 4px 3px 4px;
+         }
+         .folder-container { 
+           background: #EDE3CE; 
+           border-color: transparent; 
+           border-top-left-radius: 0; /* unround left corner to avoid gap under first tab */
+           border-top-right-radius: 18px;
+           position: relative;
+           overflow: visible;
+         }
+         /* Top seam cover bar */
+         .folder-container::before {
+           content: '';
+           position: absolute;
+           top: -4px; /* raise to cover corner rounding */
+           left: 0; /* extend to left edge */
+           right: 18px; /* stop short of right edge to reveal curve */
+           height: 16px; /* taller to fully fill curve gap */
+           background: linear-gradient(to right, #EDE3CE 0%, #EDE3CE 60%, transparent 100%);
+           z-index: 3; /* in front of curves and body */
+         }
+       `}</style>
     </div>
   );
 });

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "add-project": "node scripts/add-project.js"
   },
   "dependencies": {
     "@p5-wrapper/next": "^1.0.2",
