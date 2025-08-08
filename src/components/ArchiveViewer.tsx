@@ -406,6 +406,10 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   const autoPlayInterval = useRef<NodeJS.Timeout | null>(null);
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
   const [internalPath, setInternalPath] = useState<NavigationPath>(currentPath);
+  // 3D tilt + animation state for project card
+  const [tilt, setTilt] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isCardHover, setIsCardHover] = useState<boolean>(false);
+  const [swapDirection, setSwapDirection] = useState<'next' | 'prev'>('next');
 
   // Expose handleHover and updatePath methods to parent component
   useImperativeHandle(ref, () => ({
@@ -506,17 +510,20 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
   const goToNext = () => {
     if (filteredProjects.length > 1) {
+      setSwapDirection('next');
       setCurrentIndex(prev => (prev + 1) % filteredProjects.length);
     }
   };
 
   const goToPrevious = () => {
     if (filteredProjects.length > 1) {
+      setSwapDirection('prev');
       setCurrentIndex(prev => (prev - 1 + filteredProjects.length) % filteredProjects.length);
     }
   };
 
   const goToSlide = (index: number) => {
+    setSwapDirection(index > currentIndex ? 'next' : 'prev');
     setCurrentIndex(index);
   };
 
@@ -596,13 +603,12 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                   <button
                     onClick={() => handleTabClick(breadcrumb.path)}
                     className={`
-                      tab-button ink-bleed-text
+                      tab-button ink-bleed-text ${breadcrumb.name === 'home' ? 'no-curves' : ''}
                       px-6 py-2.5 text-sm tracking-wider transition-all duration-200
                       ${breadcrumb.isActive ? 'tab-active shadow-sm' : ''}
                     `}
                     style={{
-                      color: '#2F2A1F',
-                      ...(tierBg ? ({ ['--tab-bg' as any]: tierBg } as React.CSSProperties) : {})
+                      color: '#2F2A1F'
                     }}
                   >
                     {breadcrumb.name}
@@ -637,140 +643,136 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
             {/* Project Card */}
             {currentProject && (
-              <div 
-                className="rounded-lg overflow-hidden relative"
-                style={{
-                  backgroundColor: '#FEFCF8',
-                  boxShadow: '0 4px 12px rgba(184, 160, 130, 0.25), 0 2px 6px rgba(184, 160, 130, 0.15)'
-                }}
-              >
-                {/* Project Content */}
-                <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-900/50">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center space-y-2">
-                      <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
-                      <div className="text-white/40 text-xs font-mono">
-                        Supports: Images • Videos • Interactive Demos • Embeds
+              <div className="relative card-wrapper">
+                <div 
+                  className="rounded-lg overflow-hidden relative paper-card"
+                  style={{
+                    backgroundColor: '#FEFCF8',
+                    boxShadow: isCardHover
+                      ? '0 10px 18px rgba(184,160,130,0.28), 0 6px 12px rgba(184,160,130,0.18)'
+                      : '0 4px 12px rgba(184,160,130,0.25), 0 2px 6px rgba(184,160,130,0.15)',
+                    transform: `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                    transition: 'transform 100ms ease, box-shadow 200ms ease'
+                  }}
+                  onMouseMove={(e) => {
+                    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const rotateY = ((x / rect.width) - 0.5) * 12; // -6deg..6deg
+                    const rotateX = -((y / rect.height) - 0.5) * 10; // -5deg..5deg
+                    setTilt({ x: rotateX, y: rotateY });
+                    setIsCardHover(true);
+                  }}
+                  onMouseEnter={() => setIsCardHover(true)}
+                  onMouseLeave={() => {
+                    setIsCardHover(false);
+                    setTilt({ x: 0, y: 0 });
+                  }}
+                >
+                  {/* Animated Card Content */}
+                  <div key={currentProject.id} className={swapDirection === 'next' ? 'card-anim-next' : 'card-anim-prev'}>
+                    {/* Project Content */}
+                    <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-900/50">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center space-y-2">
+                          <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
+                          <div className="text-white/40 text-xs font-mono">
+                            Supports: Images • Videos • Interactive Demos • Embeds
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+  
+                    {/* Project Information */}
+                    <div className="p-3 md:p-4 space-y-1 md:space-y-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-cyan-600 tracking-widest">
+                            {currentProject.archiveRef}
+                          </span>
+                          <span className={`text-xs px-2 py-1 status-indicator ${getStatusColor(currentProject.status)}`}>
+                            {currentProject.status}
+                          </span>
+                        </div>
+                        <h3 
+                          className="text-lg font-bold tracking-wide project-title"
+                          style={{ color: '#2A2419' }}
+                        >
+                          {currentProject.title}
+                        </h3>
+                        <p 
+                          className="text-xs font-mono italic"
+                          style={{ color: '#4A4235' }}
+                        >
+                          {currentProject.subtitle}
+                        </p>
+                      </div>
+  
+                      <p 
+                        className="text-xs leading-relaxed"
+                        style={{ color: '#3A3428' }}
+                      >
+                        {currentProject.description}
+                      </p>
+  
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                        <div>
+                          <span 
+                            className="block metadata-label"
+                            style={{ color: '#5C5347' }}
+                          >
+                            DATE RECOVERED:
+                          </span>
+                          <span style={{ color: '#3A3428' }}>{currentProject.dateRecovered}</span>
+                        </div>
+                        <div>
+                          <span 
+                            className="block metadata-label"
+                            style={{ color: '#5C5347' }}
+                          >
+                            MEDIUM:
+                          </span>
+                          <span style={{ color: '#3A3428' }}>{currentProject.medium.join(' | ')}</span>
+                        </div>
+                      </div>
+  
+                      <div className="flex flex-wrap gap-1">
+                        {currentProject.tags.map((tag, index) => (
+                          <span 
+                            key={index}
+                            className="text-xs px-1 py-0.5 tag-label"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
- 
-                {/* Project Information */}
-                <div className="p-3 md:p-4 space-y-1 md:space-y-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-cyan-600 tracking-widest">
-                        {currentProject.archiveRef}
-                      </span>
-                      <span className={`text-xs px-2 py-1 status-indicator ${getStatusColor(currentProject.status)}`}>
-                        {currentProject.status}
-                      </span>
-                    </div>
-                    <h3 
-                      className="text-lg font-bold tracking-wide project-title"
-                      style={{ color: '#2A2419' }}
-                    >
-                      {currentProject.title}
-                    </h3>
-                    <p 
-                      className="text-xs font-mono italic"
-                      style={{ color: '#4A4235' }}
-                    >
-                      {currentProject.subtitle}
-                    </p>
-                  </div>
-
-                  <p 
-                    className="text-xs leading-relaxed"
-                    style={{ color: '#3A3428' }}
-                  >
-                    {currentProject.description}
-                  </p>
-
-                            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-            <div>
-                      <span 
-                        className="block metadata-label"
-                        style={{ color: '#5C5347' }}
-                      >
-                        DATE RECOVERED:
-                      </span>
-                      <span style={{ color: '#3A3428' }}>{currentProject.dateRecovered}</span>
-            </div>
-            <div>
-                      <span 
-                        className="block metadata-label"
-                        style={{ color: '#5C5347' }}
-                      >
-                        MEDIUM:
-                      </span>
-                      <span style={{ color: '#3A3428' }}>{currentProject.medium.join(' | ')}</span>
-            </div>
-          </div>
-
-                            <div className="flex flex-wrap gap-1">
-            {currentProject.tags.map((tag, index) => (
-              <span 
-                key={index}
-                        className="text-xs px-1 py-0.5 tag-label"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-                </div>
-
-                {/* Navigation Controls */}
+  
+                {/* Navigation Controls - outside the card */}
                 {filteredProjects.length > 1 && (
                   <>
-                    <div className="absolute inset-y-0 left-0 flex items-center">
-                      <button
-                        onClick={goToPrevious}
-                        className="ml-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300"
-                        style={{
-                          backgroundColor: '#FEFCF8',
-                          borderColor: '#D4C4A8',
-                          color: '#5C5347'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F2EFE7';
-                          e.currentTarget.style.color = '#3A3428';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#FEFCF8';
-                          e.currentTarget.style.color = '#5C5347';
-                        }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="15,18 9,12 15,6"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-
-                    <div className="absolute inset-y-0 right-0 flex items-center">
-                      <button
-                        onClick={goToNext}
-                        className="mr-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300"
-                        style={{
-                          backgroundColor: '#FEFCF8',
-                          borderColor: '#D4C4A8',
-                          color: '#5C5347'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F2EFE7';
-                          e.currentTarget.style.color = '#3A3428';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#FEFCF8';
-                          e.currentTarget.style.color = '#5C5347';
-                        }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="9,18 15,12 9,6"></polyline>
-                        </svg>
-                      </button>
-                    </div>
+                    <button
+                      onClick={goToPrevious}
+                      className="carousel-rail"
+                      style={{ left: '-32px' }}
+                      aria-label="Previous"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="15,18 9,12 15,6"></polyline>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={goToNext}
+                      className="carousel-rail"
+                      style={{ right: '-32px' }}
+                      aria-label="Next"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="9,18 15,12 9,6"></polyline>
+                      </svg>
+                    </button>
                   </>
                 )}
               </div>
@@ -803,8 +805,9 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
             )}
           </div>
         </div>
-      </div>
-             <style jsx>{`
+      {/* Close grid container wrapper */}
+    </div>
+      <style jsx>{`
                             .tab-button {
            position: relative;
            z-index: 1;
@@ -841,6 +844,9 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
             background: radial-gradient(circle at 100% 0, transparent 15.99px, var(--tab-bg) 16px);
             -webkit-mask: radial-gradient(circle at 100% 0, transparent 15.99px, #000 16px);
             mask: radial-gradient(circle at 100% 0, transparent 15.99px, #000 16px);
+          }
+          .tab-button.no-curves::before {
+            content: none; /* remove only left outer curve on specific tabs (e.g., home) */
           }
            .tab-button:hover { --tab-bg: #D8C9AE; background: var(--tab-bg); }
                     .tab-active { 
@@ -925,6 +931,59 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
            height: 16px; /* taller to fully fill curve gap */
            background: linear-gradient(to right, #EDE3CE 0%, #EDE3CE 60%, transparent 100%);
            z-index: 3; /* in front of curves and body */
+         }
+         /* Paper card styling and texture */
+         .paper-card { position: relative; }
+         .paper-card::after {
+           content: '';
+           position: absolute;
+           inset: 0;
+           pointer-events: none;
+           opacity: 0.15;
+           background-image: radial-gradient(rgba(0,0,0,0.06) 0.5px, transparent 0.5px);
+           background-size: 3px 3px;
+           mix-blend-mode: multiply;
+         }
+         /* Swap animations */
+         @keyframes cardInNext { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+         @keyframes cardInPrev { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+         .card-anim-next { animation: cardInNext 350ms ease both; }
+         .card-anim-prev { animation: cardInPrev 350ms ease both; }
+         .carousel-rail {
+           position: absolute;
+           top: 50%;
+           transform: translateY(-50%);
+           width: 24px; /* Thinner width */
+           height: 80px; /* Taller for better visibility */
+           background-color: #FEFCF8;
+           border: 1px solid #D4C4A8;
+           border-radius: 0; /* Remove rounded edges */
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           z-index: 10; /* Ensure it's above the card */
+           cursor: pointer;
+           transition: background-color 0.3s ease, border-color 0.3s ease;
+           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+         }
+         .card-wrapper {
+           position: relative;
+           overflow: visible;
+         }
+         .carousel-rail:hover {
+           background-color: #F2EFE7;
+           border-color: #3A3428;
+         }
+         .carousel-rail:active {
+           background-color: #E8DCC6;
+           border-color: #2A2419;
+         }
+         .carousel-rail svg {
+           color: #5C5347;
+           transition: color 0.3s ease;
+         }
+         .carousel-rail:hover svg {
+           color: #3A3428;
          }
        `}</style>
     </div>

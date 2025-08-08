@@ -90,7 +90,7 @@ export default function Home() {
           </div>
           
           {/* Right Panel - Archive Viewer */}
-          <div className="rounded-3xl relative overflow-hidden min-h-[500px] max-h-[85vh]">
+          <div className="rounded-3xl relative overflow-visible min-h-[500px] max-h-[85vh]">
             <ArchiveViewer 
               ref={archiveViewerRef}
               className="w-full h-full" 
