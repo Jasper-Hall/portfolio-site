@@ -54,6 +54,12 @@ export default function Home() {
     }
   };
 
+  const handleModalOpen = (modalName: string | null) => {
+    // Handle modal opening - for now just log or implement modal logic
+    console.log('Modal requested:', modalName);
+    // TODO: Implement modal opening logic
+  };
+
   return (
     <main className="min-h-screen relative">
       {/* Forest Background */}
@@ -97,7 +103,7 @@ export default function Home() {
       </div>
       
       {/* Navigation */}
-      <Navigation />
+      <Navigation onModalOpen={handleModalOpen} />
     </main>
   );
 }
