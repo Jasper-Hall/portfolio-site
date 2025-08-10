@@ -1,24 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { ProjectData, mindMapStructure } from '@/data/types';
+import { getFeaturedProjectsInMindMapOrder, getProjectsByCategory, getProjectsBySubcategory } from '@/data/projects';
+import { createPortal } from 'react-dom';
+
 interface NavigationPath {
   level: string;
   sublevel?: string;
-}
-
-interface ProjectData {
-  id: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  dateRecovered: string;
-  medium: string[];
-  tags: string[];
-  status: 'active' | 'archived' | 'in-progress';
-  archiveRef: string;
-  category: string;
-  subcategory?: string;
-  featured: boolean;
 }
 
 interface ArchiveViewerProps {
@@ -31,368 +20,6 @@ export interface ArchiveViewerRef {
   handleHover: (branchName: string | null) => void;
   updatePath: (path: NavigationPath) => void;
 }
-
-// Mock project data for all 7 categories
-const projectData: ProjectData[] = [
-  // FILM Projects 
-  {
-    id: 'film-1',
-    title: 'Digital Archaeology',
-    subtitle: 'Recovering lost media from digital decay',
-    description: 'A documentary exploring the ephemeral nature of digital media and the efforts to preserve disappearing online content. Chronicles the race against digital entropy.',
-    dateRecovered: '2024-04-20',
-    medium: ['Documentary', 'Digital Media', 'Preservation'],
-    tags: ['Film', 'Digital', 'Preservation', 'Documentary'],
-    status: 'active',
-    archiveRef: 'FILM-001',
-    category: 'film',
-    featured: true
-  },
-  
-  // SOUND Projects (was JAECE)
-  {
-    id: 'sound-1',
-    title: 'Neural Echo Chamber',
-    subtitle: 'AI-generated soundscapes from digital consciousness',
-    description: 'An exploration of artificial intelligence creating ambient soundscapes that mimic the neural patterns of human consciousness. The project uses machine learning algorithms to generate evolving audio compositions.',
-    dateRecovered: '2024-03-15',
-    medium: ['AI Audio', 'Machine Learning', 'Ambient Music'],
-    tags: ['AI', 'Neural Networks', 'Ambient', 'Experimental'],
-    status: 'active',
-    archiveRef: 'SOUND-001',
-    category: 'sound',
-    featured: true
-  },
-  {
-    id: 'sound-2',
-    title: 'Digital Memory Palace',
-    subtitle: 'Virtual reality architecture for data visualization',
-    description: 'A VR environment where complex datasets are represented as architectural spaces. Users navigate through information as if walking through a memory palace.',
-    dateRecovered: '2024-02-28',
-    medium: ['VR', 'Data Visualization', '3D Design'],
-    tags: ['VR', 'Data', 'Architecture', 'Memory'],
-    status: 'active',
-    archiveRef: 'SOUND-002',
-    category: 'sound',
-    featured: false
-  },
-  {
-    id: 'sound-3',
-    title: 'Quantum Interface',
-    subtitle: 'Experimental UI for quantum computing',
-    description: 'A user interface designed to interact with quantum computing systems. Features visual representations of quantum states and superposition.',
-    dateRecovered: '2024-01-20',
-    medium: ['UI/UX', 'Quantum Computing', 'Visualization'],
-    tags: ['Quantum', 'Interface', 'Computing', 'Experimental'],
-    status: 'in-progress',
-    archiveRef: 'SOUND-003',
-    category: 'sound',
-    featured: false
-  },
-
-  // CLOTH Projects (was XTSUI)
-  {
-    id: 'cloth-1',
-    title: 'Synthetic Biology Orchestra',
-    subtitle: 'Living organisms as musical instruments',
-    description: 'A performance piece where genetically modified organisms create music through their biological processes. Each organism contributes to a living symphony.',
-    dateRecovered: '2024-04-10',
-    medium: ['Bio Art', 'Performance', 'Sound Design'],
-    tags: ['Biology', 'Music', 'Performance', 'Synthetic'],
-    status: 'active',
-    archiveRef: 'CLOTH-001',
-    category: 'cloth',
-    featured: true
-  },
-  {
-    id: 'cloth-2',
-    title: 'Memory Fabric',
-    subtitle: 'Textiles that store and display memories',
-    description: 'Smart fabrics embedded with memory-storing technology. The textiles change color and texture based on stored emotional or visual memories.',
-    dateRecovered: '2024-03-22',
-    medium: ['Smart Textiles', 'Memory Technology', 'Interactive Art'],
-    tags: ['Textiles', 'Memory', 'Interactive', 'Technology'],
-    status: 'active',
-    archiveRef: 'CLOTH-002',
-    category: 'cloth',
-    featured: false
-  },
-  {
-    id: 'cloth-3',
-    title: 'Dream Capture Device',
-    subtitle: 'Technology to record and replay dreams',
-    description: 'An experimental device that attempts to capture and visualize dream states. Uses brain-computer interface technology to translate neural activity.',
-    dateRecovered: '2024-02-15',
-    medium: ['BCI', 'Dream Technology', 'Visualization'],
-    tags: ['Dreams', 'BCI', 'Neural', 'Experimental'],
-    status: 'in-progress',
-    archiveRef: 'CLOTH-003',
-    category: 'cloth',
-    featured: false
-  },
-
-  // RHEOME Projects
-  {
-    id: 'rheome-1',
-    title: 'Fluid Dynamics Symphony',
-    subtitle: 'Music generated from fluid flow patterns',
-    description: 'A system that translates fluid dynamics into musical compositions. Water flow, turbulence, and viscosity create complex harmonic structures.',
-    dateRecovered: '2024-04-05',
-    medium: ['Fluid Dynamics', 'Music Generation', 'Sensors'],
-    tags: ['Fluid', 'Music', 'Dynamics', 'Sensors'],
-    status: 'active',
-    archiveRef: 'RHEOME-001',
-    category: 'rheome',
-    featured: false
-  },
-  {
-    id: 'rheome-2',
-    title: 'Viscous Memory',
-    subtitle: 'Data storage in non-Newtonian fluids',
-    description: 'An experimental data storage system using the unique properties of non-Newtonian fluids. Information is encoded in fluid viscosity patterns.',
-    dateRecovered: '2024-03-18',
-    medium: ['Fluid Physics', 'Data Storage', 'Experimental'],
-    tags: ['Fluids', 'Data', 'Physics', 'Storage'],
-    status: 'active',
-    archiveRef: 'RHEOME-002',
-    category: 'rheome',
-    featured: false
-  },
-  {
-    id: 'rheome-3',
-    title: 'Surface Tension Interface',
-    subtitle: 'Touch interfaces using liquid surface tension',
-    description: 'A touch interface that uses the surface tension of liquids to create haptic feedback. Users interact with floating liquid droplets.',
-    dateRecovered: '2024-02-08',
-    medium: ['Haptics', 'Liquid Interface', 'Touch Technology'],
-    tags: ['Surface Tension', 'Haptics', 'Interface', 'Liquid'],
-    status: 'in-progress',
-    archiveRef: 'RHEOME-003',
-    category: 'rheome',
-    featured: false
-  },
-
-  // IMAGE Projects (was PHOTOGRAPHY)
-  {
-    id: 'image-1',
-    title: 'Berlin Decay',
-    subtitle: 'Urban landscapes in transition',
-    description: "A photographic series documenting the decay and transformation of Berlin's industrial architecture. Captures the beauty in deterioration.",
-    dateRecovered: '2022-11-15',
-    medium: ['Photography', 'Urban', 'Documentary'],
-    tags: ['Berlin', 'Decay', 'Urban', 'Architecture'],
-    status: 'archived',
-    archiveRef: 'IMAGE-001',
-    category: 'image',
-    subcategory: 'urbandscapes',
-    featured: true
-  },
-  {
-    id: 'image-2',
-    title: 'Fissure',
-    subtitle: 'Close-up studies of cracks and fractures',
-    description: 'Macro photography exploring the intricate patterns of cracks, fissures, and fractures in various materials. Reveals hidden beauty in destruction.',
-    dateRecovered: '2021-08-22',
-    medium: ['Macro Photography', 'Abstract', 'Textures'],
-    tags: ['Macro', 'Cracks', 'Textures', 'Abstract'],
-    status: 'archived',
-    archiveRef: 'IMAGE-002',
-    category: 'image',
-    subcategory: 'closeups',
-    featured: false
-  },
-  {
-    id: 'image-3',
-    title: 'Blur',
-    subtitle: 'Analog texture experiments',
-    description: 'Experimental photography using analog techniques to create blurred, textured images. Explores the boundary between representation and abstraction.',
-    dateRecovered: '2020-05-10',
-    medium: ['Analog Photography', 'Experimental', 'Textures'],
-    tags: ['Analog', 'Blur', 'Experimental', 'Textures'],
-    status: 'archived',
-    archiveRef: 'IMAGE-003',
-    category: 'image',
-    subcategory: 'analog',
-    featured: false
-  },
-  {
-    id: 'image-4',
-    title: 'Drift',
-    subtitle: 'Black & white long exposures',
-    description: 'Long exposure photography capturing the movement and drift of light and shadow. Creates ethereal, dreamlike compositions.',
-    dateRecovered: '2018-12-03',
-    medium: ['Long Exposure', 'Black & White', 'Abstract'],
-    tags: ['Long Exposure', 'B&W', 'Movement', 'Abstract'],
-    status: 'archived',
-    archiveRef: 'IMAGE-004',
-    category: 'image',
-    subcategory: 'bw',
-    featured: false
-  },
-
-  // TECH Projects (was CODE)
-  {
-    id: 'tech-1',
-    title: 'Neural Network Visualizer',
-    subtitle: 'Real-time visualization of AI training',
-    description: 'An interactive tool that visualizes neural network training in real-time. Shows how AI models learn and adapt during training processes.',
-    dateRecovered: '2024-03-30',
-    medium: ['Web App', 'Data Visualization', 'Machine Learning'],
-    tags: ['AI', 'Visualization', 'Neural Networks', 'Web'],
-    status: 'active',
-    archiveRef: 'TECH-001',
-    category: 'tech',
-    subcategory: 'ai',
-    featured: true
-  },
-  {
-    id: 'tech-2',
-    title: 'Generative Art Engine',
-    subtitle: 'Algorithmic art generation system',
-    description: 'A software system that generates unique artworks using mathematical algorithms and procedural generation techniques.',
-    dateRecovered: '2024-02-14',
-    medium: ['Generative Art', 'Algorithms', 'Creative Coding'],
-    tags: ['Generative', 'Art', 'Algorithms', 'Creative'],
-    status: 'active',
-    archiveRef: 'TECH-002',
-    category: 'tech',
-    subcategory: 'generative',
-    featured: false
-  },
-  {
-    id: 'tech-3',
-    title: 'Blockchain Art Registry',
-    subtitle: 'Decentralized art ownership system',
-    description: 'A blockchain-based system for registering and tracking digital art ownership. Ensures authenticity and provenance of digital artworks.',
-    dateRecovered: '2024-01-25',
-    medium: ['Blockchain', 'Web3', 'Digital Art'],
-    tags: ['Blockchain', 'Web3', 'Art', 'Ownership'],
-    status: 'in-progress',
-    archiveRef: 'TECH-003',
-    category: 'tech',
-    subcategory: 'web3',
-    featured: false
-  },
-
-  // ART Projects (was WRITING)
-  {
-    id: 'art-1',
-    title: 'Digital Poetry Generator',
-    subtitle: 'AI-assisted creative writing system',
-    description: 'An AI system that collaborates with human writers to create poetry. Combines human creativity with machine learning algorithms.',
-    dateRecovered: '2024-04-08',
-    medium: ['AI Writing', 'Poetry', 'Creative Writing'],
-    tags: ['AI', 'Poetry', 'Writing', 'Creative'],
-    status: 'active',
-    archiveRef: 'ART-001',
-    category: 'art',
-    subcategory: 'poetry',
-    featured: true
-  },
-  {
-    id: 'art-2',
-    title: 'Interactive Fiction Engine',
-    subtitle: 'Dynamic storytelling platform',
-    description: 'A platform for creating interactive fiction where reader choices dynamically alter the narrative structure and outcomes.',
-    dateRecovered: '2024-03-12',
-    medium: ['Interactive Fiction', 'Storytelling', 'Narrative Design'],
-    tags: ['Interactive', 'Fiction', 'Storytelling', 'Narrative'],
-    status: 'active',
-    archiveRef: 'ART-002',
-    category: 'art',
-    subcategory: 'fiction',
-    featured: false
-  },
-  {
-    id: 'art-3',
-    title: 'Code Poetry',
-    subtitle: 'Poetry written in programming languages',
-    description: 'Poetry written using programming languages as the medium. Explores the intersection of code and creative expression.',
-    dateRecovered: '2024-02-28',
-    medium: ['Code Poetry', 'Programming', 'Creative Writing'],
-    tags: ['Code', 'Poetry', 'Programming', 'Creative'],
-    status: 'in-progress',
-    archiveRef: 'ART-003',
-    category: 'art',
-    subcategory: 'codepoetry',
-    featured: false
-  },
-
-  // DESIGN Projects
-  {
-    id: 'design-1',
-    title: 'Minimalist UI System',
-    subtitle: 'Design system for digital interfaces',
-    description: 'A comprehensive design system emphasizing minimalism and usability. Includes components, typography, and interaction patterns.',
-    dateRecovered: '2024-04-12',
-    medium: ['UI/UX', 'Design System', 'Typography'],
-    tags: ['UI', 'UX', 'Minimalist', 'Design System'],
-    status: 'active',
-    archiveRef: 'DESIGN-001',
-    category: 'design',
-    subcategory: 'ui',
-    featured: true
-  },
-  {
-    id: 'design-2',
-    title: 'Experimental Typography',
-    subtitle: 'Pushing the boundaries of letterforms',
-    description: 'Experimental typography that challenges conventional letterform design. Explores new ways of representing written language.',
-    dateRecovered: '2024-03-05',
-    medium: ['Typography', 'Experimental', 'Letterforms'],
-    tags: ['Typography', 'Experimental', 'Letterforms', 'Design'],
-    status: 'active',
-    archiveRef: 'DESIGN-002',
-    category: 'design',
-    subcategory: 'typography',
-    featured: false
-  },
-  {
-    id: 'design-3',
-    title: 'Spatial Design Interface',
-    subtitle: '3D design tools for spatial computing',
-    description: 'Design tools specifically created for spatial computing environments. Enables intuitive 3D design in virtual and augmented reality.',
-    dateRecovered: '2024-02-20',
-    medium: ['Spatial Computing', '3D Design', 'VR/AR'],
-    tags: ['Spatial', '3D', 'VR', 'AR', 'Design'],
-    status: 'in-progress',
-    archiveRef: 'DESIGN-003',
-    category: 'design',
-    subcategory: 'spatial',
-    featured: false
-  }
-];
-
-const mindMapStructure = {
-  film: {
-    name: 'film',
-    subcategories: ['archives', 'youtube']
-  },
-  sound: {
-    name: 'sound',
-    subcategories: ['live/bookings', 'releases', 'links']
-  },
-  cloth: {
-    name: 'cloth',
-    subcategories: ['xtsuimart', 'archives']
-  },
-  image: {
-    name: 'image',
-    subcategories: ['portraits', 'landscapes', 'events']
-  },
-  tech: {
-    name: 'tech',
-    subcategories: ['web', 'mobile', 'ai']
-  },
-  art: {
-    name: 'art',
-    subcategories: ['digital', 'traditional', 'mixed']
-  },
-  design: {
-    name: 'design',
-    subcategories: ['graphic', 'ui/ux', 'branding']
-  }
-};
 
 const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({ 
   className = '', 
@@ -410,13 +37,18 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   const [tilt, setTilt] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isCardHover, setIsCardHover] = useState<boolean>(false);
   const [swapDirection, setSwapDirection] = useState<'next' | 'prev'>('next');
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const [isImageModalOpen, setIsImageModalOpen] = useState<boolean>(false);
+  const [modalImageIndex, setModalImageIndex] = useState<number>(0);
+  const [imageNaturalSize, setImageNaturalSize] = useState<{ w: number; h: number } | null>(null);
+  const isPortrait = imageNaturalSize ? imageNaturalSize.h > imageNaturalSize.w : false;
 
   // Expose handleHover and updatePath methods to parent component
   useImperativeHandle(ref, () => ({
     handleHover: (branchName: string | null) => {
       if (branchName && internalPath.level === 'home') {
         // Find the index of the hovered branch's featured project in the filtered projects
-        const featuredProjects = projectData.filter(p => p.featured);
+        const featuredProjects = getFeaturedProjectsInMindMapOrder();
         const hoveredIndex = featuredProjects.findIndex(p => p.category === branchName);
         if (hoveredIndex >= 0) {
           setLastHoveredIndex(hoveredIndex);
@@ -432,35 +64,15 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   // Get filtered projects based on current path and hover state
   const getFilteredProjects = (): ProjectData[] => {
     if (internalPath.level === 'home') {
-      // Map MindMap sections to their corresponding featured project categories
-      // MindMap order: film, sound, cloth, image, tech, art, design
-      // Featured project categories: sound, cloth, rheome, image, tech, design, art
-      const mindMapToFeaturedMapping = [
-        'sound',    // film maps to sound (index 0)
-        'sound',    // sound maps to sound (index 1) 
-        'cloth',    // cloth maps to cloth (index 2)
-        'image',    // image maps to image (index 3)
-        'tech',     // tech maps to tech (index 4)
-        'art',      // art maps to art (index 5)
-        'design'    // design maps to design (index 6)
-      ];
-      
-      const featuredProjects = projectData.filter(p => p.featured);
-      
-      // Return featured projects in the order that matches MindMap sections
-      return mindMapToFeaturedMapping
-        .map(category => featuredProjects.find(p => p.category === category))
-        .filter(Boolean) as ProjectData[];
+      // Use the actual featured projects in MindMap order
+      return getFeaturedProjectsInMindMapOrder();
     } else if (internalPath.sublevel) {
       // Show projects from specific subcategory
-      return projectData.filter(p => 
-        p.category === internalPath.level && p.subcategory === internalPath.sublevel
-      );
+      return getProjectsBySubcategory(internalPath.level, internalPath.sublevel);
     } else {
       // Show featured projects from specific category
-      return projectData.filter(p => 
-        p.category === internalPath.level && p.featured
-      );
+      const categoryProjects = getProjectsByCategory(internalPath.level);
+      return categoryProjects.filter(p => p.featured);
     }
   };
 
@@ -476,6 +88,32 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   
   const displayIndex = getHoveredProjectIndex();
   const currentProject = filteredProjects[displayIndex] || filteredProjects[0];
+  const imageSources: string[] = currentProject
+    ? (currentProject.images && currentProject.images.length > 0
+        ? currentProject.images
+        : (currentProject.gallery?.filter(item => item.type === 'image').map(item => item.src) || []))
+    : [];
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+    setModalImageIndex(0);
+    setIsImageModalOpen(false);
+    setImageNaturalSize(null);
+  }, [currentProject?.id]);
+
+  useEffect(() => {
+    setImageNaturalSize(null);
+  }, [currentImageIndex]);
+
+  // Close modal on Escape
+  useEffect(() => {
+    if (!isImageModalOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsImageModalOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isImageModalOpen]);
 
   // Auto-play carousel
   useEffect(() => {
@@ -630,36 +268,25 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
            className="rounded-b-2xl rounded-tr-2xl shadow-lg h-full folder-container"
          >
           <div className="p-4 md:p-6">
-            <div className="flex items-center justify-end mb-2">
-              <div className="flex items-center space-x-2">
-                <span 
-                  className="text-xs"
-                  style={{ color: '#5C5347' }}
-                >
-                  {filteredProjects.length > 0 ? `${displayIndex + 1} / ${filteredProjects.length}` : '0 / 0'}
-                </span>
-              </div>
-            </div>
-
             {/* Project Card */}
             {currentProject && (
               <div className="relative card-wrapper">
                 <div 
-                  className="rounded-lg overflow-hidden relative paper-card"
+                  className="rounded-lg relative paper-card overflow-y-auto max-h-[75vh]"
                   style={{
                     backgroundColor: '#FEFCF8',
                     boxShadow: isCardHover
                       ? '0 10px 18px rgba(184,160,130,0.28), 0 6px 12px rgba(184,160,130,0.18)'
                       : '0 4px 12px rgba(184,160,130,0.25), 0 2px 6px rgba(184,160,130,0.15)',
-                    transform: `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-                    transition: 'transform 100ms ease, box-shadow 200ms ease'
+                    transform: `perspective(1400px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                    transition: 'transform 150ms ease, box-shadow 200ms ease'
                   }}
                   onMouseMove={(e) => {
                     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
-                    const rotateY = ((x / rect.width) - 0.5) * 12; // -6deg..6deg
-                    const rotateX = -((y / rect.height) - 0.5) * 10; // -5deg..5deg
+                    const rotateY = ((x / rect.width) - 0.5) * 3; // -1.5deg..1.5deg
+                    const rotateX = -((y / rect.height) - 0.5) * 2; // -1deg..1deg
                     setTilt({ x: rotateX, y: rotateY });
                     setIsCardHover(true);
                   }}
@@ -672,17 +299,86 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                   {/* Animated Card Content */}
                   <div key={currentProject.id} className={swapDirection === 'next' ? 'card-anim-next' : 'card-anim-prev'}>
                     {/* Project Content */}
-                    <div className="relative w-full h-64 md:h-80 overflow-hidden bg-gray-900/50">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center space-y-2">
-                          <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
-                          <div className="text-white/40 text-xs font-mono">
-                            Supports: Images • Videos • Interactive Demos • Embeds
+                    <div
+                      className="relative w-full overflow-hidden bg-gray-900/50"
+                      style={{ height: isPortrait ? '28rem' : '20rem' }}
+                    >
+                      {imageSources.length > 0 ? (
+                        <>
+                          {/* Blurred background fill */}
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              backgroundImage: `url(${imageSources[currentImageIndex]})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              filter: 'blur(20px) brightness(0.6)',
+                              transform: 'scale(1.1)'
+                            }}
+                          />
+                          {/* Foreground image (contain) */}
+                          <img
+                            src={imageSources[currentImageIndex]}
+                            alt={currentProject.title}
+                            className="absolute inset-0 w-full h-full object-contain z-10"
+                            onLoad={(e) => {
+                              const img = e.currentTarget as HTMLImageElement;
+                              if (img.naturalWidth && img.naturalHeight) {
+                                setImageNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+                              }
+                            }}
+                          />
+                          {/* Inline image navigation */}
+                          {imageSources.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev - 1 + imageSources.length) % imageSources.length); }}
+                                className="carousel-rail z-20"
+                                style={{ left: '8px' }}
+                                aria-label="Previous image"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="15,18 9,12 15,6"></polyline>
+                                </svg>
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev + 1) % imageSources.length); }}
+                                className="carousel-rail z-20"
+                                style={{ right: '8px' }}
+                                aria-label="Next image"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="9,18 15,12 9,6"></polyline>
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                          {/* Expand button */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setIsImageModalOpen(true); setModalImageIndex(currentImageIndex); }}
+                            className="absolute top-3 right-3 z-20 bg-white/80 hover:bg-white text-gray-800 border border-gray-300 rounded-md p-2 shadow-sm transition"
+                            aria-label="Expand image"
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M15 3h6v6"/>
+                              <path d="M9 21H3v-6"/>
+                              <path d="M21 3l-7 7"/>
+                              <path d="M3 21l7-7"/>
+                            </svg>
+                          </button>
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center space-y-2">
+                            <div className="text-white/60 text-sm font-mono">[ARTIFACT VISUAL DATA]</div>
+                            <div className="text-white/40 text-xs font-mono">
+                              Supports: Images • Videos • Interactive Demos • Embeds
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
-  
+
                     {/* Project Information */}
                     <div className="p-3 md:p-4 space-y-1 md:space-y-2">
                       <div className="space-y-1">
@@ -707,14 +403,14 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           {currentProject.subtitle}
                         </p>
                       </div>
-  
+
                       <p 
                         className="text-xs leading-relaxed"
                         style={{ color: '#3A3428' }}
                       >
                         {currentProject.description}
                       </p>
-  
+
                       <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                         <div>
                           <span 
@@ -735,7 +431,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           <span style={{ color: '#3A3428' }}>{currentProject.medium.join(' | ')}</span>
                         </div>
                       </div>
-  
+
                       <div className="flex flex-wrap gap-1">
                         {currentProject.tags.map((tag, index) => (
                           <span 
@@ -749,7 +445,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                     </div>
                   </div>
                 </div>
-  
+
                 {/* Navigation Controls - outside the card */}
                 {filteredProjects.length > 1 && (
                   <>
@@ -775,6 +471,55 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                     </button>
                   </>
                 )}
+
+                {/* Image Modal - render via portal to ensure it overlays everything including nav */}
+                {imageSources.length > 0 && isImageModalOpen && typeof window !== 'undefined' &&
+                  createPortal(
+                    <div className="fixed inset-0 z-[99999]">
+                      {/* Backdrop with blur that covers entire viewport including nav */}
+                      <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                        onClick={() => setIsImageModalOpen(false)}
+                      />
+                      {/* Centered content */}
+                      <div className="absolute inset-0 flex items-center justify-center" onClick={() => setIsImageModalOpen(false)}>
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <img
+                            src={imageSources[modalImageIndex]}
+                            alt={`${currentProject.title} - image ${modalImageIndex + 1}`}
+                            className="max-w-[92vw] max-h-[92vh] object-contain rounded-md shadow-2xl"
+                          />
+                          {imageSources.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setModalImageIndex(prev => (prev - 1 + imageSources.length) % imageSources.length); }}
+                                className="carousel-rail"
+                                style={{ left: '-40px' }}
+                                aria-label="Previous image"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="15,18 9,12 15,6"></polyline>
+                                </svg>
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setModalImageIndex(prev => (prev + 1) % imageSources.length); }}
+                                className="carousel-rail"
+                                style={{ right: '-40px' }}
+                                aria-label="Next image"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="9,18 15,12 9,6"></polyline>
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>,
+                    document.body
+                  )
+                }
+
               </div>
             )}
 

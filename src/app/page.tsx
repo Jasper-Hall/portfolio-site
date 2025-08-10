@@ -4,6 +4,7 @@ import MindMap, { MindMapRef } from '@/components/MindMap';
 import Navigation from '@/components/Navigation';
 import RippleShader from '@/components/RippleShader';
 import ArchiveViewer, { ArchiveViewerRef } from '@/components/ArchiveViewer';
+import Modal from '@/components/Modal';
 import { RippleShaderRef } from '@/components/RippleShader';
 import { useState, useRef, useEffect } from 'react';
 
@@ -14,6 +15,10 @@ interface NavigationPath {
 
 export default function Home() {
   const [currentPath, setCurrentPath] = useState<NavigationPath>({ level: 'home' });
+  const [modalState, setModalState] = useState<{ isOpen: boolean; type: string | null }>({
+    isOpen: false,
+    type: null
+  });
   const archiveViewerRef = useRef<ArchiveViewerRef>(null);
   const rippleShaderRef = useRef<RippleShaderRef>(null);
   const mindMapRef = useRef<MindMapRef>(null);
@@ -55,9 +60,63 @@ export default function Home() {
   };
 
   const handleModalOpen = (modalName: string | null) => {
-    // Handle modal opening - for now just log or implement modal logic
-    console.log('Modal requested:', modalName);
-    // TODO: Implement modal opening logic
+    if (modalName) {
+      setModalState({ isOpen: true, type: modalName });
+    }
+  };
+
+  const handleModalClose = () => {
+    setModalState({ isOpen: false, type: null });
+  };
+
+  const getModalContent = () => {
+    switch (modalState.type) {
+      case 'cv':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Curriculum Vitae</h3>
+            <p>CV content will go here...</p>
+          </div>
+        );
+      case 'links':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Links</h3>
+            <p>External links and social media will go here...</p>
+          </div>
+        );
+      case 'about':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">About</h3>
+            <p>About me content will go here...</p>
+          </div>
+        );
+      case 'work':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Work With Me</h3>
+            <p>Collaboration and work opportunities will go here...</p>
+          </div>
+        );
+      default:
+        return <div>Content not found</div>;
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (modalState.type) {
+      case 'cv':
+        return 'Curriculum Vitae';
+      case 'links':
+        return 'Links';
+      case 'about':
+        return 'About';
+      case 'work':
+        return 'Work With Me';
+      default:
+        return 'Modal';
+    }
   };
 
   return (
@@ -104,6 +163,15 @@ export default function Home() {
       
       {/* Navigation */}
       <Navigation onModalOpen={handleModalOpen} />
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={handleModalClose}
+        title={getModalTitle()}
+      >
+        {getModalContent()}
+      </Modal>
     </main>
   );
 }

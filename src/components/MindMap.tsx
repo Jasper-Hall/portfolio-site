@@ -355,13 +355,13 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         art: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.2],
         design: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2]
       } : {
-        purgeFiles: [p5.PI / 27, p5.PI / 1.5],
-        jaece: [p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7],
-        xtsui: [p5.PI / 4, p5.PI / 1.5],
-        photography: [p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5],
-        technology: [p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8],
-        art: [p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9],
-        design: [p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5]
+        purgeFiles: [p5.PI / 1.8, p5.PI / 1.5], // Fixed: was p5.PI / 27, p5.PI / 1.5
+        jaece: [p5.PI / 1.6, p5.PI / 1.2, p5.PI / 1.7], // Fixed: was p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7
+        xtsui: [p5.PI / 1.4, p5.PI / 1.5], // Fixed: was p5.PI / 4, p5.PI / 1.5
+        photography: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5], // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
+        technology: [p5.PI / 1.6, p5.PI / 1.4, (3 * p5.PI) / 8], // Fixed: was p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8
+        art: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 1.9], // Fixed: was p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9
+        design: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5] // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
       };
 
       const mobileDistances = isMobile ? {
@@ -654,6 +654,12 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           } else {
             angle = startAngle + (idx / (totalBranches - 1)) * angleSpread;
           }
+        }
+        
+        // Ensure angles point downward (positive Y values)
+        // In p5.js, positive Y goes down, so we want positive sin values
+        if (p5.sin(angle) < 0) {
+          angle = p5.PI - angle; // Flip the angle to point downward
         }
         
         const subX = x + section.branchAnimProgress * distance * p5.cos(angle);

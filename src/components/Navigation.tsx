@@ -47,10 +47,9 @@ const Navigation: React.FC<NavigationProps> = ({ onModalOpen }) => {
             </button>
             <button 
               onClick={() => onModalOpen('work')}
-              className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm relative group"
+              className="text-white/90 hover:text-white transition-colors duration-200 drop-shadow-sm"
             >
-              <span className="relative z-10">Work w/ Me</span>
-              <span className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+              Work w. Me
             </button>
           </div>
 
@@ -108,10 +107,9 @@ const Navigation: React.FC<NavigationProps> = ({ onModalOpen }) => {
                   onModalOpen('work');
                   setIsMenuOpen(false);
                 }}
-                className="block w-full text-left px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors duration-200 relative group"
+                className="block w-full text-left px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors duration-200"
               >
-                <span className="relative z-10">Work w/ Me</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></span>
+                Work w. Me
               </button>
             </div>
           </div>
