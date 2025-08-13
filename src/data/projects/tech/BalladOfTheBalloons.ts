@@ -4,7 +4,7 @@ const BalladOfTheBalloons: ProjectData = {
   id: 'Ballad-Of-The-Balloons',
   title: 'Ballad of the Balloons',
   subtitle: 'Weather-balloon sonification web experiment',
-  description: 'Interactive web piece that sonifies live weather-balloon telemetry in real-time using granular synthesis and p5.js visuals.',
+  description: 'Interactive web piece that sonifies the last 24 hours of weather-balloon telemetry data sing granular synthesis and p5.js visuals.',
   dateRecovered: '2024-05-01',
   medium: ['Web', 'Interactive', 'Audio', 'Data Visualization'],
   tags: ['p5.js', 'sonification', 'weather', 'granular synthesis'],

@@ -84,6 +84,6 @@ export const mindMapStructure: Record<string, MindMapStructure> = {
   },
   graphix: {
     name: 'GRAPHIX',
-    subcategories: ['logo', 'artwork']
+    subcategories: ['logo', 'flier', 'artwork']
   }
 }; 

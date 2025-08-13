@@ -431,7 +431,7 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         {
           name: "graphix",
           logo: null,
-          branches: ["logo", "artwork"],
+          branches: ["logo", "flier", "artwork"],
           isVisible: false,
           branchAnimProgress: 0,
           angles: mobileAngles.graphix,

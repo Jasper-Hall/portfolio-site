@@ -71,9 +71,9 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
       // Show projects from specific subcategory
       return getProjectsBySubcategory(internalPath.level, internalPath.sublevel);
     } else {
-      // Show featured projects from specific category
+      // Show ALL projects from specific category (branch open)
       const categoryProjects = getProjectsByCategory(internalPath.level);
-      return categoryProjects.filter(p => p.featured);
+      return categoryProjects;
     }
   };
 
@@ -283,7 +283,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                 <div 
                   className="rounded-lg relative paper-card overflow-y-auto max-h-[75vh]"
                   style={{
-                    backgroundColor: '#FEFCF8',
+                    backgroundColor: '#cccccc',
                     boxShadow: isCardHover
                       ? '0 10px 18px rgba(184,160,130,0.28), 0 6px 12px rgba(184,160,130,0.18)'
                       : '0 4px 12px rgba(184,160,130,0.25), 0 2px 6px rgba(184,160,130,0.15)',
