@@ -26,6 +26,7 @@ on site running Ableton Live.`,
   
   // Enhanced content
   images: [
+    '/projects/art/Crash-River/gallery/crashRiver.jpeg',
     '/projects/art/Crash-River/gallery/TraumaBar_i8i_035.jpeg',
     '/projects/art/Crash-River/gallery/TraumaBar_i8i_085.jpeg',
     '/projects/art/Crash-River/gallery/TraumaBar_i8i_126.jpg',
@@ -42,6 +43,12 @@ on site running Ableton Live.`,
     }
   ],
   gallery: [
+    {
+      src: '/projects/art/Crash-River/gallery/crashRiver.jpeg',
+      alt: 'Crash River main installation view',
+      caption: 'Main installation view - Crash River at Berlin Art Week 2021',
+      type: 'image'
+    },
     {
       src: '/projects/art/Crash-River/gallery/TraumaBar_i8i_035.jpeg',
       alt: 'Crash River installation view 1',

@@ -64,7 +64,7 @@ export const mindMapStructure: Record<string, MindMapStructure> = {
   },
   sound: {
     name: 'SOUND',
-    subcategories: ['live/bookings', 'releases', 'links']
+    subcategories: ['release', 'score', 'live']
   },
   cloth: {
     name: 'CLOTH',
@@ -72,18 +72,18 @@ export const mindMapStructure: Record<string, MindMapStructure> = {
   },
   image: {
     name: 'IMAGE',
-    subcategories: ['portraits', 'landscapes', 'events']
+    subcategories: ['photo', 'scans', 'collage']
   },
   tech: {
     name: 'TECH',
-    subcategories: ['web', 'mobile', 'ai']
+    subcategories: ['web', 'hardware']
   },
   art: {
     name: 'ART',
-    subcategories: ['digital', 'traditional', 'mixed']
+    subcategories: ['installation', 'bio', 'drawing']
   },
-  design: {
-    name: 'DESIGN',
-    subcategories: ['graphic', 'ui/ux', 'branding']
+  graphix: {
+    name: 'GRAPHIX',
+    subcategories: ['logo', 'artwork']
   }
 }; 

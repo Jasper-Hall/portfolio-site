@@ -3,20 +3,18 @@ import filmProjects from './film';
 import soundProjects from './sound';
 import imageProjects from './image';
 import artProjects from './art';
-// Import other category projects as they're created
-// import clothProjects from './cloth';
-// import techProjects from './tech';
-// import designProjects from './design';
-
+import clothProjects from './cloth';
+import graphixProjects from './graphix';
+import techProjects from './tech';
 // Combine all projects
 export const allProjects: ProjectData[] = [
   ...filmProjects,
   ...soundProjects,
   ...imageProjects,
   ...artProjects,
-  // ...clothProjects,
-  // ...techProjects,
-  // ...designProjects,
+  ...clothProjects,
+  ...graphixProjects,
+  ...techProjects,
 ];
 
 // Utility functions for filtering projects
@@ -40,7 +38,7 @@ export const getProjectById = (id: string): ProjectData | undefined =>
 
 // Get projects in MindMap order for featured display
 export const getFeaturedProjectsInMindMapOrder = (): ProjectData[] => {
-  const mindMapOrder = ['film', 'sound', 'cloth', 'image', 'tech', 'art', 'design'];
+  const mindMapOrder = ['cloth', 'film', 'sound', 'image', 'art', 'graphix', 'tech'];
   const featuredProjects = getFeaturedProjects();
   
   return mindMapOrder
@@ -49,4 +47,4 @@ export const getFeaturedProjectsInMindMapOrder = (): ProjectData[] => {
 };
 
 // Export individual category projects for specific use cases
-export { filmProjects, soundProjects, imageProjects, artProjects }; 
+export { filmProjects, soundProjects, imageProjects, artProjects, clothProjects, graphixProjects, techProjects }; 

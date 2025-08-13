@@ -1,7 +1,8 @@
 import { ProjectData } from '../../types';
+import TheLibrarian from './The-Librarian';
 
 const filmProjects: ProjectData[] = [
-  // Add film projects here
+  TheLibrarian
 ];
 
 export default filmProjects; 

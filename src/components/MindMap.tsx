@@ -353,7 +353,7 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         photography: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2],
         technology: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.5],
         art: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.2],
-        design: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2]
+        graphix: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2]
       } : {
         purgeFiles: [p5.PI / 1.8, p5.PI / 1.5], // Fixed: was p5.PI / 27, p5.PI / 1.5
         jaece: [p5.PI / 1.6, p5.PI / 1.2, p5.PI / 1.7], // Fixed: was p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7
@@ -361,7 +361,7 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         photography: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5], // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
         technology: [p5.PI / 1.6, p5.PI / 1.4, (3 * p5.PI) / 8], // Fixed: was p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8
         art: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 1.9], // Fixed: was p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9
-        design: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5] // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
+        graphix: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5] // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
       };
 
       const mobileDistances = isMobile ? {
@@ -371,7 +371,7 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         photography: [40, 40, 60],
         technology: [35, 40, 70],
         art: [35, 40, 85],
-        design: [40, 40, 60]
+        graphix: [40, 40, 60]
       } : {
         purgeFiles: [-80, 50],
         jaece: [-50, 80, 70],
@@ -379,10 +379,19 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         photography: [70, 70, 90],
         technology: [50, 70, 100],
         art: [50, 70, 120],
-        design: [70, 70, 90]
+        graphix: [70, 70, 90]
       };
 
       sections = [
+        {
+          name: "cloth",
+          logo: xtsuiLogo,
+          branches: ["xtsuimart", "archives"],
+          isVisible: false,
+          branchAnimProgress: 0,
+          angles: mobileAngles.xtsui,
+          distances: mobileDistances.xtsui,
+        },
         {
           name: "film",
           logo: purgeFilesLogo,
@@ -395,56 +404,47 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         {
           name: "sound",
           logo: jaeceLogo,
-          branches: ["live/bookings", "releases", "links"],
+          branches: ["release", "score", "live"],
           isVisible: false,
           branchAnimProgress: 0,
           angles: mobileAngles.jaece,
           distances: mobileDistances.jaece,
         },
         {
-          name: "cloth",
-          logo: xtsuiLogo,
-          branches: ["xtsuimart", "archives"],
-          isVisible: false,
-          branchAnimProgress: 0,
-          angles: mobileAngles.xtsui,
-          distances: mobileDistances.xtsui,
-        },
-        {
           name: "image",
           logo: null,
-          branches: ["portraits", "landscapes", "events"],
+          branches: ["photo", "scans", "collage"],
           isVisible: false,
           branchAnimProgress: 0,
           angles: mobileAngles.photography,
           distances: mobileDistances.photography,
         },
         {
-          name: "tech",
-          logo: null,
-          branches: ["web", "mobile", "ai"],
-          isVisible: false,
-          branchAnimProgress: 0,
-          angles: mobileAngles.technology,
-          distances: mobileDistances.technology,
-        },
-        {
           name: "art",
           logo: null,
-          branches: ["digital", "traditional", "mixed"],
+          branches: ["installation", "bio", "drawing"],
           isVisible: false,
           branchAnimProgress: 0,
           angles: mobileAngles.art,
           distances: mobileDistances.art,
         },
         {
-          name: "design",
+          name: "graphix",
           logo: null,
-          branches: ["graphic", "ui/ux", "branding"],
+          branches: ["logo", "artwork"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: mobileAngles.design,
-          distances: mobileDistances.design,
+          angles: mobileAngles.graphix,
+          distances: mobileDistances.graphix,
+        },
+        {
+          name: "tech",
+          logo: null,
+          branches: ["web", "hardware"],
+          isVisible: false,
+          branchAnimProgress: 0,
+          angles: mobileAngles.technology,
+          distances: mobileDistances.technology,
         },
       ];
     }

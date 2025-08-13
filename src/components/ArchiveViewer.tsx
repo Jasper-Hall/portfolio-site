@@ -41,6 +41,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   const [isImageModalOpen, setIsImageModalOpen] = useState<boolean>(false);
   const [modalImageIndex, setModalImageIndex] = useState<number>(0);
   const [imageNaturalSize, setImageNaturalSize] = useState<{ w: number; h: number } | null>(null);
+  const [isProjectViewerHovered, setIsProjectViewerHovered] = useState<boolean>(false);
   const isPortrait = imageNaturalSize ? imageNaturalSize.h > imageNaturalSize.w : false;
 
   // Expose handleHover and updatePath methods to parent component
@@ -94,6 +95,10 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         : (currentProject.gallery?.filter(item => item.type === 'image').map(item => item.src) || []))
     : [];
 
+  const embedBlock = currentProject?.contentBlocks?.find(b => b.type === 'embed' && b.embedUrl);
+  const embedUrl = embedBlock && (embedBlock as any).embedUrl as string | undefined;
+  const isBandcampEmbed = !!embedUrl && embedUrl.includes('bandcamp.com/EmbeddedPlayer');
+
   useEffect(() => {
     setCurrentImageIndex(0);
     setModalImageIndex(0);
@@ -117,7 +122,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
   // Auto-play carousel
   useEffect(() => {
-    if (isAutoPlaying && filteredProjects.length > 1) {
+    if (isAutoPlaying && filteredProjects.length > 1 && !isProjectViewerHovered) {
       autoPlayInterval.current = setInterval(() => {
         setCurrentIndex(prev => (prev + 1) % filteredProjects.length);
       }, 4000); // Change every 4 seconds
@@ -128,7 +133,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         clearInterval(autoPlayInterval.current);
       }
     };
-  }, [isAutoPlaying, filteredProjects.length]);
+  }, [isAutoPlaying, filteredProjects.length, isProjectViewerHovered]);
 
   // Pause auto-play on hover
   useEffect(() => {
@@ -270,7 +275,11 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           <div className="p-4 md:p-6">
             {/* Project Card */}
             {currentProject && (
-              <div className="relative card-wrapper">
+              <div 
+                className="relative card-wrapper"
+                onMouseEnter={() => setIsProjectViewerHovered(true)}
+                onMouseLeave={() => setIsProjectViewerHovered(false)}
+              >
                 <div 
                   className="rounded-lg relative paper-card overflow-y-auto max-h-[75vh]"
                   style={{
@@ -300,17 +309,34 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                   <div key={currentProject.id} className={swapDirection === 'next' ? 'card-anim-next' : 'card-anim-prev'}>
                     {/* Project Content */}
                     <div
-                      className="relative w-full overflow-hidden bg-gray-900/50"
-                      style={{ height: isPortrait ? '28rem' : '20rem' }}
+                      className={`relative w-full overflow-hidden bg-gray-900/50 ${embedUrl ? (isBandcampEmbed ? 'square-embed-container' : 'landscape-image-container') : (isPortrait ? 'portrait-image-container' : 'landscape-image-container')}`}
                     >
-                      {imageSources.length > 0 ? (
+                      {embedUrl ? (
+                        (isBandcampEmbed ? (
+                          <div className="square-embed-inner">
+                            <iframe
+                              src={embedUrl}
+                              title={currentProject.title}
+                              className="absolute inset-0 w-full h-full z-10 border-0"
+                              allow="autoplay; fullscreen;"
+                            />
+                          </div>
+                        ) : (
+                          <iframe
+                            src={embedUrl}
+                            title={currentProject.title}
+                            className="absolute inset-0 w-full h-full z-10 border-0"
+                            allow="autoplay; fullscreen;"
+                          />
+                        ))
+                      ) : imageSources.length > 0 ? (
                         <>
                           {/* Blurred background fill */}
                           <div
                             className="absolute inset-0"
                             style={{
                               backgroundImage: `url(${imageSources[currentImageIndex]})`,
-                              backgroundSize: 'cover',
+                              backgroundSize: isPortrait ? 'contain' : 'cover',
                               backgroundPosition: 'center',
                               filter: 'blur(20px) brightness(0.6)',
                               transform: 'scale(1.1)'
@@ -320,7 +346,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           <img
                             src={imageSources[currentImageIndex]}
                             alt={currentProject.title}
-                            className="absolute inset-0 w-full h-full object-contain z-10"
+                            className={`absolute inset-0 w-full h-full z-10 ${isPortrait ? 'object-contain' : 'object-cover'}`}
                             onLoad={(e) => {
                               const img = e.currentTarget as HTMLImageElement;
                               if (img.naturalWidth && img.naturalHeight) {
@@ -729,6 +755,31 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
          }
          .carousel-rail:hover svg {
            color: #3A3428;
+         }
+         
+         /* Landscape image optimization */
+         .landscape-image-container {
+           aspect-ratio: 16/9;
+           min-height: 16rem;
+         }
+         
+         .portrait-image-container {
+           height: 28rem;
+         }
+         /* Square embed container (e.g., Bandcamp) */
+         .square-embed-container {
+           aspect-ratio: 1 / 1;
+           width: 100%;
+           margin: 1rem auto 0; /* add a bit of top spacing */
+           position: relative;
+         }
+         .square-embed-inner {
+           position: absolute;
+           top: 0;
+           left: 50%;
+           transform: translateX(-50%);
+           width: 65%;
+           height: 100%;
          }
        `}</style>
     </div>
