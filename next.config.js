@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: '/Jasper2024Portfolio-compressed.pdf',
+        destination: '/JasperPortfolio2025.pdf',
         permanent: false,
       },
     ];
