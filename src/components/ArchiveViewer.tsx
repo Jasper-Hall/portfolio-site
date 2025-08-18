@@ -137,14 +137,18 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
   // Pause auto-play on hover
   useEffect(() => {
-    if (hoveredBranch) {
-      setIsAutoPlaying(false);
+    if (internalPath.level === 'home') {
+      if (hoveredBranch) {
+        setIsAutoPlaying(false);
+      } else {
+        setIsAutoPlaying(true);
+        // When unhovering, set the current index to the last hovered index so auto-play continues from here
+        setCurrentIndex(lastHoveredIndex);
+      }
     } else {
       setIsAutoPlaying(true);
-      // When unhovering, set the current index to the last hovered index so auto-play continues from here
-      setCurrentIndex(lastHoveredIndex);
     }
-  }, [hoveredBranch, lastHoveredIndex]);
+  }, [hoveredBranch, lastHoveredIndex, internalPath.level]);
 
   // Reset index when path changes
   useEffect(() => {
@@ -342,18 +346,33 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                               transform: 'scale(1.1)'
                             }}
                           />
-                          {/* Foreground image (contain) */}
-                          <img
-                            src={imageSources[currentImageIndex]}
-                            alt={currentProject.title}
-                            className={`absolute inset-0 w-full h-full z-10 ${isPortrait ? 'object-contain' : 'object-cover'}`}
-                            onLoad={(e) => {
-                              const img = e.currentTarget as HTMLImageElement;
-                              if (img.naturalWidth && img.naturalHeight) {
-                                setImageNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
-                              }
-                            }}
-                          />
+                          {isPortrait ? (
+                            <div className="portrait-image-wrapper absolute inset-0 flex items-center justify-center z-10">
+                              <img
+                                src={imageSources[currentImageIndex]}
+                                alt={currentProject.title}
+                                className="portrait-image max-h-full max-w-full object-contain"
+                                onLoad={(e) => {
+                                  const img = e.currentTarget as HTMLImageElement;
+                                  if (img.naturalWidth && img.naturalHeight) {
+                                    setImageNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <img
+                              src={imageSources[currentImageIndex]}
+                              alt={currentProject.title}
+                              className="absolute inset-0 w-full h-full z-10 object-contain"
+                              onLoad={(e) => {
+                                const img = e.currentTarget as HTMLImageElement;
+                                if (img.naturalWidth && img.naturalHeight) {
+                                  setImageNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+                                }
+                              }}
+                            />
+                          )}
                           {/* Inline image navigation */}
                           {imageSources.length > 1 && (
                             <>
@@ -758,10 +777,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
          }
          
          /* Landscape image optimization */
-         .landscape-image-container {
-           aspect-ratio: 16/9;
-           min-height: 16rem;
-         }
+         .landscape-image-container { aspect-ratio: 21/9; min-height: 14rem; }
          
          .portrait-image-container {
            height: 28rem;
@@ -781,6 +797,9 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
            width: 65%;
            height: 100%;
          }
+         /* Portrait floating effect */
+         .portrait-image-wrapper { padding-top: 0.9rem; padding-bottom: 0.9rem; }
+         .portrait-image { box-shadow: 0 10px 16px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.12); border-radius: 4px; }
        `}</style>
     </div>
   );

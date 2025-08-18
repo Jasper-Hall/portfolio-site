@@ -21,3 +21,5 @@ const MemoryAsMissionaryPosition: ProjectData = {
 };
 
 export default MemoryAsMissionaryPosition;
+
+

@@ -13,6 +13,7 @@
     "@p5-wrapper/next": "^1.0.2",
     "@p5-wrapper/react": "^4.4.2",
     "@types/three": "^0.178.1",
+    "@vercel/analytics": "^1.5.0",
     "next": "14.0.4",
     "p5": "^2.0.3",
     "react": "18.2.0",

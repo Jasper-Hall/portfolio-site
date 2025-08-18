@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Analytics } from '@vercel/analytics/react';
 
 export const metadata: Metadata = {
   title: "Jasper Hall - Portfolio",
@@ -34,7 +35,10 @@ export default function RootLayout({
                <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
                <link rel="manifest" href="/favicons/manifest.webmanifest" />
              </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

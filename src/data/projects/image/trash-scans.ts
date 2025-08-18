@@ -21,3 +21,5 @@ const TrashScans: ProjectData = {
 };
 
 export default TrashScans;
+
+
