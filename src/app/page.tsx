@@ -2,6 +2,7 @@
 
 import Navigation from '@/components/Navigation';
 import Modal from '@/components/Modal';
+import GlobalPreloader from '@/components/GlobalPreloader';
 import { useState } from 'react';
 import { ViewMode } from '@/components/ViewToggle';
 import MindMapView from '@/components/MindMapView';
@@ -11,6 +12,7 @@ import GalleryView from '@/components/GalleryView';
 
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<ViewMode>('split');
   const [modalState, setModalState] = useState<{ isOpen: boolean; type: string | null }>({
     isOpen: false,
@@ -31,6 +33,10 @@ export default function Home() {
 
   const handleViewChange = (view: ViewMode) => {
     setCurrentView(view);
+  };
+
+  const handleLoadComplete = () => {
+    setIsLoading(false);
   };
 
   const getModalContent = () => {
@@ -82,6 +88,11 @@ export default function Home() {
         return 'Modal';
     }
   };
+
+  // Show preloader while loading
+  if (isLoading) {
+    return <GlobalPreloader onLoadComplete={handleLoadComplete} />;
+  }
 
   return (
     <main className="min-h-screen relative">

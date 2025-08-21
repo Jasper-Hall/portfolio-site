@@ -36,6 +36,8 @@ export const getProjectsByTag = (tag: string): ProjectData[] =>
 export const getProjectById = (id: string): ProjectData | undefined => 
   allProjects.find(project => project.id === id);
 
+export const getAllProjects = (): ProjectData[] => allProjects;
+
 // Get projects in MindMap order for featured display
 export const getFeaturedProjectsInMindMapOrder = (): ProjectData[] => {
   const mindMapOrder = ['cloth', 'film', 'sound', 'image', 'art', 'graphix', 'tech'];
