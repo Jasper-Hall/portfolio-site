@@ -194,6 +194,41 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         : (currentProject.gallery?.filter(item => item.type === 'image').map(item => item.src) || []))
     : [];
 
+  // Preload images strategically: adjacent images first, then all others
+  useEffect(() => {
+    if (imageSources.length > 1) {
+      // Preload adjacent images first for instant switching
+      const preloadAdjacent = () => {
+        const nextIndex = (currentImageIndex + 1) % imageSources.length;
+        const prevIndex = (currentImageIndex - 1 + imageSources.length) % imageSources.length;
+        
+        // Preload next and previous images
+        [nextIndex, prevIndex].forEach(index => {
+          if (index !== currentImageIndex) {
+            const img = new Image();
+            img.src = imageSources[index];
+          }
+        });
+      };
+
+      // Preload all images in background (lower priority)
+      const preloadAll = () => {
+        imageSources.forEach((src, index) => {
+          if (index !== currentImageIndex) {
+            const img = new Image();
+            img.src = src;
+          }
+        });
+      };
+
+      // Immediate preload of adjacent images
+      preloadAdjacent();
+      
+      // Delayed preload of all images to avoid blocking
+      setTimeout(preloadAll, 100);
+    }
+  }, [currentProject?.id, currentImageIndex, imageSources]);
+
   const embedBlock = currentProject?.contentBlocks?.find(b => b.type === 'embed' && b.embedUrl);
   const embedUrl = embedBlock && (embedBlock as any).embedUrl as string | undefined;
   const isBandcampEmbed = !!embedUrl && embedUrl.includes('bandcamp.com/EmbeddedPlayer');
@@ -632,7 +667,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                           <img
                             src={imageSources[currentImageIndex]}
                             alt={currentProject.title}
-                            className="max-w-full max-h-full object-contain"
+                            className="max-w-full max-h-full object-contain transition-opacity duration-200"
                             style={{
                               maxHeight: 'calc(100vh - 300px)', // Ensure it doesn't exceed viewport
                               maxWidth: '100%'
@@ -643,6 +678,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                                 setImageNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
                               }
                             }}
+                            loading="eager" // Load current image immediately
                           />
                         </div>
 
