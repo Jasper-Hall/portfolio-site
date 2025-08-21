@@ -7,8 +7,8 @@ const nextConfig = {
     optimizePackageImports: ['p5'],
   },
   async redirects() {
-    // Only redirect to PDF in production
-    if (process.env.NODE_ENV === 'production') {
+    // Skip PDF redirect if BYPASS_PDF_REDIRECT is set or if in development
+    if (process.env.NODE_ENV === 'production' && !process.env.BYPASS_PDF_REDIRECT) {
       return [
         {
           source: '/',
@@ -17,7 +17,7 @@ const nextConfig = {
         },
       ];
     }
-    // No redirects in development
+    // No redirects in development or when bypass is enabled
     return [];
   },
 }
