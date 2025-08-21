@@ -227,16 +227,6 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
             </pre>
           </div>
         </div>
-          <pre className="text-white text-xs md:text-sm font-mono drop-shadow-lg leading-none whitespace-pre">
-{`   ||                                            '||              '||  '||  
-  ...  ....    ....  ... ...    ....  ... ..      || ||    ....    ||   ||  
-   || '' .||  ||. '   ||'  || .|...||  ||' ''     ||' ||  '' .||   ||   ||  
-   || .|' ||  . '|..  ||    | ||       ||         ||  ||  .|' ||   ||   ||  
-   || '|..'|' |'..|'  ||...'   '|...' .||.       .||. ||. '|..'|' .||. .||. 
-.. |'                 ||                                                    
- ''                  ''''`}
-          </pre>
-        </div>
 
         {/* Loading text */}
         <div className="mb-6">
