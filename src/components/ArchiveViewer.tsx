@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { ProjectData, mindMapStructure } from '@/data/types';
 import { getFeaturedProjectsInMindMapOrder, getProjectsByCategory, getProjectsBySubcategory } from '@/data/projects';
 import { createPortal } from 'react-dom';
@@ -110,7 +110,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     }
   };
 
-  const filteredProjects = getFilteredProjects();
+  // Memoize filtered projects to prevent unnecessary recalculations
+  const filteredProjects = React.useMemo(() => getFilteredProjects(), [internalPath.level, internalPath.sublevel]);
   
   // Function to animate ink blur from high to low for text reveal effect
   const animateInkBlur = () => {
@@ -185,9 +186,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     return currentIndex;
   };
   
-  // Use animatedIndex for display during transitions, fallback to calculated index
-  const displayIndex = isTransitioning ? animatedIndex : getHoveredProjectIndex();
-  const currentProject = filteredProjects[displayIndex] || filteredProjects[0];
+  // Use currentIndex directly for image carousel - no need for complex transition logic
+  const currentProject = filteredProjects[currentIndex] || filteredProjects[0];
   const imageSources: string[] = currentProject
     ? (currentProject.images && currentProject.images.length > 0
         ? currentProject.images
@@ -341,9 +341,10 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     };
   }, []);
 
+  // Only reset image natural size when project changes, not when switching images within a project
   useEffect(() => {
     setImageNaturalSize(null);
-  }, [currentImageIndex]);
+  }, [currentProject?.id]);
 
   // Close modal on Escape
   useEffect(() => {
@@ -415,7 +416,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     if (filteredProjects.length > 1) {
       const nextIndex = (currentIndex + 1) % filteredProjects.length;
       setCurrentIndex(nextIndex);
-      initiateTransition(nextIndex);
+      // Don't trigger transition for image carousel - just update index
     }
   };
 
@@ -423,13 +424,13 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     if (filteredProjects.length > 1) {
       const prevIndex = (currentIndex - 1 + filteredProjects.length) % filteredProjects.length;
       setCurrentIndex(prevIndex);
-      initiateTransition(prevIndex);
+      // Don't trigger transition for image carousel - just update index
     }
   };
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
-    initiateTransition(index);
+    // Don't trigger transition for image carousel - just update index
   };
 
   const getStatusColor = (status: string) => {
@@ -649,7 +650,10 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         {imageSources.length > 1 && (
                           <>
                             <button
-                              onClick={() => setCurrentImageIndex(prev => (prev - 1 + imageSources.length) % imageSources.length)}
+                              onClick={() => {
+                                const newIndex = (currentImageIndex - 1 + imageSources.length) % imageSources.length;
+                                setCurrentImageIndex(newIndex);
+                              }}
                               className="absolute left-2 top-1/2 -translate-y-1/2 p-1 text-white z-20 hover:text-white transition-colors"
                               style={{ filter: 'drop-shadow(0 0 6px rgba(0,0,0,0.75))' }}
                               aria-label="Previous image"
@@ -659,9 +663,12 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                               </svg>
                             </button>
                             <button
-                              onClick={() => setCurrentImageIndex(prev => (prev + 1) % imageSources.length)}
+                              onClick={() => {
+                                const newIndex = (currentImageIndex + 1) % imageSources.length;
+                                setCurrentImageIndex(newIndex);
+                              }}
                               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-white z-20 hover:text-white transition-colors"
-                              style={{ filter: 'drop-shadow(0 0 6px rgba(0,0,0,0.75))' }}
+                              style={{ filter: 'drop-shadow(0 0 6px rgba(0,0,0,0.2))' }}
                               aria-label="Next image"
                             >
                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -983,15 +990,15 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         onClick={() => goToSlide(index)}
                         className="w-2 h-2 rounded-full transition-all duration-300"
                         style={{
-                          backgroundColor: index === displayIndex ? '#6B635A' : '#ABA398'
+                          backgroundColor: index === currentIndex ? '#6B635A' : '#ABA398'
                         }}
                         onMouseEnter={(e) => {
-                          if (index !== displayIndex) {
+                          if (index !== currentIndex) {
                             e.currentTarget.style.backgroundColor = '#9D9588';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (index !== displayIndex) {
+                          if (index !== currentIndex) {
                             e.currentTarget.style.backgroundColor = '#ABA398';
                           }
                         }}
