@@ -11,8 +11,8 @@ const TheLibrarian: ProjectData = {
   status: 'active',
   archiveRef: 'FILM-001',
   category: 'film',
-  subcategory: 'archives',
-  featured: true,
+  subcategory: 'short',
+  featured: false,
 
   images: [],
   videos: [],

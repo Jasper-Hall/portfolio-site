@@ -7,13 +7,18 @@ const nextConfig = {
     optimizePackageImports: ['p5'],
   },
   async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/JasperPortfolio2025.pdf',
-        permanent: false,
-      },
-    ];
+    // Only redirect to PDF in production
+    if (process.env.NODE_ENV === 'production') {
+      return [
+        {
+          source: '/',
+          destination: '/JasperPortfolio2025.pdf',
+          permanent: false,
+        },
+      ];
+    }
+    // No redirects in development
+    return [];
   },
 }
 

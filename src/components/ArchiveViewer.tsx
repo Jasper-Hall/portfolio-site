@@ -13,12 +13,13 @@ interface NavigationPath {
 interface ArchiveViewerProps {
   className?: string;
   currentPath: NavigationPath;
-  onPathChange: (path: NavigationPath) => void;
+  onPathChange: (path: NavigationPath, previousPath?: NavigationPath) => void;
 }
 
 export interface ArchiveViewerRef {
   handleHover: (branchName: string | null) => void;
   updatePath: (path: NavigationPath) => void;
+  getCurrentPath: () => NavigationPath;
 }
 
 const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({ 
@@ -52,26 +53,48 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   // Ink bleed animation states
   const [animatedInkBlur, setAnimatedInkBlur] = useState(0.6);
   const inkBlurAnimationRef = useRef<number | null>(null);
+  
+  // Layout transition state to prevent jarring size changes
+  const [previousLayoutType, setPreviousLayoutType] = useState<'portrait' | 'landscape' | 'square'>('landscape');
+  const [isLayoutTransitioning, setIsLayoutTransitioning] = useState(false);
+  const [isContentLoading, setIsContentLoading] = useState(false);
+  
+  // Media playback state to prevent auto-scrolling during playback
+  const [isMediaPlaying, setIsMediaPlaying] = useState(false);
 
-  // Expose handleHover and updatePath methods to parent component
+  // Expose handleHover, updatePath, and getCurrentPath methods to parent component
   useImperativeHandle(ref, () => ({
     handleHover: (branchName: string | null) => {
+      // Completely disable hover behavior when any section is expanded
+      if (internalPath.level !== 'home') {
+        // Clear any existing hover state when sections are expanded
+        if (hoveredBranch !== null) {
+          setHoveredBranch(null);
+        }
+        return;
+      }
+      
       if (branchName && internalPath.level === 'home') {
         const featuredProjects = getFeaturedProjectsInMindMapOrder();
         const hoveredIndex = featuredProjects.findIndex(p => p.category === branchName);
         if (hoveredIndex >= 0) {
           setLastHoveredIndex(hoveredIndex);
-          // Initiate smooth transition to hovered project
           initiateTransition(hoveredIndex);
         }
-      } else if (!branchName && internalPath.level === 'home') {
-        // Return to current auto-play index when hover ends
-        initiateTransition(currentIndex);
+      } else if (!branchName) {
+        // Handle unhover - return to last hovered featured project
+        if (internalPath.level === 'home' && lastHoveredIndex !== currentIndex) {
+          setAnimatedIndex(lastHoveredIndex);
+          setCurrentIndex(lastHoveredIndex);
+        }
       }
       setHoveredBranch(branchName);
     },
     updatePath: (path: NavigationPath) => {
       setInternalPath(path);
+    },
+    getCurrentPath: () => {
+      return internalPath;
     }
   }));
 
@@ -96,7 +119,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
       cancelAnimationFrame(inkBlurAnimationRef.current);
     }
     
-    const startBlur = 2.0;
+    const startBlur = 1.7;
     const endBlur = 0.5;
     const duration = 1500; // 1.5 seconds for optimal timing
     
@@ -139,7 +162,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     setIsTransitioning(true);
     
     // Immediately set blur to max to start the blur effect before project switches
-    setAnimatedInkBlur(2.0);
+    setAnimatedInkBlur(1.7);
     
     // Start the transition after a brief delay to allow for animation prep
     transitionTimeoutRef.current = setTimeout(() => {
@@ -176,7 +199,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   const isBandcampEmbed = !!embedUrl && embedUrl.includes('bandcamp.com/EmbeddedPlayer');
   const isVimeoEmbed = !!embedUrl && embedUrl.includes('vimeo.com');
 
-  // Determine layout based on current media
+  // Determine layout based on current media with prediction
   const getLayoutType = (): 'portrait' | 'landscape' | 'square' => {
     if (embedUrl) {
       if (isBandcampEmbed) return 'square';
@@ -188,27 +211,79 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
       if (w === h) return 'square';
       return h > w ? 'portrait' : 'landscape';
     }
-    return 'landscape'; // default
+    
+    // Predict layout based on project type and content for smoother transitions
+    if (currentProject?.gallery && currentProject.gallery.length > 0) {
+      // For projects with galleries, predict based on first image if we have metadata
+      const firstImage = currentProject.gallery[0];
+      if (firstImage.width && firstImage.height) {
+        if (firstImage.width === firstImage.height) return 'square';
+        return firstImage.height > firstImage.width ? 'portrait' : 'landscape';
+      }
+      
+      // For logo/graphix projects, predict square layout (common for logos)
+      if (currentProject.category === 'graphix' && currentProject.subcategory === 'logo') {
+        return 'square';
+      }
+      
+      // For image projects with scans, predict landscape (common for scans)
+      if (currentProject.category === 'image' && currentProject.subcategory === 'scans') {
+        return 'landscape';
+      }
+    }
+    
+    // Fallback to landscape for most content types
+    return 'landscape';
   };
 
   const layoutType = getLayoutType();
   const isPortrait = layoutType === 'portrait';
   const isSquare = layoutType === 'square';
+  
+  // Handle layout transitions smoothly
+  useEffect(() => {
+    if (previousLayoutType !== layoutType && !isLayoutTransitioning) {
+      setIsLayoutTransitioning(true);
+      
+      // Short delay to allow for smooth transition
+      const timer = setTimeout(() => {
+        setIsLayoutTransitioning(false);
+        setPreviousLayoutType(layoutType);
+      }, 150); // Match the ink blur transition timing
+      
+      return () => clearTimeout(timer);
+    }
+  }, [layoutType, previousLayoutType, isLayoutTransitioning]);
+  
+  // Force specific projects to use bottom text layout even if they're square
+  const forceBottomLayout = currentProject?.id === 'evanoraTour' || currentProject?.id === 'CyclesOfNight';
+  const useSideLayout = (isPortrait || isSquare) && !forceBottomLayout;
 
   useEffect(() => {
     setCurrentImageIndex(0);
     setModalImageIndex(0);
     setIsImageModalOpen(false);
     setImageNaturalSize(null);
+    
+    // Set loading state to prevent layout flash
+    setIsContentLoading(true);
+    
+    // Clear loading state after a short delay to allow content to settle
+    const loadingTimer = setTimeout(() => {
+      setIsContentLoading(false);
+    }, 100);
+    
     // keep text section visible; no toggle state needed
     
     // Trigger ink blur animation when project content changes
-    // (but not if we're already in a transition to avoid double-animation)
+    // (not if we're already in a transition to avoid double-animation)
     if (!isTransitioning && currentProject?.id) {
       setTimeout(() => {
         animateInkBlur();
       }, 50);
     }
+    
+    return () => clearTimeout(loadingTimer);
   }, [currentProject?.id]);
 
   // Initialize animated index and ink blur on first load
@@ -216,6 +291,43 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
     setAnimatedIndex(currentIndex);
     setAnimatedInkBlur(0.5); // Start with final blur value for initial state
   }, []);
+
+  // Media playback detection
+  useEffect(() => {
+    const handleMediaPlay = () => setIsMediaPlaying(true);
+    const handleMediaPause = () => setIsMediaPlaying(false);
+    const handleMediaEnded = () => setIsMediaPlaying(false);
+
+    // Get all media elements in the current project
+    const mediaElements = document.querySelectorAll('audio, video, iframe');
+    
+    mediaElements.forEach(media => {
+      if (media instanceof HTMLAudioElement || media instanceof HTMLVideoElement) {
+        media.addEventListener('play', handleMediaPlay);
+        media.addEventListener('pause', handleMediaPause);
+        media.addEventListener('ended', handleMediaEnded);
+      }
+      // For iframes, we'll use a more conservative approach
+      // Pause auto-scroll when iframes are present to prevent interrupting embedded content
+      if (media instanceof HTMLIFrameElement) {
+        // Check if it's a media iframe (YouTube, SoundCloud, Bandcamp, etc.)
+        const src = media.src || '';
+        if (src.includes('youtube.com') || src.includes('soundcloud.com') || src.includes('bandcamp.com') || src.includes('vimeo.com')) {
+          setIsMediaPlaying(true);
+        }
+      }
+    });
+
+    return () => {
+      mediaElements.forEach(media => {
+        if (media instanceof HTMLAudioElement || media instanceof HTMLVideoElement) {
+          media.removeEventListener('play', handleMediaPlay);
+          media.removeEventListener('pause', handleMediaPause);
+          media.removeEventListener('ended', handleMediaEnded);
+        }
+      });
+    };
+  }, [currentProject?.id]); // Re-run when project changes
 
   // Cleanup transition timeout and ink blur animation on unmount
   useEffect(() => {
@@ -245,7 +357,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
   // Auto-play carousel
   useEffect(() => {
-    if (isAutoPlaying && filteredProjects.length > 1 && !isProjectViewerHovered && !isTransitioning) {
+    if (isAutoPlaying && filteredProjects.length > 1 && !isProjectViewerHovered && !isTransitioning && !isMediaPlaying) {
       autoPlayInterval.current = setInterval(() => {
         setCurrentIndex(prev => {
           const nextIndex = (prev + 1) % filteredProjects.length;
@@ -260,7 +372,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         clearInterval(autoPlayInterval.current);
       }
     };
-  }, [isAutoPlaying, filteredProjects.length, isProjectViewerHovered, isTransitioning]);
+  }, [isAutoPlaying, filteredProjects.length, isProjectViewerHovered, isTransitioning, isMediaPlaying]);
 
   // Pause auto-play on hover
   useEffect(() => {
@@ -268,13 +380,17 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
       if (hoveredBranch) {
         setIsAutoPlaying(false);
       } else {
-        setIsAutoPlaying(true);
-        setCurrentIndex(lastHoveredIndex);
+        // Resume autoplay after a brief delay to let the transition complete
+        setTimeout(() => {
+          setIsAutoPlaying(true);
+        }, 500);
+        // Don't set currentIndex here - let the handleHover transition handle it
+        // This prevents conflicts with the smooth transition back
       }
     } else {
       setIsAutoPlaying(true);
     }
-  }, [hoveredBranch, lastHoveredIndex, internalPath.level]);
+  }, [hoveredBranch, internalPath.level]);
 
   // Reset index when path changes and trigger initial animation
   useEffect(() => {
@@ -368,8 +484,14 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
   };
 
   const handleTabClick = (path: NavigationPath) => {
+    // Store current path to determine context
+    const previousPath = internalPath;
+    
     setInternalPath(path);
-    onPathChange(path);
+    
+    // Only sync to parent when clicking folder tabs (not mindmap clicks)
+    // This allows mindmap to stay in sync for folder navigation while preserving animations
+    onPathChange(path, previousPath);
   };
 
   // Text section is always visible; no toggle function required
@@ -411,13 +533,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         <div className="flex items-end space-x-1">
           {(() => {
             const crumbs = generateBreadcrumbs();
-            const total = crumbs.length;
             return crumbs.map((breadcrumb, index) => {
-              let tierBg: string | undefined;
-              if (!breadcrumb.isActive && total === 3) {
-                if (index === 0) tierBg = '#D8C9AE';
-                if (index === 1) tierBg = '#E3D6BC';
-              }
               return (
                 <div key={index} className="relative">
                                       <button
@@ -441,12 +557,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                     >
                       {breadcrumb.name}
                     </button>
-                  {breadcrumb.isActive && (
-                    <div 
-                      className="absolute left-0 right-0 h-1 rounded-b-sm"
-                      style={{ backgroundColor: '#d1d5db', bottom: '-4px' }}
-                    ></div>
-                  )}
+
                 </div>
               );
             });
@@ -454,7 +565,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         </div>
         
         {/* Main Container */}
-        <div className="rounded-b-2xl rounded-tr-2xl shadow-lg h-full border relative z-10 -mt-1 bg-[#E9E0CC] border-[#D8C9AE]">
+        <div className="rounded-b-2xl rounded-tr-2xl shadow-lg h-full relative z-10 -mt-1 bg-[#B8AFA1]">
           <div className="p-4 md:p-6 h-full">
             {currentProject && (
               <div className="h-full flex flex-col">
@@ -464,10 +575,10 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                     onMouseEnter={() => setIsProjectViewerHovered(true)}
                     onMouseLeave={() => setIsProjectViewerHovered(false)}
                   >
-                {/* Media + Text wrapper: side-by-side when portrait or square */}
-                <div className={(isPortrait || isSquare || isBandcampEmbed) ? 'flex gap-4 items-start' : ''}>
+                {/* Media + Text wrapper: side-by-side when portrait or square (unless forced to bottom) */}
+                <div className={(useSideLayout || isBandcampEmbed) ? 'flex gap-4 items-start' : 'flex flex-col h-full'}>
                   {/* Media Container - Takes up most of the space */}
-                  <div className="flex-1 relative min-h-0 flex items-center justify-center">
+                  <div className={`relative min-h-0 flex items-center justify-center ${useSideLayout || isBandcampEmbed ? 'flex-1' : 'flex-1 max-h-[calc(100%-12rem)]'}`}>
                     {embedUrl ? (
                       <div className="w-full h-full flex items-center justify-center">
                         {isBandcampEmbed ? (
@@ -477,6 +588,22 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                               title={currentProject.title}
                               className="w-full h-full border-0 rounded-lg"
                               allow="autoplay; fullscreen;"
+                            />
+                          </div>
+                        ) : isVimeoEmbed ? (
+                          <div className="w-full h-full min-h-[400px]">
+                            <iframe
+                              src={embedUrl}
+                              title={currentProject.title}
+                              className="w-full h-full border-0 rounded-lg"
+                              allow="autoplay; fullscreen;"
+                              style={{
+                                minHeight: '400px',
+                                width: '100%',
+                                height: '100%',
+                                maxWidth: '100%',
+                                maxHeight: '100%'
+                              }}
                             />
                           </div>
                         ) : (
@@ -570,8 +697,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                     )}
                   </div>
 
-                  {/* Side text panel for portrait and square (incl. Bandcamp) */}
-                  {(isPortrait || isSquare) && (
+                  {/* Side text panel for portrait and square (unless forced to bottom) */}
+                  {useSideLayout && (
                     <div className="w-64">
                       <div className="rounded-lg max-h-[calc(100vh-300px)] overflow-y-auto paper-text-panel">
                         <div className="p-4 space-y-3">
@@ -606,15 +733,36 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                             {currentProject.subtitle}
                           </p>
 
-                          <p 
-                            className="text-sm leading-relaxed" 
-                            style={{ 
-                              color: '#3A3428',
-                              filter: `blur(${animatedInkBlur}px) url(#ink-bleed-filter-${inkThreshold.toFixed(1)})`
-                            }}
-                          >
-                            {currentProject.description}
-                          </p>
+                          {/* Special handling for Previous Performances - show contentBlocks, otherwise show description */}
+                          {currentProject.id === 'Previous-Performances' && currentProject.contentBlocks && currentProject.contentBlocks.length > 0 ? (
+                            <div className="space-y-3">
+                              {currentProject.contentBlocks.map((block, index) => (
+                                <div key={index}>
+                                  {block.type === 'text' && (
+                                    <p 
+                                      className="text-sm leading-relaxed whitespace-pre-line" 
+                                      style={{ 
+                                        color: '#3A3428',
+                                        filter: `blur(${animatedInkBlur}px) url(#ink-bleed-filter-${inkThreshold.toFixed(1)})`
+                                      }}
+                                    >
+                                      {block.content}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p 
+                              className="text-sm leading-relaxed" 
+                              style={{ 
+                                color: '#3A3428',
+                                filter: `blur(${animatedInkBlur}px) url(#ink-bleed-filter-${inkThreshold.toFixed(1)})`
+                              }}
+                            >
+                              {currentProject.description}
+                            </p>
+                          )}
 
                           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
                             <div>
@@ -673,12 +821,12 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                   )}
                 </div>
 
-                {/* Bottom text panel for landscape */}
-                {!isPortrait && !isSquare && (
-                  <div className="mt-4 block">
+                {/* Bottom text panel for landscape and forced bottom layout */}
+                {!useSideLayout && (
+                  <div className="flex-shrink-0">
                     {/* Text Content Panel */}
                     <div className={`w-full`}>
-                      <div className="rounded-lg max-h-48 overflow-y-auto paper-text-panel">
+                      <div className="rounded-lg max-h-44 overflow-y-auto paper-text-panel">
                         <div className="p-4 space-y-3">
                           <div className="flex items-center justify-between">
                             <span 
@@ -711,15 +859,36 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                             {currentProject.subtitle}
                           </p>
 
-                          <p 
-                            className="text-sm leading-relaxed" 
-                            style={{ 
-                              color: '#3A3428',
-                              filter: `blur(${animatedInkBlur}px) url(#ink-bleed-filter-${inkThreshold.toFixed(1)})`
-                            }}
-                          >
-                            {currentProject.description}
-                          </p>
+                          {/* Special handling for Previous Performances - show contentBlocks, otherwise show description */}
+                          {currentProject.id === 'Previous-Performances' && currentProject.contentBlocks && currentProject.contentBlocks.length > 0 ? (
+                            <div className="space-y-3">
+                              {currentProject.contentBlocks.map((block, index) => (
+                                <div key={index}>
+                                  {block.type === 'text' && (
+                                    <p 
+                                      className="text-sm leading-relaxed whitespace-pre-line" 
+                                      style={{ 
+                                        color: '#3A3428',
+                                        filter: `blur(${animatedInkBlur}px) url(#ink-bleed-filter-${inkThreshold.toFixed(1)})`
+                                      }}
+                                    >
+                                      {block.content}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p 
+                              className="text-sm leading-relaxed" 
+                              style={{ 
+                                color: '#3A3428',
+                                filter: `blur(${animatedInkBlur}px) url(#ink-bleed-filter-${inkThreshold.toFixed(1)})`
+                              }}
+                            >
+                              {currentProject.description}
+                            </p>
+                          )}
 
                           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
                             <div>
@@ -814,16 +983,16 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
                         onClick={() => goToSlide(index)}
                         className="w-2 h-2 rounded-full transition-all duration-300"
                         style={{
-                          backgroundColor: index === displayIndex ? '#8B7355' : '#C9B991'
+                          backgroundColor: index === displayIndex ? '#6B635A' : '#ABA398'
                         }}
                         onMouseEnter={(e) => {
                           if (index !== displayIndex) {
-                            e.currentTarget.style.backgroundColor = '#A69570';
+                            e.currentTarget.style.backgroundColor = '#9D9588';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (index !== displayIndex) {
-                            e.currentTarget.style.backgroundColor = '#C9B991';
+                            e.currentTarget.style.backgroundColor = '#ABA398';
                           }
                         }}
                       />
@@ -890,7 +1059,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         .tab-button {
           position: relative;
           z-index: 1;
-          --tab-bg: #E3D6BC;
+          --tab-bg: #9D9588;
           background: var(--tab-bg);
           border: none;
           border-top-left-radius: 18px;
@@ -927,11 +1096,11 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         .tab-button.no-curves::before {
           content: none; /* remove only left outer curve on specific tabs (e.g., home) */
         }
-        .tab-button:hover { --tab-bg: #D8C9AE; background: var(--tab-bg); }
+        .tab-button:hover { --tab-bg: #8B8275; background: var(--tab-bg); }
         .tab-active { 
-          --tab-bg: #EDE3CE;
+          --tab-bg: #B8AFA1;
           background: var(--tab-bg);
-          z-index: 2; 
+          z-index: 2;
         }
         .ink-bleed-text {
           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
@@ -967,27 +1136,27 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           padding: 6px 6px 4px 6px;
         }
         .status-active {
-          background-color: #F0E8D8;
-          border-color: #B8A082;
+          background-color: #D2C9C0;
+          border-color: #ABA398;
           color: #3A3428;
         }
         .status-archived {
-          background-color: #F5F5F5;
-          border-color: #B8B8B8;
+          background-color: #C8C0B6;
+          border-color: #9D9588;
           color: #5A5A5A;
         }
         .status-in-progress {
-          background-color: #E8F0F8;
-          border-color: #87CEEB;
-          color: #2E5A7A;
+          background-color: #C4BBB0;
+          border-color: #ABA398;
+          color: #4A453F;
         }
         .tag-label {
           font-family: 'GaldienStamp', 'Zombnze', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
           letter-spacing: 0.05em;
           transform: scaleY(0.8);
           transform-origin: center;
-          background-color: #F8F6F0;
-          border: 1px solid #E3D6BC;
+          background-color: #C8C0B6;
+          border: 1px solid #ABA398;
           border-radius: 2px;
           color: #5C5347;
           padding: 6px 6px 4px 6px;
@@ -996,8 +1165,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         /* Stacked paper card effect (slightly lighter than folder background) */
         .paper-stack {
           /* subtle paper texture over base color */
-          background-color: #F7F1E4; /* lighter than #E9E0CC */
-          background-image: linear-gradient(rgba(247,241,228,0.86), rgba(247,241,228,0.86)), url('/Texturelabs_Paper_373M.jpg');
+          background-color: #D2C9C0; /* lighter than #B8AFA1 */
+          background-image: linear-gradient(rgba(210,201,192,0.86), rgba(210,201,192,0.86)), url('/Texturelabs_Paper_373M.jpg');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -1008,8 +1177,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         .paper-text-panel {
-          background-color: #F7F1E4;
-          background-image: linear-gradient(rgba(247,241,228,0.86), rgba(247,241,228,0.86)), url('/Texturelabs_Paper_373M.jpg');
+          background-color: #D2C9C0;
+          background-image: linear-gradient(rgba(210,201,192,0.86), rgba(210,201,192,0.86)), url('/Texturelabs_Paper_373M.jpg');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -1024,8 +1193,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           border-radius: 0px;
         }
         .paper-stack::before {
-          background-color: #FBF6EA;
-          background-image: linear-gradient(rgba(251,246,234,0.78), rgba(251,246,234,0.78)), url('/Texturelabs_Paper_373M.jpg');
+          background-color: #D8D0C8;
+          background-image: linear-gradient(rgba(216,208,200,0.78), rgba(216,208,200,0.78)), url('/Texturelabs_Paper_373M.jpg');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -1037,8 +1206,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           transform: rotate(-1.6deg) scale(0.994);
         }
         .paper-stack::after {
-          background-color: #FAF3E6;
-          background-image: linear-gradient(rgba(250,243,230,0.80), rgba(250,243,230,0.80)), url('/Texturelabs_Paper_373M.jpg');
+          background-color: #D7CDC5;
+          background-image: linear-gradient(rgba(215,205,197,0.80), rgba(215,205,197,0.80)), url('/Texturelabs_Paper_373M.jpg');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -1052,8 +1221,8 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
 
 
         .carousel-rail {
-          background-color: #F7F1E4;
-          border: 2px solid #D8C9AE;
+          background-color: #C6BDB3;
+          border: 2px solid #9D9588;
           border-radius: 8px;
           padding: 8px;
           display: flex;
@@ -1069,11 +1238,11 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           overflow: visible;
         }
         .carousel-rail:hover {
-          background-color: #F2EFE7;
+          background-color: #D8D0C8;
           border-color: #3A3428;
         }
         .carousel-rail:active {
-          background-color: #E8DCC6;
+          background-color: #C4BBB0;
           border-color: #2A2419;
         }
         .carousel-rail svg {
@@ -1085,10 +1254,15 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         }
         
         /* Landscape image optimization */
-        .landscape-image-container { aspect-ratio: 21/9; min-height: 14rem; }
+        .landscape-image-container { 
+          aspect-ratio: 21/9; 
+          min-height: 14rem; 
+          transition: all 0.15s ease-out;
+        }
         
         .portrait-image-container {
           height: 28rem;
+          transition: all 0.15s ease-out;
         }
         /* Square embed container (e.g., Bandcamp) */
         .square-embed-container {
@@ -1096,6 +1270,19 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           width: 100%;
           margin: 1rem auto 0; /* add a bit of top spacing */
           position: relative;
+          transition: all 0.15s ease-out;
+        }
+        
+        /* Loading state to prevent layout flash */
+        .content-loading {
+          opacity: 0.7;
+          pointer-events: none;
+        }
+        
+        .content-loading .landscape-image-container,
+        .content-loading .portrait-image-container,
+        .content-loading .square-embed-container {
+          transition: none; /* Disable transitions during loading */
         }
         .square-embed-inner {
           position: absolute;
@@ -1120,7 +1307,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           left: -2px;
           right: -2px;
           bottom: -2px;
-          background: linear-gradient(45deg, #F7F1E4, #EDE3CE, #E3D6BC);
+          background: linear-gradient(45deg, #C6BDB3, #C4BBB0, #ABA398);
           border-radius: 10px;
           z-index: -1;
         }
@@ -1232,15 +1419,15 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: #D8C9AE;
+          background: #ABA398;
           cursor: pointer;
           transition: background-color 0.3s ease;
         }
         .project-dot.active {
-          background: #8B7355;
+          background: #6B635A;
         }
         .project-dot:hover:not(.active) {
-          background: #A69570;
+          background: #9D9588;
         }
         /* Breadcrumb styles */
         .breadcrumb-container {
@@ -1250,7 +1437,7 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           margin-bottom: 16px;
         }
         .breadcrumb-tab {
-          background: #E3D6BC;
+          background: #ABA398;
           border: none;
           border-top-left-radius: 18px;
           border-top-right-radius: 18px;
@@ -1262,20 +1449,20 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
           z-index: 1;
         }
         .breadcrumb-tab.active {
-          background: #EDE3CE;
+          background: #C4BBB0;
           z-index: 2;
         }
         .breadcrumb-tab:hover:not(.active) {
-          background: #D8C9AE;
+          background: #9D9588;
         }
         /* Text panel styles */
         .text-panel {
-          background: #F7F1E4;
+          background: #C6BDB3;
           border-radius: 8px;
           padding: 16px;
           max-height: 300px;
           overflow-y: auto;
-          border: 1px solid #E3D6BC;
+          border: 1px solid #ABA398;
         }
         .text-panel h3 {
           margin: 0 0 8px 0;

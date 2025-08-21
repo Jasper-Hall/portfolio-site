@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useImperativeHandle, useRef } from "react";
+import React, { useImperativeHandle, useRef, useEffect } from "react";
 import { type Sketch } from "@p5-wrapper/react";
 import { NextReactP5Wrapper } from "@p5-wrapper/next";
 import p5 from "p5";
 
 export interface MindMapRef {
   clearActiveSection: () => void;
+  keepSectionExpanded: (sectionName: string) => void;
+  setExpandedSection: (sectionName: string | null) => void;
 }
 
 interface MindMapProps {
@@ -14,13 +16,17 @@ interface MindMapProps {
   onSectionClick?: (sectionName: string) => void;
   onSubBranchClick?: (sectionName: string, subBranchName: string) => void;
   onBranchHover?: (branchName: string | null) => void;
+  expandedSection?: string | null;
+  expandedSubcategory?: string | null;
 }
 
 const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({ 
   className = '', 
   onSectionClick,
   onSubBranchClick,
-  onBranchHover
+  onBranchHover,
+  expandedSection,
+  expandedSubcategory
 }, ref) => {
   const activeSectionRef = useRef<string | null>(null);
   const sectionsRef = useRef<any[]>([]);
@@ -52,6 +58,8 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
     let activeSectionIndex = -1; // Track which section is currently open
     let activeSectionName: string | null = null; // Track which section is active in ArchiveViewer (local to sketch)
     let subBranchPositions: Array<{x: number, y: number, sectionName: string, branchName: string}> = []; // Track sub-branch positions for clicks
+    let initialExpandedSection: string | null = expandedSectionRef.current; // Use ref to get current value
+    let initialExpandedSubcategory: string | null = expandedSubcategoryRef.current; // Use ref to get current subcategory value
 
     p5.preload = () => {
       customFont = p5.loadFont("/fonts/JetBrainsMono-Medium.ttf");
@@ -68,7 +76,8 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
       p5.strokeWeight(1);
 
       // Detect mobile screen using full window width
-      isMobile = p5.windowWidth < 768;
+      // Use a lower threshold to avoid mobile layout on tablets/resized desktop windows
+      isMobile = p5.windowWidth < 600;
 
       centerX = p5.width / 2;
       
@@ -133,7 +142,8 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
       p5.resizeCanvas(newCanvasW, p5.windowHeight);
       
       // Update mobile detection using window width
-      isMobile = p5.windowWidth < 768;
+      // Use a lower threshold to avoid mobile layout on tablets/resized desktop windows
+      isMobile = p5.windowWidth < 600;
       
       centerX = p5.width / 2;
       
@@ -148,6 +158,8 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         curveHeight = 70; // No top nav on desktop
       }
       
+      // Reinitialize sections with new mobile detection to update angles
+      initSections();
       computeScalingFactorAndAdjustDistances();
     };
 
@@ -162,6 +174,12 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
               // Set the parent section as active for highlighting
               activeSectionName = subBranch.sectionName;
               activeSectionRef.current = subBranch.sectionName;
+              
+              // Clear any existing hover state when sub-branch is clicked
+              if (currentHoverState !== null && onBranchHover) {
+                currentHoverState = null;
+                onBranchHover(null);
+              }
             }
             return; // Exit early if sub-branch was clicked
           }
@@ -205,6 +223,12 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
               // Set this as the active section for highlighting
               activeSectionName = section.name;
               activeSectionRef.current = section.name;
+              
+              // Clear any existing hover state when section expands
+              if (currentHoverState !== null && onBranchHover) {
+                currentHoverState = null;
+                onBranchHover(null);
+              }
             }
           }
         });
@@ -237,11 +261,22 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         return;
       }
 
+      // If any section is expanded, disable all hover behavior
+      if (expandedSectionRef.current || expandedSubcategoryRef.current) {
+        if (currentHoverState !== null && onBranchHover) {
+          currentHoverState = null;
+          onBranchHover(null);
+        }
+        hoveredSectionIndex = -1;
+        hoveredSubBranch = null;
+        return;
+      }
+
       let hoveredBranchName: string | null = null;
       let newHoveredSectionIndex = -1;
       let newHoveredSubBranch: {sectionName: string, branchName: string} | null = null;
       
-      // Check for section hover
+      // Check for section hover (only when no sections are expanded)
       sections.forEach((section, index) => {
         const angle = p5.PI - (p5.PI / (sections.length - 1)) * index;
         const movement = p5.sin(p5.frameCount * 0.02 + index) * 3;
@@ -255,15 +290,13 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         }
       });
       
-      // Check for sub-branch hover
-      if (!hoveredBranchName) {
-        for (const subBranch of subBranchPositions) {
-          const hoverRadius = isMobile ? 35 : 40;
-          if (p5.dist(p5.mouseX, p5.mouseY, subBranch.x, subBranch.y) < hoverRadius) {
-            hoveredBranchName = `${subBranch.sectionName}-${subBranch.branchName}`;
-            newHoveredSubBranch = {sectionName: subBranch.sectionName, branchName: subBranch.branchName};
-            break;
-          }
+      // Check for sub-branch hover (only when no sections are expanded)
+      for (const subBranch of subBranchPositions) {
+        const hoverRadius = isMobile ? 35 : 40;
+        if (p5.dist(p5.mouseX, p5.mouseY, subBranch.x, subBranch.y) < hoverRadius) {
+          hoveredBranchName = `${subBranch.sectionName}-${subBranch.branchName}`;
+          newHoveredSubBranch = {sectionName: subBranch.sectionName, branchName: subBranch.branchName};
+          break;
         }
       }
       
@@ -292,6 +325,12 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
               // Set the parent section as active for highlighting
               activeSectionName = subBranch.sectionName;
               activeSectionRef.current = subBranch.sectionName;
+              
+              // Clear any existing hover state when sub-branch is touched
+              if (currentHoverState !== null && onBranchHover) {
+                currentHoverState = null;
+                onBranchHover(null);
+              }
             }
             break;
           }
@@ -331,6 +370,12 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
               
               section.isVisible = !section.isVisible;
               section.branchAnimProgress = section.isVisible ? 0 : 1;
+              
+              // Clear any existing hover state when section expands via touch
+              if (section.isVisible && currentHoverState !== null && onBranchHover) {
+                currentHoverState = null;
+                onBranchHover(null);
+              }
             }
           });
         }
@@ -345,40 +390,47 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
     };
 
     function initSections() {
+      // Preserve current expanded state before reinitializing (only if sections exist)
+      const currentExpandedSections = sections.length > 0 ? sections.map(section => ({
+        name: section.name,
+        isVisible: section.isVisible,
+        branchAnimProgress: section.branchAnimProgress
+      })) : [];
+      
       // Adjust angles and distances for mobile
       const mobileAngles = isMobile ? {
-        purgeFiles: [p5.PI / 2, p5.PI / 1.8], // More downward angles, fixed upward spawning
-        jaece: [p5.PI / 1.8, p5.PI / 1.5, p5.PI / 2.2],
-        xtsui: [p5.PI / 1.6, p5.PI / 2],
-        photography: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2],
-        technology: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.5],
-        art: [p5.PI / 1.8, p5.PI / 1.7, p5.PI / 2.2],
-        graphix: [p5.PI / 1.8, p5.PI / 1.6, p5.PI / 2.2]
+        film: [p5.PI / 0.8, p5.PI / 1.5], // Match desktop angles
+        sound: [p5.PI / 0.6, p5.PI / 1.2, p5.PI / 1.7], // Match desktop angles
+        cloth: [p5.PI / 1.1, p5.PI / 1.5], // Match desktop angles
+        image: [p5.PI / 2.6, p5.PI / 1.4, p5.PI / 1.9], // Match desktop angles
+        tech: [p5.PI / 3.8, p5.PI / 2.6], // Match desktop angles
+        art: [p5.PI / 2.6, p5.PI / 1.6, p5.PI / 1.9], // Match desktop angles
+        graphix: [p5.PI / 2.6, p5.PI / 2.1, p5.PI / 1.6] // Match desktop angles
       } : {
-        purgeFiles: [p5.PI / 1.8, p5.PI / 1.5], // Fixed: was p5.PI / 27, p5.PI / 1.5
-        jaece: [p5.PI / 1.6, p5.PI / 1.2, p5.PI / 1.7], // Fixed: was p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7
-        xtsui: [p5.PI / 1.4, p5.PI / 1.5], // Fixed: was p5.PI / 4, p5.PI / 1.5
-        photography: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5], // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
-        technology: [p5.PI / 1.6, p5.PI / 1.4, (3 * p5.PI) / 8], // Fixed: was p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8
-        art: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 1.9], // Fixed: was p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9
-        graphix: [p5.PI / 1.6, p5.PI / 1.4, p5.PI / 2.5] // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
+        film: [p5.PI / 1.2, p5.PI / 1.8], // Fixed: was p5.PI / 27, p5.PI / 1.5
+        sound: [p5.PI / 0.6, p5.PI / 1.2, p5.PI / 1.7], // Fixed: was p5.PI / 30, p5.PI / 1.2, p5.PI / 1.7
+        cloth: [p5.PI / 1.1, p5.PI / 1.5], // Fixed: was p5.PI / 4, p5.PI / 1.5
+        image: [p5.PI / 2.6, p5.PI / 1.4, p5.PI / 1.9], // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
+        tech: [p5.PI / 3.6, p5.PI / 2.8,], // Fixed: was p5.PI / 30, p5.PI / 4.5, (3 * p5.PI) / 8
+        art: [p5.PI / 2.6, p5.PI / 1.6, p5.PI / 1.9], // Fixed: was p5.PI / 30, p5.PI / 4.5, p5.PI / 1.9
+        graphix: [p5.PI / 2.6, p5.PI / 2.1, p5.PI / 1.6] // Fixed: was p5.PI / 30, p5.PI / 3.7, p5.PI / 2.5
       };
 
       const mobileDistances = isMobile ? {
-        purgeFiles: [-50, 35],
-        jaece: [-35, 50, 40],
-        xtsui: [50, 40],
-        photography: [40, 40, 60],
-        technology: [35, 40, 70],
-        art: [35, 40, 85],
-        graphix: [40, 40, 60]
+        film: [-65, 40], // Close to desktop but slightly smaller
+        sound: [-55, 70, 55], // Close to desktop but slightly smaller
+        cloth: [65, 55], // Close to desktop but slightly smaller
+        image: [55, 55, 70], // Close to desktop but slightly smaller
+        tech: [55, 55], // Close to desktop but slightly smaller
+        art: [65, 65, 90], // Close to desktop but slightly smaller
+        graphix: [55, 55, 70] // Close to desktop but slightly smaller
       } : {
-        purgeFiles: [-80, 50],
-        jaece: [-50, 80, 70],
-        xtsui: [80, 66],
-        photography: [70, 70, 90],
-        technology: [50, 70, 100],
-        art: [50, 70, 120],
+        film: [80, 50],
+        sound: [70, 70, 86],
+        cloth: [80, 66],
+        image: [70, 70, 90],
+        tech: [70, 70],
+        art: [80, 80, 110],
         graphix: [70, 70, 90]
       };
 
@@ -387,28 +439,28 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           name: "cloth",
           logo: xtsuiLogo,
           branches: ["xtsuimart", "archives"],
-          isVisible: false,
-          branchAnimProgress: 0,
-          angles: mobileAngles.xtsui,
-          distances: mobileDistances.xtsui,
+          isVisible: initialExpandedSection === "cloth",
+          branchAnimProgress: initialExpandedSection === "cloth" ? 1 : 0,
+          angles: mobileAngles.cloth,
+          distances: mobileDistances.cloth,
         },
         {
           name: "film",
           logo: purgeFilesLogo,
-          branches: ["archives", "youtube"],
-          isVisible: false,
-          branchAnimProgress: 0,
-          angles: mobileAngles.purgeFiles,
-          distances: mobileDistances.purgeFiles,
+          branches: ["short", "music video"],
+          isVisible: initialExpandedSection === "film",
+          branchAnimProgress: initialExpandedSection === "film" ? 1 : 0,
+          angles: mobileAngles.film,
+          distances: mobileDistances.film,
         },
         {
           name: "sound",
           logo: jaeceLogo,
           branches: ["release", "score", "live"],
-          isVisible: false,
-          branchAnimProgress: 0,
-          angles: mobileAngles.jaece,
-          distances: mobileDistances.jaece,
+          isVisible: initialExpandedSection === "sound",
+          branchAnimProgress: initialExpandedSection === "sound" ? 1 : 0,
+          angles: mobileAngles.sound,
+          distances: mobileDistances.sound,
         },
         {
           name: "image",
@@ -416,15 +468,15 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           branches: ["photo", "scans", "collage"],
           isVisible: false,
           branchAnimProgress: 0,
-          angles: mobileAngles.photography,
-          distances: mobileDistances.photography,
+          angles: mobileAngles.image,
+          distances: mobileDistances.image,
         },
         {
           name: "art",
           logo: null,
-          branches: ["installation", "bio", "drawing"],
-          isVisible: false,
-          branchAnimProgress: 0,
+          branches: ["sculpture", "bio", "drawing"],
+          isVisible: initialExpandedSection === "art",
+          branchAnimProgress: initialExpandedSection === "art" ? 1 : 0,
           angles: mobileAngles.art,
           distances: mobileDistances.art,
         },
@@ -432,8 +484,8 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           name: "graphix",
           logo: null,
           branches: ["logo", "flier", "artwork"],
-          isVisible: false,
-          branchAnimProgress: 0,
+          isVisible: initialExpandedSection === "graphix",
+          branchAnimProgress: initialExpandedSection === "graphix" ? 1 : 0,
           angles: mobileAngles.graphix,
           distances: mobileDistances.graphix,
         },
@@ -441,12 +493,61 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           name: "tech",
           logo: null,
           branches: ["web", "hardware"],
-          isVisible: false,
-          branchAnimProgress: 0,
-          angles: mobileAngles.technology,
-          distances: mobileDistances.technology,
+          isVisible: initialExpandedSection === "tech",
+          branchAnimProgress: initialExpandedSection === "tech" ? 1 : 0,
+          angles: mobileAngles.tech,
+          distances: mobileDistances.tech,
         },
       ];
+      
+      // Restore expanded state from before reinitialization (if this is a resize)
+      if (currentExpandedSections && currentExpandedSections.length > 0) {
+        currentExpandedSections.forEach(expandedSection => {
+          const section = sections.find(s => s.name === expandedSection.name);
+          if (section) {
+            section.isVisible = expandedSection.isVisible;
+            section.branchAnimProgress = expandedSection.branchAnimProgress;
+          }
+        });
+        
+        // Update active section index
+        const expandedSection = currentExpandedSections.find(s => s.isVisible);
+        if (expandedSection) {
+          const sectionIndex = sections.findIndex(s => s.name === expandedSection.name);
+          if (sectionIndex >= 0) {
+            activeSectionIndex = sectionIndex;
+            activeSectionName = expandedSection.name;
+          }
+        }
+      }
+      
+      // Set active section index if there's an initially expanded section
+      if (initialExpandedSection) {
+        const sectionIndex = sections.findIndex(s => s.name === initialExpandedSection);
+        if (sectionIndex >= 0) {
+          activeSectionIndex = sectionIndex;
+          activeSectionName = initialExpandedSection;
+          
+          // Pre-calculate sub-branch positions for the initially expanded section
+          const section = sections[sectionIndex];
+          if (section.angles && section.adjustedDistances) {
+            section.adjustedDistances.forEach((distance: number, idx: number) => {
+              const angle = p5.PI - (p5.PI / (sections.length - 1)) * sectionIndex;
+              const x = centerX + radiusX * p5.cos(angle);
+              const branchAngle = section.angles![idx];
+              const subX = x + distance * p5.cos(branchAngle);
+              const y = curveHeight + (isMobile ? 80 : 100) + radiusY * p5.sin(angle) + 95;
+              
+              subBranchPositions.push({
+                x: subX,
+                y: y,
+                sectionName: section.name,
+                branchName: section.branches[idx]
+              });
+            });
+          }
+        }
+      }
     }
 
     function computeScalingFactorAndAdjustDistances() {
@@ -464,27 +565,42 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
             let distance = section.distances![idx];
             let branchAngle = section.angles![idx];
             
-            // On mobile, if this is the only open section, use more space and better angles
-            if (isMobile && activeSectionIndex !== -1) {
+            // Only override angles on actual mobile devices (very small screens), not resized desktop windows
+            if (isMobile && p5.windowWidth < 480 && activeSectionIndex !== -1) {
               distance = distance * 1.8;
               
               // Calculate better fan-out angles based on the number of branches
               const totalBranches = section.branches.length;
-              const angleSpread = p5.PI / 3; // 60-degree spread
-              const startAngle = p5.PI / 2 - angleSpread / 2; // Start from 30 degrees
+              const angleSpread = p5.PI / 4; // Reduced from PI/3 to PI/4 (45-degree spread)
+              const startAngle = p5.PI / 2 - angleSpread / 2; // Start angle ensures downward direction
               
-              // Distribute branches evenly across the spread
+              // Distribute branches evenly across the spread, ensuring they all point downward
               if (totalBranches === 1) {
                 branchAngle = p5.PI / 2; // Straight down for single branch
               } else {
                 branchAngle = startAngle + (idx / (totalBranches - 1)) * angleSpread;
               }
+              
+              // Clamp angle to ensure it's always in the lower half-circle (downward)
+              branchAngle = p5.constrain(branchAngle, p5.PI / 4, (3 * p5.PI) / 4);
             }
             
             const subX = x + distance * p5.cos(branchAngle);
 
-            p5.textFont(customFont, isMobile ? 8 : 8); // Match the font size used in sub-branches
-            const textW = p5.textWidth(branch) + (isMobile ? 12 : 10); // Match the padding used in sub-branches
+            // Only calculate text width if font is loaded and ready
+            let textW = 0;
+            if (customFont) {
+              try {
+                p5.textFont(customFont, isMobile ? 8 : 8); // Match the font size used in sub-branches
+                textW = p5.textWidth(branch) + (isMobile ? 12 : 10); // Match the padding used in sub-branches
+              } catch (e) {
+                // Fallback if font is not ready
+                textW = branch.length * 6 + (isMobile ? 12 : 10);
+              }
+            } else {
+              // Fallback text width calculation if font not loaded yet
+              textW = branch.length * 6 + (isMobile ? 12 : 10);
+            }
             const rectLeft = subX - textW / 2;
             const rectRight = subX + textW / 2;
 
@@ -518,7 +634,13 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
       p5.fill(0);
       p5.noStroke();
       p5.textAlign(p5.CENTER, p5.CENTER);
-      p5.textFont(customFont, isMobile ? 10 : 12); // Smaller font for mobile
+      if (customFont) {
+        try {
+          p5.textFont(customFont, isMobile ? 10 : 12); // Smaller font for mobile
+        } catch (e) {
+          // Font not ready, continue without setting font
+        }
+      }
 
       const logoX = centerX;
       const logoY = isMobile ? 60 : 80; // Moved up from 80/100 to 60/80
@@ -610,7 +732,13 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         }
         
         p5.noStroke();
-        p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
+        if (customFont) {
+          try {
+            p5.textFont(customFont, isMobile ? 11 : 14); // Smaller font for mobile
+          } catch (e) {
+            // Font not ready, continue without setting font
+          }
+        }
         p5.text(section.name, x, y + (isMobile ? 55 : 75)); // Adjusted position for mobile
 
         if (section.branches.length > 0) {
@@ -638,35 +766,57 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         let distance = section.adjustedDistances![idx];
         let angle = section.angles![idx];
         
-        // On mobile, if this is the only open section, use more space and better angles
-        if (isMobile && activeSectionIndex !== -1) {
+        // Only override angles on actual mobile devices (very small screens), not resized desktop windows
+        if (isMobile && p5.windowWidth < 480 && activeSectionIndex !== -1) {
           // Increase distance for better spacing when only one section is open
           distance = distance * 1.8;
           
           // Calculate better fan-out angles based on the number of branches
           const totalBranches = section.branches.length;
-          const angleSpread = p5.PI / 3; // 60-degree spread
-          const startAngle = p5.PI / 2 - angleSpread / 2; // Start from 30 degrees
+          const angleSpread = p5.PI / 4; // Reduced from PI/3 to PI/4 (45-degree spread)
+          const startAngle = p5.PI / 2 - angleSpread / 2; // Start angle ensures downward direction
           
-          // Distribute branches evenly across the spread
+          // Distribute branches evenly across the spread, ensuring they all point downward
           if (totalBranches === 1) {
             angle = p5.PI / 2; // Straight down for single branch
           } else {
             angle = startAngle + (idx / (totalBranches - 1)) * angleSpread;
           }
+          
+          // Clamp angle to ensure it's always in the lower half-circle (downward)
+          angle = p5.constrain(angle, p5.PI / 4, (3 * p5.PI) / 4);
         }
         
-        // Ensure angles point downward (positive Y values)
-        // In p5.js, positive Y goes down, so we want positive sin values
-        if (p5.sin(angle) < 0) {
-          angle = p5.PI - angle; // Flip the angle to point downward
+        // Ensure angles point downward (positive Y values) - improved logic
+        // In p5.js, positive Y goes down, so we want angles between PI/4 and 3*PI/4
+        if (angle < p5.PI / 4 || angle > (3 * p5.PI) / 4) {
+          // If angle is in upper half-circle, map it to lower half-circle
+          if (angle < p5.PI / 2) {
+            angle = p5.PI / 2 + (p5.PI / 2 - angle); // Mirror around PI/2
+          } else if (angle > p5.PI) {
+            angle = p5.PI - (angle - p5.PI); // Mirror around PI
+          }
+          // Ensure we're still in the valid downward range
+          angle = p5.constrain(angle, p5.PI / 4, (3 * p5.PI) / 4);
         }
         
         const subX = x + section.branchAnimProgress * distance * p5.cos(angle);
         const subY = y + section.branchAnimProgress * distance * p5.sin(angle);
 
-        p5.textFont(customFont, isMobile ? 8 : 8); // Larger font for mobile sub-branches
-        const textW = p5.textWidth(branch) + (isMobile ? 12 : 10); // More padding for mobile
+        // Only calculate text width if font is loaded and ready
+        let textW = 0;
+        if (customFont) {
+          try {
+            p5.textFont(customFont, isMobile ? 8 : 8); // Larger font for mobile sub-branches
+            textW = p5.textWidth(branch) + (isMobile ? 12 : 10); // More padding for mobile
+          } catch (e) {
+            // Fallback if font is not ready
+            textW = branch.length * 6 + (isMobile ? 12 : 10);
+          }
+        } else {
+          // Fallback text width calculation if font not loaded yet
+          textW = branch.length * 6 + (isMobile ? 12 : 10);
+        }
         const textH = isMobile ? 22 : 20; // Larger height for mobile
         const alpha = p5.map(Math.abs(section.branchAnimProgress), 0, 1, 0, 255);
 
@@ -731,8 +881,21 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           hoveredSubBranch.sectionName === section.name && 
           hoveredSubBranch.branchName === branch;
 
-        // Add subtle glow to connection line for hovered sub-branch
-        if (isThisSubBranchHovered && section.branchAnimProgress >= 1) {
+        // Check if this sub-branch should be highlighted as the expanded subcategory
+        // Use current ref values instead of initial values
+        const currentExpandedSection = expandedSectionRef.current;
+        const currentExpandedSubcategory = expandedSubcategoryRef.current;
+        const isExpandedSubcategory = currentExpandedSubcategory && 
+          section.name === currentExpandedSection && 
+          branch === currentExpandedSubcategory;
+        
+        // Debug logging for subcategory highlighting
+        if (section.name === 'sound' && (currentExpandedSection || currentExpandedSubcategory)) {
+          console.log(`MindMap debug - section: ${section.name}, branch: ${branch}, currentExpandedSection: ${currentExpandedSection}, currentExpandedSubcategory: ${currentExpandedSubcategory}, isExpandedSubcategory: ${isExpandedSubcategory}`);
+        }
+
+        // Add subtle glow to connection line for hovered or expanded sub-branch
+        if ((isThisSubBranchHovered || isExpandedSubcategory) && section.branchAnimProgress >= 1) {
           p5.stroke(255, 255, 255, alpha * 1.2); // Slightly brighter connection line
           p5.strokeWeight(1.5);
           p5.noFill();
@@ -749,15 +912,25 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
           p5.endShape();
         }
 
-        // Standard fill for sub-branch rectangles
-        p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
+        // Fill for sub-branch rectangles with highlighting for expanded subcategory
+        if (isExpandedSubcategory) {
+          p5.fill(255, 255, 255, alpha * 0.9); // More opaque for highlighted subcategory
+        } else {
+          p5.fill(255, 255, 255, alpha * 0.6); // More transparent white for normal state
+        }
 
         p5.rect(subX - textW / 2, adjustedY - textH / 2, textW, textH, isMobile ? 8 : 10); // Larger radius for mobile
 
         p5.fill(0, alpha); // Black text for contrast against the white/grey background rectangles
         p5.noStroke();
         p5.textAlign(p5.CENTER, p5.CENTER);
-        p5.text(branch, subX, adjustedY);
+        if (customFont) {
+          try {
+            p5.text(branch, subX, adjustedY);
+          } catch (e) {
+            // Font not ready, skip text rendering
+          }
+        }
       });
 
       // Update animation progress
@@ -843,8 +1016,56 @@ const MindMap = React.forwardRef<MindMapRef, MindMapProps>(({
         section.isVisible = false;
         section.branchAnimProgress = 0;
       });
+    },
+    keepSectionExpanded: (sectionName: string) => {
+      // Close all other sections and keep the specified one expanded
+      sectionsRef.current.forEach((section: any) => {
+        if (section.name === sectionName) {
+          section.isVisible = true;
+          section.branchAnimProgress = 0;
+        } else {
+          section.isVisible = false;
+          section.branchAnimProgress = 0;
+        }
+      });
+    },
+    setExpandedSection: (sectionName: string | null) => {
+      console.log('MindMap setExpandedSection called with:', sectionName);
+      if (sectionsRef.current) {
+        sectionsRef.current.forEach((section: any) => {
+          const wasVisible = section.isVisible;
+          if (sectionName && section.name === sectionName) {
+            section.isVisible = true;
+            section.branchAnimProgress = 1;
+            console.log(`  Setting ${section.name} to visible`);
+          } else {
+            section.isVisible = false;
+            section.branchAnimProgress = 0;
+            if (wasVisible) {
+              console.log(`  Setting ${section.name} to hidden`);
+            }
+          }
+        });
+      }
     }
   }));
+
+  // Track current expandedSection and expandedSubcategory in refs so the sketch can access them
+  const expandedSectionRef = useRef<string | null>(expandedSection || null);
+  const expandedSubcategoryRef = useRef<string | null>(expandedSubcategory || null);
+  
+  // Update refs immediately when props change (synchronous)
+  expandedSectionRef.current = expandedSection || null;
+  expandedSubcategoryRef.current = expandedSubcategory || null;
+  
+  useEffect(() => {
+    console.log('MindMap useEffect: expandedSection changed to:', expandedSection);
+    // Update sections immediately when prop changes through the ref
+    if (ref && typeof ref === 'object' && ref.current) {
+      console.log('MindMap useEffect: calling setExpandedSection');
+      ref.current.setExpandedSection(expandedSection || null);
+    }
+  }, [expandedSection, ref]);
 
   return (
     <div className={className} style={{ zIndex: 20, position: 'relative', pointerEvents: 'none' }}>

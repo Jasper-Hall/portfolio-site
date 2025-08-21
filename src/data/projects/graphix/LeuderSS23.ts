@@ -14,14 +14,14 @@ const LeuderSS23: ProjectData = {
   subcategory: 'flier',
   featured: true,
   images: [
-    '/projects/graphix/LuederSS23/lueder_ss23_flierfinal.jpg'
+    '/projects/graphix/Flier/LuederSS23/lueder_ss23_flierfinal.jpg'
   ],
   videos: [],
   externalLinks: [],
   contentBlocks: [],
   gallery: [
     {
-      src: '/projects/graphix/LuederSS23/lueder_ss23_flierfinal.jpg',
+      src: '/projects/graphix/Flier/LuederSS23/lueder_ss23_flierfinal.jpg',
       alt: 'Leuder SS23 flier',
       type: 'image'
     }

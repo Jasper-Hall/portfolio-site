@@ -1,7 +1,8 @@
 import { ProjectData } from '../../types';
+import EntropyScans from './Entropy-Scans';
 
 const imageProjects: ProjectData[] = [
-  // Add image projects here
+  EntropyScans,
 ];
 
 export default imageProjects; 

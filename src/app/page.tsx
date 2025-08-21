@@ -1,63 +1,23 @@
 'use client';
 
-import MindMap, { MindMapRef } from '@/components/MindMap';
 import Navigation from '@/components/Navigation';
-import RippleShader from '@/components/RippleShader';
-import ArchiveViewer, { ArchiveViewerRef } from '@/components/ArchiveViewer';
 import Modal from '@/components/Modal';
-import { RippleShaderRef } from '@/components/RippleShader';
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { ViewMode } from '@/components/ViewToggle';
+import MindMapView from '@/components/MindMapView';
+import SplitView from '@/components/SplitView';
+import GalleryView from '@/components/GalleryView';
 
-interface NavigationPath {
-  level: string;
-  sublevel?: string;
-}
+
 
 export default function Home() {
-  const [currentPath, setCurrentPath] = useState<NavigationPath>({ level: 'home' });
+  const [currentView, setCurrentView] = useState<ViewMode>('split');
   const [modalState, setModalState] = useState<{ isOpen: boolean; type: string | null }>({
     isOpen: false,
     type: null
   });
-  const archiveViewerRef = useRef<ArchiveViewerRef>(null);
-  const rippleShaderRef = useRef<RippleShaderRef>(null);
-  const mindMapRef = useRef<MindMapRef>(null);
 
-  const handlePathChange = (path: NavigationPath) => {
-    setCurrentPath(path);
-    // Clear active section in MindMap when navigating to home
-    if (path.level === 'home' && mindMapRef.current) {
-      mindMapRef.current.clearActiveSection();
-    }
-  };
 
-  const handleSectionClick = (sectionName: string) => {
-    const newPath = { level: sectionName };
-    // Update ArchiveViewer directly via ref to avoid re-rendering MindMap
-    if (archiveViewerRef.current) {
-      archiveViewerRef.current.updatePath(newPath);
-    }
-  };
-
-  const handleSubBranchClick = (sectionName: string, subBranchName: string) => {
-    const newPath = { level: sectionName, sublevel: subBranchName };
-    // Update ArchiveViewer directly via ref to avoid re-rendering MindMap
-    if (archiveViewerRef.current) {
-      archiveViewerRef.current.updatePath(newPath);
-    }
-  };
-
-  const handleBranchHover = (branchName: string | null) => {
-    // Use ref to directly call method on ArchiveViewer without re-rendering
-    if (archiveViewerRef.current && archiveViewerRef.current.handleHover) {
-      archiveViewerRef.current.handleHover(branchName);
-    }
-    
-    // Update RippleShader directly via ref instead of causing re-render
-    if (rippleShaderRef.current) {
-      rippleShaderRef.current.setHoverState(branchName !== null);
-    }
-  };
 
   const handleModalOpen = (modalName: string | null) => {
     if (modalName) {
@@ -67,6 +27,10 @@ export default function Home() {
 
   const handleModalClose = () => {
     setModalState({ isOpen: false, type: null });
+  };
+
+  const handleViewChange = (view: ViewMode) => {
+    setCurrentView(view);
   };
 
   const getModalContent = () => {
@@ -121,48 +85,28 @@ export default function Home() {
 
   return (
     <main className="min-h-screen relative">
-      {/* Forest Background */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: 'url(/masaaki-komori-hFH1bK2CYSE-unsplash.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      />
       
       {/* Main Content Grid */}
       <div className="relative z-10 min-h-screen pb-20 md:pb-24 lg:pb-28">
-        <div className="p-2 md:p-4 lg:p-6 grid grid-cols-2 gap-4 grid-portrait-single xl:h-screen xl:overflow-hidden">
-          
-          {/* Left Panel - Mind Map with RippleShader Background */}
-          <div className="rounded-3xl relative overflow-hidden min-h-[500px] max-h-[85vh]">
-            <RippleShader ref={rippleShaderRef} />
-            <MindMap 
-              ref={mindMapRef}
-              className="w-full h-full" 
-              onSectionClick={handleSectionClick}
-              onSubBranchClick={handleSubBranchClick}
-              onBranchHover={handleBranchHover}
-            />
-          </div>
-          
-          {/* Right Panel - Archive Viewer */}
-          <div className="rounded-3xl relative overflow-visible min-h-[500px] max-h-[85vh]">
-            <ArchiveViewer 
-              ref={archiveViewerRef}
-              className="w-full h-full" 
-              currentPath={currentPath}
-              onPathChange={handlePathChange}
-            />
-          </div>
-          
-        </div>
+        {currentView === 'mindmap' && (
+          <MindMapView className="w-full h-full" />
+        )}
+        
+        {currentView === 'split' && (
+          <SplitView className="w-full h-full" />
+        )}
+        
+        {currentView === 'gallery' && (
+          <GalleryView className="w-full h-full" />
+        )}
       </div>
       
       {/* Navigation */}
-      <Navigation onModalOpen={handleModalOpen} />
+      <Navigation 
+        onModalOpen={handleModalOpen} 
+        currentView={currentView}
+        onViewChange={handleViewChange}
+      />
 
       {/* Modal */}
       <Modal

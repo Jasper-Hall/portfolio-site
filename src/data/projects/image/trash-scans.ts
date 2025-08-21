@@ -12,7 +12,7 @@ const TrashScans: ProjectData = {
   archiveRef: 'IMAGE-002',
   category: 'image',
   subcategory: 'scans',
-  featured: true,
+  featured: false,
   images: [],
   videos: [],
   externalLinks: [],

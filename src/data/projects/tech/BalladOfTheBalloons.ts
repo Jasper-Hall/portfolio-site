@@ -12,7 +12,7 @@ const BalladOfTheBalloons: ProjectData = {
   archiveRef: 'TECH-401',
   category: 'tech',
   subcategory: 'web',
-  featured: true,
+  featured: false,
 
   // There is no local image yet – main artefact is the live embed
   images: [],

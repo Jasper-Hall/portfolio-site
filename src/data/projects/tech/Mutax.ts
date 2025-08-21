@@ -12,9 +12,11 @@ const Mutax: ProjectData = {
   archiveRef: 'TECH-403',
   category: 'tech',
   subcategory: 'hardware',
-  featured: false,
+  featured: true,
 
-  images: [],
+  images: [
+    '/projects/tech/Mutax/gallery/DSC03861.JPG'
+  ],
   videos: [],
   externalLinks: [],
   contentBlocks: [
@@ -25,7 +27,14 @@ const Mutax: ProjectData = {
       caption: 'YouTube embed'
     }
   ],
-  gallery: []
+  gallery: [
+    {
+      src: '/projects/tech/Mutax/gallery/DSC03861.JPG',
+      alt: 'Mutax hardware performance piece',
+      caption: 'Hardware performance piece documentation',
+      type: 'image'
+    }
+  ]
 };
 
 export default Mutax;

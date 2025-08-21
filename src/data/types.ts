@@ -60,7 +60,7 @@ export interface MindMapStructure {
 export const mindMapStructure: Record<string, MindMapStructure> = {
   film: {
     name: 'FILM',
-    subcategories: ['archives', 'youtube']
+    subcategories: ['short', 'music video']
   },
   sound: {
     name: 'SOUND',
@@ -80,7 +80,7 @@ export const mindMapStructure: Record<string, MindMapStructure> = {
   },
   art: {
     name: 'ART',
-    subcategories: ['installation', 'bio', 'drawing']
+    subcategories: ['sculpture', 'bio', 'drawing']
   },
   graphix: {
     name: 'GRAPHIX',

@@ -17,11 +17,11 @@ and a randomized selection of samples from a computer
 on site running Ableton Live.`,
   dateRecovered: '2021-09-17',
   medium: ['Installation', 'Interactive', 'Sound', 'Sculpture'],
-  tags: ['Berlin', 'Tag2'],
+  tags: ['Berlin', 'Interactive', 'Sound', 'Sculpture'],
   status: 'archived',
   archiveRef: 'ART-917',
   category: 'art',
-  subcategory: 'installation',
+  subcategory: 'sculpture',
   featured: true,
   
   // Enhanced content

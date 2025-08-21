@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState } from "react";
+import ViewToggle, { ViewMode } from "./ViewToggle";
 
 interface NavigationProps {
   onModalOpen: (modalName: string | null) => void;
+  currentView: ViewMode;
+  onViewChange: (view: ViewMode) => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ onModalOpen }) => {
+const Navigation: React.FC<NavigationProps> = ({ onModalOpen, currentView, onViewChange }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -16,13 +19,18 @@ const Navigation: React.FC<NavigationProps> = ({ onModalOpen }) => {
           <div className="flex items-center">
             <pre className="text-[4px] md:text-[4px] font-mono text-white drop-shadow-lg leading-none whitespace-pre max-h-12 overflow-hidden">
 {`   ||                                            '||              '||  '||  
-  ...  ....    ....  ... ...    ....  ... ..      || ..    ....    ||   ||  
+  ...  ....    ....  ... ...    ....  ... ..      || ||    ....    ||   ||  
    || '' .||  ||. '   ||'  || .|...||  ||' ''     ||' ||  '' .||   ||   ||  
    || .|' ||  . '|..  ||    | ||       ||         ||  ||  .|' ||   ||   ||  
    || '|..'|' |'..|'  ||...'   '|...' .||.       .||. ||. '|..'|' .||. .||. 
 .. |'                 ||                                                    
  ''                  ''''`}
             </pre>
+          </div>
+          
+          {/* Center - View Toggle */}
+          <div className="flex items-center justify-center flex-1">
+            <ViewToggle currentView={currentView} onViewChange={onViewChange} />
           </div>
           
           {/* Desktop Navigation */}

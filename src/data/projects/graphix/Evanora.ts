@@ -14,17 +14,17 @@ const Evanora: ProjectData = {
   subcategory: 'logo',
   featured: false,
   images: [
-    '/projects/graphix/evanora/gallery/logo-1.png',
-    '/projects/graphix/evanora/gallery/evanoraLogoIterationPack1.png',
-    '/projects/graphix/evanora/gallery/evanoraa1.png'
+    '/projects/graphix/logo/evanora/logo-1.png',
+    '/projects/graphix/logo/evanora/logo-2.png',
+    '/projects/graphix/logo/evanora/evanoraa1.png'
   ],
   videos: [],
   externalLinks: [],
   contentBlocks: [],
   gallery: [
-    { src: '/projects/graphix/evanora/gallery/logo-1.png', alt: 'Evanora logo', type: 'image' },
-    { src: '/projects/graphix/evanora/gallery/evanoraLogoIterationPack1.png', alt: 'Evanora iteration sheet', type: 'image' },
-    { src: '/projects/graphix/evanora/gallery/evanoraa1.png', alt: 'Evanora wordmark poster', type: 'image' },
+    { src: '/projects/graphix/logo/evanora/logo-1.png', alt: 'Evanora logo', type: 'image' },
+    { src: '/projects/graphix/logo/evanora/logo-2.png', alt: 'Evanora logo v2', type: 'image' },
+    { src: '/projects/graphix/logo/evanora/evanoraa1.png', alt: 'Evanora wordmark poster', type: 'image' },
   ]
 };
 
