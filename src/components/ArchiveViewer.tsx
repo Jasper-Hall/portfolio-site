@@ -194,8 +194,40 @@ const ArchiveViewer = forwardRef<ArchiveViewerRef, ArchiveViewerProps>(({
         : (currentProject.gallery?.filter(item => item.type === 'image').map(item => item.src) || []))
     : [];
 
-  // Note: Image preloading is now handled globally by GlobalPreloader
-  // This ensures all images are loaded before the site becomes interactive
+  // Preload remaining images for current project (since GlobalPreloader only loads featured project first images)
+  useEffect(() => {
+    if (imageSources.length > 1) {
+      // Preload adjacent images first for instant switching
+      const preloadAdjacent = () => {
+        const nextIndex = (currentImageIndex + 1) % imageSources.length;
+        const prevIndex = (currentImageIndex - 1 + imageSources.length) % imageSources.length;
+        
+        // Preload next and previous images
+        [nextIndex, prevIndex].forEach(index => {
+          if (index !== currentImageIndex) {
+            const img = new Image();
+            img.src = imageSources[index];
+          }
+        });
+      };
+
+      // Preload all images in background (lower priority)
+      const preloadAll = () => {
+        imageSources.forEach((src, index) => {
+          if (index !== currentImageIndex) {
+            const img = new Image();
+            img.src = src;
+          }
+        });
+      };
+
+      // Immediate preload of adjacent images
+      preloadAdjacent();
+      
+      // Delayed preload of remaining images
+      setTimeout(preloadAll, 300);
+    }
+  }, [currentProject?.id]);
 
   const embedBlock = currentProject?.contentBlocks?.find(b => b.type === 'embed' && b.embedUrl);
   const embedUrl = embedBlock && (embedBlock as any).embedUrl as string | undefined;

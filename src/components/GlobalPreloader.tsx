@@ -19,27 +19,26 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
         // Get all projects from all categories
         const allProjects = getAllProjects();
         
-        // Collect all image sources
-        const allImageSources: string[] = [];
+        // Collect image sources - prioritize featured projects and first images only
+        const priorityImageSources: string[] = [];
+        const featuredProjects = allProjects.filter(project => project.featured);
         
-        allProjects.forEach(project => {
-          // Add project images
+        // For featured projects, take first image only to reduce load time
+        featuredProjects.forEach(project => {
+          // Add first project image
           if (project.images && project.images.length > 0) {
-            allImageSources.push(...project.images);
-          }
-          
-          // Add gallery images
-          if (project.gallery) {
-            project.gallery.forEach(item => {
-              if (item.type === 'image') {
-                allImageSources.push(item.src);
-              }
-            });
+            priorityImageSources.push(project.images[0]);
+          } else if (project.gallery && project.gallery.length > 0) {
+            // Add first gallery image
+            const firstImage = project.gallery.find(item => item.type === 'image');
+            if (firstImage) {
+              priorityImageSources.push(firstImage.src);
+            }
           }
         });
 
         // Remove duplicates
-        const uniqueImageSources = [...new Set(allImageSources)];
+        const uniqueImageSources = [...new Set(priorityImageSources)];
         setTotalAssets(uniqueImageSources.length);
         
         if (uniqueImageSources.length === 0) {
@@ -47,7 +46,11 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
           return;
         }
 
-        setLoadingText('LOADING VISUAL ARTIFACTS...');
+        setLoadingText('LOADING FEATURED ARTIFACTS...');
+
+        // Set a maximum loading time (5 seconds)
+        const maxLoadTime = 5000;
+        const startTime = Date.now();
 
         // Load all images with progress tracking
         let completed = 0;
@@ -90,12 +93,20 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
           });
         });
 
-        // Wait for all images to load (or fail)
-        await Promise.all(imagePromises);
+        // Wait for all images to load (or fail) with timeout
+        const loadingPromise = Promise.all(imagePromises);
+        const timeoutPromise = new Promise(resolve => {
+          setTimeout(() => {
+            console.log('Preloader timeout reached, proceeding anyway');
+            resolve(null);
+          }, maxLoadTime);
+        });
+
+        await Promise.race([loadingPromise, timeoutPromise]);
         
         // Brief pause to show completion
         setLoadingText('ARCHIVE READY...');
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         onLoadComplete();
         
@@ -122,6 +133,71 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
       </div>
 
       <div className="relative z-10 text-center max-w-md mx-auto px-6">
+        {/* Animated Center Glyph */}
+        <div className="mb-6 glyph-container">
+          <svg
+            width="120"
+            height="120"
+            viewBox="0 0 350 380"
+            className="glyph-core"
+          >
+            {/* Large outer circle */}
+            <circle
+              cx="175"
+              cy="195"
+              r="150"
+              fill="rgba(255,255,255,0.1)"
+              stroke="rgba(255,255,255,0.8)"
+              strokeWidth="2"
+              className="animate-pulse"
+            />
+            
+            {/* Animated connection lines */}
+            <g stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" fill="none">
+              <line x1="200" y1="120" x2="225" y2="210" className="animate-pulse" style={{ animationDelay: '0.1s' }} />
+              <line x1="115" y1="265" x2="245" y2="250" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
+              <line x1="200" y1="120" x2="90" y2="240" className="animate-pulse" style={{ animationDelay: '0.3s' }} />
+              <line x1="130" y1="95" x2="250" y2="250" className="animate-pulse" style={{ animationDelay: '0.4s' }} />
+              <line x1="250" y1="130" x2="177" y2="300" className="animate-pulse" style={{ animationDelay: '0.5s' }} />
+              <line x1="150" y1="105" x2="180" y2="280" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
+              <line x1="245" y1="170" x2="100" y2="150" className="animate-pulse" style={{ animationDelay: '0.7s' }} />
+              <line x1="50" y1="190" x2="280" y2="210" className="animate-pulse" style={{ animationDelay: '0.8s' }} />
+              <line x1="230" y1="130" x2="176" y2="230" className="animate-pulse" style={{ animationDelay: '0.9s' }} />
+              <line x1="230" y1="220" x2="100" y2="150" className="animate-pulse" style={{ animationDelay: '1.0s' }} />
+              <line x1="250" y1="135" x2="115" y2="265" className="animate-pulse" style={{ animationDelay: '1.1s' }} />
+              <line x1="115" y1="200" x2="230" y2="290" className="animate-pulse" style={{ animationDelay: '1.2s' }} />
+            </g>
+            
+            {/* Animated dots/nodes */}
+            <g fill="rgba(0,255,255,0.8)">
+              <circle cx="108.5" cy="150" r="8.5" className="animate-ping" style={{ animationDelay: '0.2s' }} />
+              <circle cx="206" cy="120" r="6" className="animate-ping" style={{ animationDelay: '0.4s' }} />
+              <circle cx="202.5" cy="260" r="7.5" className="animate-ping" style={{ animationDelay: '0.6s' }} />
+              <circle cx="254.5" cy="250" r="9.5" className="animate-ping" style={{ animationDelay: '0.8s' }} />
+              <circle cx="261" cy="137" r="11" className="animate-ping" style={{ animationDelay: '1.0s' }} />
+              <circle cx="216" cy="160" r="6" className="animate-ping" style={{ animationDelay: '1.2s' }} />
+            </g>
+            
+            {/* Central pulsing core */}
+            <circle
+              cx="175"
+              cy="195"
+              r="20"
+              fill="rgba(0,255,255,0.4)"
+              className="animate-ping"
+              style={{ animationDuration: '2s' }}
+            />
+            <circle
+              cx="175"
+              cy="195"
+              r="10"
+              fill="rgba(255,255,255,0.9)"
+              className="animate-pulse"
+              style={{ animationDuration: '1.5s' }}
+            />
+          </svg>
+        </div>
+
         {/* Main logo/title */}
         <div className="mb-8">
           <pre className="text-white text-xs md:text-sm font-mono drop-shadow-lg leading-none whitespace-pre">
@@ -163,8 +239,18 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
         {/* Progress text */}
         <div className="text-white/60 text-xs font-mono">
           {totalAssets > 0 && (
-            <span>{loadedAssets} / {totalAssets} ARTIFACTS RECOVERED</span>
+            <span>{loadedAssets} / {totalAssets} FEATURED ARTIFACTS RECOVERED</span>
           )}
+        </div>
+
+        {/* Skip button */}
+        <div className="mt-6">
+          <button
+            onClick={onLoadComplete}
+            className="text-white/50 hover:text-white/80 text-xs font-mono transition-colors duration-200 underline"
+          >
+            SKIP PRELOAD → ENTER ARCHIVE
+          </button>
         </div>
 
         {/* Scanning line effect */}
@@ -183,6 +269,24 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
           0% { transform: translateX(-100%); }
           50% { transform: translateX(400%); }
           100% { transform: translateX(-100%); }
+        }
+        
+        @keyframes rotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 10px rgba(0,255,255,0.3)); }
+          50% { opacity: 1; filter: drop-shadow(0 0 30px rgba(0,255,255,0.8)); }
+        }
+        
+        .glyph-container {
+          animation: rotate 20s linear infinite;
+        }
+        
+        .glyph-core {
+          animation: pulseGlow 2s ease-in-out infinite;
         }
       `}</style>
     </div>
