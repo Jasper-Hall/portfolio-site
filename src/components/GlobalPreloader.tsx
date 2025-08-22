@@ -273,31 +273,33 @@ const GlobalPreloader: React.FC<GlobalPreloaderProps> = ({ onLoadComplete }) => 
         </div>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes scan {
           0% { transform: translateX(-100%); }
           50% { transform: translateX(400%); }
           100% { transform: translateX(-100%); }
         }
-        
+
         @keyframes rotate {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        
+
         @keyframes pulseGlow {
           0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 10px rgba(0,255,255,0.3)); }
           50% { opacity: 1; filter: drop-shadow(0 0 30px rgba(0,255,255,0.8)); }
         }
-        
+
         .glyph-container {
           animation: rotate 20s linear infinite;
         }
-        
+
         .glyph-core {
           animation: pulseGlow 2s ease-in-out infinite;
         }
-      `}</style>
+        `
+      }} />
     </div>
   );
 };
