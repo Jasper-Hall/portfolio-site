@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mark tuner — throwaway</title>
+<style>
+  :root { --porcelain: #e8e9e4; --ink: #14171d; --ring: rgba(20,23,29,0.45); }
+  body.dark { --porcelain: #101319; --ink: #e6e8e5; --ring: rgba(230,232,229,0.45); }
+  body {
+    margin: 0; padding: 2rem; background: var(--porcelain); color: var(--ink);
+    font: 14px/1.5 ui-monospace, Menlo, monospace;
+    display: grid; grid-template-columns: 340px 1fr; gap: 2.5rem; align-items: start;
+  }
+  h1 { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; margin: 0 0 1.2rem; }
+  label { display: block; margin: 0.9rem 0 0.15rem; color: var(--ink); }
+  label span { float: right; opacity: .65; }
+  input[type=range] { width: 100%; }
+  .row { display: flex; gap: .6rem; align-items: center; margin-top: 1.2rem; }
+  button {
+    font: inherit; padding: .45rem .8rem; cursor: pointer;
+    background: none; border: 1px solid var(--ink); color: var(--ink); border-radius: 2px;
+  }
+  pre {
+    margin-top: 1.2rem; padding: .9rem; font-size: 12px; line-height: 1.5;
+    border: 1px dashed var(--ring); white-space: pre-wrap; user-select: all;
+  }
+  .previews { display: grid; gap: 2.5rem; justify-items: start; }
+  .cap { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; opacity: .6; margin-bottom: .5rem; }
+
+  /* mirrors .wordmark-logo on the site */
+  .seal {
+    box-sizing: border-box; border: 1px solid var(--ring); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; overflow: visible;
+  }
+  .seal img { flex: none; }
+  body.dark .seal img { filter: invert(1); }
+  .seal.real  { width: 50.5px; height: 50.5px; }
+  .seal.big   { width: 340px;  height: 340px; }
+
+  .lockup { display: flex; align-items: center; gap: 0.85rem; }
+  .lockup pre.ascii {
+    margin: 0; border: none; padding: 0; user-select: none;
+    font: 700 5px/1.15 ui-monospace, Menlo, monospace;
+    text-shadow: 0 0 .6px currentColor, 0 0 .6px currentColor;
+  }
+</style>
+<body>
+<div>
+  <h1>mark tuner</h1>
+
+  <label>size <span id="v-size"></span></label>
+  <input id="size" type="range" min="40" max="140" step="0.5" value="92">
+
+  <label>offset x <span id="v-x"></span></label>
+  <input id="x" type="range" min="-12" max="12" step="0.1" value="0">
+
+  <label>offset y <span id="v-y"></span></label>
+  <input id="y" type="range" min="-12" max="12" step="0.1" value="0">
+
+  <label>mark opacity <span id="v-op"></span></label>
+  <input id="op" type="range" min="0.3" max="1" step="0.01" value="0.72">
+
+  <label>ring opacity <span id="v-ring"></span></label>
+  <input id="ring" type="range" min="0.1" max="1" step="0.01" value="0.45">
+
+  <div class="row">
+    <button id="theme">toggle dark</button>
+    <button id="copy">copy css</button>
+  </div>
+
+  <pre id="out"></pre>
+  <p style="opacity:.55; font-size:12px">offsets are real pixels at header size (50.5px circle). when it looks right, copy the css block or just read me the numbers.</p>
+</div>
+
+<div class="previews">
+  <div>
+    <p class="cap">actual size — in lockup</p>
+    <div class="lockup">
+      <div class="seal real"><img id="img-real" src="public/shots/jaece-mark.png" alt=""></div>
+      <pre class="ascii">   '||'                                            '||'  '||'         '||  '||
+    ||   ....    ....  ... ...    ....  ... ..      ||    ||   ....    ||   ||
+    ||  '' .||  ||. '   ||'  || .|...||  ||' ''     ||''''||  '' .||   ||   ||
+    ||  .|' ||  . '|..  ||    | ||       ||         ||    ||  .|' ||   ||   ||
+|| .|'  '|..'|' |'..|'  ||...'   '|...' .||.       .||.  .||. '|..'|' .||. .||.
+ '''                    ||
+                       ''''                                                    </pre>
+    </div>
+  </div>
+  <div>
+    <p class="cap">zoomed ×6.73</p>
+    <div class="seal big"><img id="img-big" src="public/shots/jaece-mark.png" alt=""></div>
+  </div>
+</div>
+
+<script>
+  var S = { size: 92, x: 0, y: 0, op: 0.72, ring: 0.45 };
+  var ZOOM = 340 / 50.5;
+  function apply() {
+    ["real", "big"].forEach(function (which) {
+      var img = document.getElementById("img-" + which);
+      var scale = which === "big" ? ZOOM : 1;
+      img.style.width = S.size + "%";
+      img.style.height = "auto";
+      img.style.opacity = S.op;
+      img.style.transform = "translate(" + S.x * scale + "px," + S.y * scale + "px)";
+    });
+    document.querySelectorAll(".seal").forEach(function (el) {
+      el.style.borderColor = "color-mix(in srgb, var(--ink) " + Math.round(S.ring * 100) + "%, transparent)";
+    });
+    document.getElementById("v-size").textContent = S.size + "%";
+    document.getElementById("v-x").textContent = S.x + "px";
+    document.getElementById("v-y").textContent = S.y + "px";
+    document.getElementById("v-op").textContent = S.op;
+    document.getElementById("v-ring").textContent = S.ring;
+    document.getElementById("out").textContent =
+      ".wordmark-logo {\n" +
+      "  border-color: color-mix(in srgb, var(--ink) " + Math.round(S.ring * 100) + "%, transparent);\n" +
+      "}\n" +
+      ".wordmark-logo img {\n" +
+      "  width: " + S.size + "%; height: auto;\n" +
+      "  opacity: " + S.op + ";\n" +
+      "  transform: translate(" + S.x + "px, " + S.y + "px);\n" +
+      "}";
+  }
+  ["size", "x", "y", "op", "ring"].forEach(function (k) {
+    document.getElementById(k).addEventListener("input", function (e) {
+      S[k] = parseFloat(e.target.value); apply();
+    });
+  });
+  document.getElementById("theme").onclick = function () { document.body.classList.toggle("dark"); };
+  document.getElementById("copy").onclick = function () {
+    navigator.clipboard.writeText(document.getElementById("out").textContent);
+  };
+  apply();
+</script>
+</body>
+</html>

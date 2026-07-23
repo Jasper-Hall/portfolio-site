@@ -1,0 +1,1466 @@
+/* =========================================================================
+   Jasper Hall — portfolio
+   Palette: Kaolin. White clay, blue-and-white china, cobalt underglaze.
+   Theme is implemented at token level only. Components never hardcode colour.
+   ========================================================================= */
+
+/* Trial licenses — swap for licensed Focal builds before wide release. */
+@font-face {
+  font-family: "Focal Maxi";
+  src: url("public/fonts/focal-maxi-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Focal Maxi";
+  src: url("public/fonts/focal-maxi-medium.woff2") format("woff2");
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Focal";
+  src: url("public/fonts/focal-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Focal";
+  src: url("public/fonts/focal-medium.woff2") format("woff2");
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Focal";
+  src: url("public/fonts/focal-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --porcelain: #e8e9e4;
+  --surface:   #f3f4f0;
+  --ink:       #14171d;
+  --ink-soft:  #3d434f;
+  --slip:      #868c97;
+  --rule:      #cdcfc8;
+  --cobalt:    #2547b8;
+  --celadon:   #3e7d5a;
+
+  --shadow: 0 1px 2px rgba(20, 23, 29, 0.05), 0 12px 32px -18px rgba(20, 23, 29, 0.35);
+  --frame-inset: inset 0 0 0 1px rgba(20, 23, 29, 0.04);
+
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono", monospace;
+  --serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --sans: "Focal", "Helvetica Neue", Helvetica, Inter, Arial, sans-serif;
+  --display: "Focal Maxi", "Helvetica Neue", Helvetica, Inter, Arial, sans-serif;
+
+  --wrap: 1180px;
+  --gut: clamp(1.25rem, 4vw, 3.5rem);
+  --gap-s: clamp(1.75rem, 3vw, 2.5rem);
+  --gap-m: clamp(3rem, 6vw, 5.5rem);
+  --gap-l: clamp(5rem, 10vw, 9rem);
+}
+
+/* Dark: warm charcoal ground, bone text, clay accent, moss for "shipped".
+   Deliberately no blue — stoneware by lamplight rather than terminal navy. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --porcelain: #181613;
+    --surface:   #201d19;
+    --ink:       #e8e4dc;
+    --ink-soft:  #aba499;
+    --slip:      #7e786d;
+    --rule:      #332f29;
+    --cobalt:    #c9a06a;
+    --celadon:   #94b184;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 44px -22px rgba(0, 0, 0, 0.9);
+    --frame-inset: inset 0 0 0 1px rgba(232, 228, 220, 0.06);
+  }
+}
+
+:root[data-theme="dark"] {
+  --porcelain: #181613;
+  --surface:   #201d19;
+  --ink:       #e8e4dc;
+  --ink-soft:  #aba499;
+  --slip:      #7e786d;
+  --rule:      #332f29;
+  --cobalt:    #c9a06a;
+  --celadon:   #94b184;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 44px -22px rgba(0, 0, 0, 0.9);
+  --frame-inset: inset 0 0 0 1px rgba(232, 228, 220, 0.06);
+}
+
+:root[data-theme="light"] {
+  --porcelain: #e8e9e4;
+  --surface:   #f3f4f0;
+  --ink:       #14171d;
+  --ink-soft:  #3d434f;
+  --slip:      #868c97;
+  --rule:      #cdcfc8;
+  --cobalt:    #2547b8;
+  --celadon:   #3e7d5a;
+
+  --shadow: 0 1px 2px rgba(20, 23, 29, 0.05), 0 12px 32px -18px rgba(20, 23, 29, 0.35);
+  --frame-inset: inset 0 0 0 1px rgba(20, 23, 29, 0.04);
+}
+
+/* ------------------------------- reset -------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 7rem;
+}
+
+body {
+  margin: 0;
+  background: var(--porcelain);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: clamp(0.95rem, 0.92rem + 0.2vw, 1.0625rem);
+  line-height: 1.58;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; height: auto; }
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p { margin: 0 0 1.05em; }
+p:last-child { margin-bottom: 0; }
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+a { color: var(--cobalt); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 0.22em; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--cobalt) 8%, transparent);
+  padding: 0.08em 0.34em;
+  border-radius: 2px;
+}
+
+em { font-style: italic; }
+strong { font-weight: 600; }
+
+:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--ink); color: var(--porcelain);
+  padding: 0.7rem 1.1rem; font-family: var(--sans); font-size: 0.8rem;
+}
+.skip-link:focus { left: 0.75rem; top: 0.75rem; }
+
+/* ------------------------------ primitives ---------------------------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--gut);
+}
+
+.label {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 0.67rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--slip);
+  line-height: 1.4;
+}
+
+.sep, .dot { color: var(--slip); padding-inline: 0.15em; }
+
+.scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.section { padding-block: var(--gap-l); }
+
+.section-head { max-width: 62ch; margin-bottom: var(--gap-s); }
+
+.section-title {
+  font-size: clamp(1.8rem, 1rem + 3.4vw, 3.4rem);
+  letter-spacing: -0.025em;
+  margin: 0.5rem 0 0.9rem;
+}
+
+.section-lede {
+  font-size: clamp(1.02rem, 0.98rem + 0.35vw, 1.22rem);
+  color: var(--ink-soft);
+  max-width: 58ch;
+}
+
+.sub {
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.7rem;
+}
+
+/* -------------------------------- header ------------------------------ */
+
+.site-head {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--porcelain) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.site-head-inner {
+  width: 100%; max-width: var(--wrap);
+  margin-inline: auto;
+  padding: 0.7rem var(--gut);
+  display: flex; align-items: center; gap: 1.25rem;
+}
+
+.wordmark {
+  display: flex; align-items: center; gap: 0.85rem;
+  color: var(--ink); margin-right: auto;
+}
+.wordmark:hover { text-decoration: none; }
+.wordmark-logo {
+  flex: none; box-sizing: border-box;
+  width: 50.5px; height: 50.5px;
+  border: 1px solid color-mix(in srgb, var(--ink) 34%, transparent);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.wordmark-logo img {
+  width: 96.5%; height: auto;
+  opacity: 0.72;
+  transform: translate(0.4px, -1px);
+}
+@media (prefers-color-scheme: dark) {
+  .wordmark-logo img { filter: invert(1); }
+  :root[data-theme="light"] .wordmark-logo img { filter: none; }
+}
+:root[data-theme="dark"] .wordmark-logo img { filter: invert(1); }
+.wordmark-text { display: flex; flex-direction: column; gap: 0.28rem; }
+.wordmark-ascii {
+  margin: 0;
+  font-family: var(--mono); font-size: 4px; line-height: 1.15;
+  font-weight: 700; color: var(--ink);
+  /* thickens the hairline glyph strokes at this tiny size */
+  text-shadow: 0 0 0.6px currentColor, 0 0 0.6px currentColor;
+}
+.wordmark-role {
+  font-family: var(--sans); font-size: 0.56rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.24em;
+  color: var(--slip); line-height: 1;
+}
+
+.site-nav { display: flex; gap: 1.15rem; }
+.site-nav a {
+  font-family: var(--sans); font-size: 0.92rem;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+  padding-block: 0.35rem;
+  border-bottom: 1px solid transparent;
+}
+.site-nav a:hover { color: var(--cobalt); border-bottom-color: var(--cobalt); text-decoration: none; }
+
+.theme-toggle {
+  display: inline-flex; align-items: center;
+  color: var(--ink-soft);
+  background: none; border: none;
+  padding: 0.4rem;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+.theme-toggle:hover { color: var(--cobalt); }
+.theme-toggle-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid currentColor;
+  /* half-shaded disc: reads as day/night without an icon font */
+  background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+  transition: transform 0.3s ease;
+}
+.theme-toggle:hover .theme-toggle-dot { transform: rotate(180deg); }
+.theme-toggle-label {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --------------------------------- hero ------------------------------- */
+
+.hero { padding-top: clamp(1.25rem, 2.5vw, 2.25rem); padding-bottom: var(--gap-m); }
+
+.hero-eyebrow { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+
+.hero-lede { display: grid; gap: clamp(1.5rem, 3vw, 2.75rem); align-items: center; }
+@media (min-width: 880px) {
+  .hero-lede { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .hero-bench { max-width: none; }
+}
+.hero-bench { margin: 0; max-width: 380px; }
+.hero-bench img { display: block; width: 100%; height: auto; }
+
+/* Full-width strip under both hero columns: label and links share one
+   baseline, so the short text column no longer leaves a dead corner. */
+.hero-domains-row {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.55rem 1.75rem;
+  margin-top: clamp(1.75rem, 3.5vw, 2.75rem);
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+}
+.hero-domains {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.4rem 0.85rem;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  letter-spacing: 0;
+}
+.hero-domains li + li::before {
+  content: "\00B7";
+  color: var(--slip);
+  margin-right: 0.85rem;
+}
+
+.hero-title {
+  font-size: clamp(1.9rem, 1.2rem + 2.9vw, 3.3rem);
+  letter-spacing: -0.03em;
+  margin: 0 0 clamp(1.1rem, 2.2vw, 1.75rem);
+  max-width: 18ch;
+}
+
+.standfirst {
+  font-family: var(--display);
+  font-size: clamp(0.95rem, 0.9rem + 0.4vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: -0.008em;
+  color: var(--ink-soft);
+  max-width: 58ch;
+}
+
+.hero-figure {
+  margin: clamp(2.5rem, 5vw, 4.5rem) auto 0;
+  width: 100%;
+  max-width: 1500px;
+  padding-inline: var(--gut);
+}
+
+.frame {
+  display: block;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: clamp(6px, 0.8vw, 12px);
+  box-shadow: var(--shadow);
+  transition: border-color 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+  overflow: hidden;
+}
+.frame img {
+  width: 100%;
+  border-radius: 1px;
+  box-shadow: var(--frame-inset);
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* Video sits in the same frame as a screenshot. The width/height attributes
+   supply the aspect ratio, so the box is reserved before a byte is fetched. */
+.frame video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 1px;
+  box-shadow: var(--frame-inset);
+  background: color-mix(in srgb, var(--ink) 6%, var(--surface));
+}
+a.frame:hover { border-color: var(--cobalt); text-decoration: none; }
+a.frame:hover img { transform: scale(1.012); }
+.frame:hover { border-color: color-mix(in srgb, var(--cobalt) 55%, var(--rule)); }
+
+.frame--hero { padding: clamp(8px, 1vw, 16px); }
+
+.hero-figure figcaption,
+.shot figcaption {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--slip);
+  margin-top: 0.85rem;
+  max-width: 72ch;
+}
+.hero-figure figcaption .label { margin-right: 0.5rem; color: var(--cobalt); }
+
+/* ------------------------------ loop diagram -------------------------- */
+
+.loop-diagram {
+  display: block;
+  min-width: 720px;
+  width: 100%;
+  height: auto;
+  margin-block: clamp(1.5rem, 3vw, 2.5rem) 0;
+}
+
+.d-box {
+  fill: var(--surface);
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.d-box--eval { stroke: color-mix(in srgb, var(--cobalt) 55%, var(--rule)); stroke-width: 1; }
+
+.d-name {
+  font-family: var(--display); font-size: 16.5px; font-weight: 600;
+  letter-spacing: -0.02em; fill: var(--ink);
+}
+.d-name--ship { fill: var(--celadon); }
+.d-meta { font-family: var(--sans); font-size: 11.5px; fill: var(--ink-soft); letter-spacing: 0.02em; }
+.d-dim { fill: var(--slip); }
+.d-label, .d-note {
+  font-family: var(--sans); font-size: 9.5px; font-weight: 600; fill: var(--slip);
+  text-transform: uppercase; letter-spacing: 0.18em;
+}
+.d-tag { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.02em; fill: var(--slip); }
+.d-tag--pass { fill: var(--celadon); }
+.d-tag--rej { fill: color-mix(in srgb, var(--cobalt) 85%, var(--ink)); }
+
+.d-line { stroke: color-mix(in srgb, var(--ink-soft) 65%, var(--rule)); stroke-width: 1; fill: none; }
+.d-line--rej { stroke: color-mix(in srgb, var(--cobalt) 45%, transparent); }
+.d-line--hair { stroke: var(--rule); stroke-width: 1; }
+.d-arrowhead { fill: color-mix(in srgb, var(--ink-soft) 65%, var(--rule)); }
+.d-arrowhead--rej { fill: color-mix(in srgb, var(--cobalt) 55%, transparent); }
+
+.d-pulse {
+  stroke: var(--cobalt);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dasharray: 26 574;
+  stroke-dashoffset: 600;
+  animation: d-travel 4.2s linear infinite;
+}
+@keyframes d-travel { to { stroke-dashoffset: 0; } }
+
+/* ------------------------------ method grid --------------------------- */
+
+.method-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--gap-s);
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding-top: clamp(1.75rem, 3vw, 2.5rem);
+  border-top: 1px solid var(--rule);
+}
+.method-col p { color: var(--ink-soft); max-width: 52ch; }
+
+.contract-strip {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-top: 1.35rem;
+}
+.contract-strip li {
+  display: flex; align-items: baseline; gap: 0.45rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.4rem 0.65rem;
+}
+.contract-strip li + li::before {
+  content: "→";
+  position: absolute; margin-left: -1.05rem;
+  color: var(--slip); font-family: var(--mono);
+}
+.contract-strip li { position: relative; }
+.contract-strip code { background: none; padding: 0; font-size: 0.85rem; }
+.contract-strip li:last-child code { color: var(--cobalt); }
+
+.harness-list { display: grid; gap: 0.55rem; margin-top: 1.1rem; }
+.harness-list li {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding-block: 0.55rem;
+  border-bottom: 1px solid var(--rule);
+}
+.harness-list li:first-child { padding-top: 0; }
+.harness-list code {
+  background: none; padding: 0;
+  font-size: 0.84rem; color: var(--cobalt);
+  letter-spacing: -0.02em;
+}
+.harness-list span {
+  font-family: var(--sans); font-size: 0.64rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--slip); margin-left: auto;
+}
+
+/* --------------------------------- gate ------------------------------- */
+
+.gate {
+  background: var(--surface);
+  border-block: 1px solid var(--rule);
+}
+
+.gate-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  margin-top: 1.25rem;
+}
+@media (min-width: 860px) {
+  .gate-grid { grid-template-columns: 1.05fr 1fr; gap: clamp(2rem, 5vw, 4rem); }
+}
+
+.gate-title {
+  font-size: clamp(1.6rem, 0.9rem + 3.1vw, 3.1rem);
+  line-height: 1.02;
+}
+.gate-title em { font-style: italic; color: var(--cobalt); font-family: var(--serif); letter-spacing: 0; }
+
+.gate-body p { color: var(--ink-soft); }
+.gate-body p:first-child { margin-top: 0.35rem; }
+
+/* The tool-evolution strip: years of practice compressed into one line */
+.method-journey {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.85rem;
+  margin: 1.4rem 0 0;
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--slip);
+}
+.mj-arrow { color: var(--rule); }
+.mj-step--now {
+  color: var(--cobalt);
+  border-bottom: 1px solid color-mix(in srgb, var(--cobalt) 55%, transparent);
+  padding-bottom: 0.2rem;
+}
+
+/* The workflow as four designed steps, not paragraphs */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem clamp(1.5rem, 3vw, 2.75rem);
+  list-style: none;
+  margin: clamp(2.5rem, 5vw, 4rem) 0 clamp(1.5rem, 3vw, 2.5rem);
+  padding: 0;
+}
+.steps li {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.2rem;
+}
+.step-num {
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--cobalt);
+}
+.step-title {
+  font-family: var(--display);
+  font-size: 1.32rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0.6rem 0 0.6rem;
+}
+.steps p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+@media (max-width: 900px) {
+  .steps { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 540px) {
+  .steps { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
+.method-payoff {
+  max-width: 58ch;
+  margin: clamp(2rem, 4vw, 3rem) auto 0;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* Lead slides in the deck (method payoff, work intro): plain flow blocks
+   without JS, full-viewport title cards inside the deck with it. */
+.deck-lead { padding-block: clamp(2.5rem, 5vw, 4.5rem); }
+
+/* With the deck live, the payoff slide brings its own screenful of centred
+   whitespace — stacking two section paddings on top reads as a dead gap
+   after the diagram, so both collapse in deck mode only. */
+.js-deck #method { padding-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+.js-deck #work { padding-top: 0; }
+
+/* The payoff slide is approached by normal scroll, so centring it would put
+   half a viewport of blank porcelain between the diagram and the paragraph.
+   Hold it in the upper third instead; the wiped-in intro slide stays centred. */
+.js-deck .deck-slide.deck-lead--payoff {
+  justify-content: flex-start;
+  padding-top: max(7rem, 12svh);
+}
+.js-deck .deck-lead .method-payoff { margin-block: 0; }
+.js-deck .deck-lead .section-head { margin-bottom: 0; }
+
+/* Ambient ASCII orbit under the payoff paragraph: a dotted loop with a comet
+   of wordmark glyphs and the method's stage names cycling in the centre.
+   Fills the slide's dwell viewport; only exists when the deck is live. */
+.loop-orbit { display: none; }
+.js-deck .loop-orbit {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: clamp(3rem, 10svh, 6rem) auto 0;
+  font-family: var(--mono);
+  font-size: clamp(11px, 1.05vw, 15px);
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  color: var(--slip);
+  overflow: hidden;
+  user-select: none;
+}
+.loop-orbit b { font-weight: inherit; color: var(--ink); }
+
+.grade-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 560px;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  text-align: left;
+}
+.grade-table th, .grade-table td {
+  padding: 0.85rem 1rem 0.85rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+  font-weight: 400;
+}
+.grade-table thead th {
+  font-family: var(--sans);
+  font-size: 0.64rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--slip); border-bottom-color: var(--rule);
+}
+.grade-table tbody th { color: var(--ink); font-weight: 600; }
+.grade-table code { background: none; padding: 0; color: var(--ink-soft); }
+.grade-table .ok { color: var(--celadon); }
+.grade-table .human { color: var(--cobalt); font-weight: 600; }
+.row--human th, .row--human td {
+  background: color-mix(in srgb, var(--cobalt) 7%, transparent);
+  border-bottom-color: var(--cobalt);
+}
+.row--human th { padding-left: 0.7rem; }
+
+/* -------------------------------- projects ---------------------------- */
+
+/* Projects supply their own vertical rhythm, so the Work section must not
+   add a second helping of padding at the bottom. */
+#work { padding-bottom: 0; }
+
+.project { padding-block: clamp(3rem, 6vw, 5.5rem); }
+.project + .project { border-top: 1px solid var(--rule); }
+
+.project-head {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.6rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.project-num {
+  font-family: var(--sans); font-size: 0.66rem; font-weight: 600;
+  letter-spacing: 0.18em; color: var(--slip);
+  padding-top: 0.35rem;
+}
+
+.project-title {
+  font-size: clamp(1.5rem, 1rem + 2.2vw, 2.6rem);
+  margin-right: 0.25rem;
+}
+.project-title .times { color: var(--slip); font-weight: 400; }
+
+.badge {
+  font-family: var(--sans); font-size: 0.62rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.28rem 0.62rem;
+  white-space: nowrap;
+}
+.badge--shipped {
+  color: var(--celadon);
+  border-color: color-mix(in srgb, var(--celadon) 45%, var(--rule));
+  background: color-mix(in srgb, var(--celadon) 8%, transparent);
+}
+.badge--build {
+  color: var(--cobalt);
+  border-color: color-mix(in srgb, var(--cobalt) 40%, var(--rule));
+}
+
+.project-link {
+  font-family: var(--sans); font-size: 0.88rem;
+  letter-spacing: 0;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Two class names deep on purpose: this has to outrank the global
+   `p:last-child { margin-bottom: 0 }` reset, because in projects whose
+   screenshot breaks out of .wrap the lede *is* the last child. */
+.project .project-lede {
+  font-size: clamp(1.05rem, 1rem + 0.45vw, 1.28rem);
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+}
+
+.shot { margin: 0 0 clamp(1.75rem, 3.5vw, 2.75rem); }
+.project > .shot { padding-inline: var(--gut); max-width: 1500px; margin-inline: auto; }
+
+.shot-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+@media (min-width: 720px) {
+  .shot-pair { grid-template-columns: 1fr 1fr; }
+}
+.shot--half { margin-bottom: 0; }
+.shot--half figcaption { font-size: 0.85rem; }
+
+/* ---------------------------- diagram panels -------------------------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.panel--diagram::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--rule) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--rule) 55%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.panel--tall { padding-block: clamp(1.75rem, 4vw, 3rem); }
+.panel > * { position: relative; }
+.panel-label { display: block; margin-bottom: 1.35rem; }
+.panel-note {
+  font-family: var(--sans); font-size: 0.88rem;
+  color: var(--slip); margin-top: 1.35rem; margin-bottom: 0;
+}
+.panel-note--gate {
+  color: var(--ink);
+  border-top: 1px solid var(--rule);
+  padding-top: 1.1rem;
+}
+.panel-note--gate strong { color: var(--cobalt); }
+
+.pipeline {
+  display: flex; align-items: center; flex-wrap: nowrap;
+  gap: 0.55rem;
+  margin: 0;
+  padding-bottom: 0.35rem;
+  width: max-content;
+  min-width: 100%;
+}
+.pipe-node {
+  font-family: var(--mono);
+  font-size: clamp(0.72rem, 0.68rem + 0.2vw, 0.85rem);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  background: var(--porcelain);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.5rem 0.75rem;
+  white-space: nowrap;
+}
+.pipe-node--accent { border-color: var(--cobalt); color: var(--cobalt); }
+.pipe-node--grade {
+  border-color: color-mix(in srgb, var(--celadon) 55%, var(--rule));
+  color: var(--celadon);
+}
+.pipe-arrow { font-family: var(--mono); color: var(--slip); font-size: 0.9rem; }
+.pipe-arrow--rej { color: var(--cobalt); }
+
+.chip-row {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+  margin-top: 1.35rem;
+}
+.chip-row li {
+  font-family: var(--sans); font-size: 0.64rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--slip);
+  border: 1px dashed var(--rule);
+  border-radius: 2px;
+  padding: 0.3rem 0.55rem;
+}
+
+/* The Fold's engines are product names, not stack metadata — solid, inked,
+   and set as written rather than shouted. */
+.chip-row--engines { margin-top: 0; }
+.chip-row--engines li {
+  font-size: 0.78rem;
+  text-transform: none;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  background: var(--porcelain);
+  border-style: solid;
+  padding: 0.42rem 0.7rem;
+}
+.chip-row--engines li:first-child {
+  border-color: var(--cobalt);
+  color: var(--cobalt);
+}
+
+/* --------------------------------- specs ------------------------------ */
+
+.spec {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.1rem, 2.5vw, 1.9rem);
+  margin: 0;
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 1px solid var(--rule);
+}
+@media (min-width: 780px) {
+  /* Stack is a short list; Notes carries real copy — weight the row so the
+     prose gets most of the line and still fits inside a deck slide. */
+  .spec { grid-template-columns: 1fr 1.9fr; gap: clamp(1.5rem, 3vw, 2.75rem); }
+}
+.spec dt {
+  font-family: var(--sans); font-size: 0.64rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--slip);
+  margin-bottom: 0.6rem;
+}
+.spec dd {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.58;
+  color: var(--ink-soft);
+}
+
+/* -------------------------------- embeds ------------------------------ */
+/* Live third-party frames: drumCircles, Ballad, and the Mutax video. */
+
+.embed {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Video platforms are 16:9. */
+.embed--video { aspect-ratio: 16 / 9; }
+
+/* drumCircles lays out roughly 4000px tall at this width, so the frame is a
+   window onto it, not a container for it — it scrolls internally. Height is
+   set outright rather than via aspect-ratio: with a ratio in play, a
+   min-height pushes the *width* out instead and the page gains a scrollbar. */
+.embed--app { aspect-ratio: auto; height: 420px; }
+@media (min-width: 720px)  { .embed--app { height: 560px; } }
+@media (min-width: 1100px) { .embed--app { height: 666px; } }
+
+/* Ballad draws into a fixed 840px canvas at every width, so an aspect ratio
+   would only ever crop it. Pin the height to the height it actually is. */
+.embed--fixed { aspect-ratio: auto; height: 840px; }
+
+.embed-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--cobalt);
+}
+
+.embed-note {
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  color: var(--slip);
+  margin: 0.85rem 0 clamp(1.75rem, 3.5vw, 2.75rem);
+  max-width: 72ch;
+}
+
+/* A shot-pair or an embed can be followed directly by a diagram panel;
+   neither carries its own trailing margin, so the gap is declared here. */
+.shot-pair + .panel { margin-top: clamp(1.75rem, 3.5vw, 2.75rem); }
+
+/* ------------------------------- terminal ----------------------------- */
+
+.terminal {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem);
+}
+.terminal-bar {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--ink) 4%, var(--surface));
+}
+.terminal-dots { display: inline-flex; gap: 0.35rem; }
+.terminal-dots i {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--rule); display: block;
+}
+.terminal-dots i:first-child { background: color-mix(in srgb, var(--cobalt) 55%, var(--rule)); }
+.terminal-title {
+  font-family: var(--mono); font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--slip);
+}
+.terminal .scroller { padding: clamp(1.1rem, 3vw, 2.25rem); }
+
+.ascii-art {
+  font-family: var(--mono);
+  font-size: clamp(0.68rem, 0.4rem + 1.45vw, 1.6rem);
+  /* FIGlet art assumes a terminal's 1.0 line box — anything looser
+     breaks the vertical strokes apart and the letterforms stop reading. */
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--cobalt);
+  margin: 0;
+  white-space: pre;
+  width: max-content;
+}
+
+.terminal-prompt {
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--ink-soft);
+  padding: 0 clamp(1.1rem, 3vw, 2.25rem) clamp(1.1rem, 3vw, 1.75rem);
+  margin: 0;
+}
+.prompt-sigil { color: var(--cobalt); }
+.prompt-dim { color: var(--slip); }
+
+/* ------------------------------ euclid demo --------------------------- */
+
+.demo {
+  background: var(--surface);
+  border-block: 1px solid var(--rule);
+  padding-block: var(--gap-m);
+}
+
+.euclid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.75rem, 4vw, 3.25rem);
+  align-items: start;
+}
+@media (min-width: 880px) {
+  .euclid { grid-template-columns: minmax(0, 1fr) minmax(300px, 26rem); }
+}
+
+.euclid-stage {
+  background: var(--porcelain);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  display: flex; justify-content: center;
+  box-shadow: var(--shadow);
+}
+#euclid-canvas {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  touch-action: manipulation;
+}
+
+.euclid-controls { display: grid; gap: 1.1rem; }
+
+.euclid-readout {
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.euclid-pattern {
+  font-family: var(--mono);
+  font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem);
+  letter-spacing: -0.045em;
+  color: var(--ink);
+  margin: 0.35rem 0 0.5rem;
+}
+.euclid-binary {
+  display: block;
+  background: none; padding: 0;
+  font-size: clamp(0.72rem, 0.6rem + 0.5vw, 0.95rem);
+  letter-spacing: 0.16em;
+  color: var(--cobalt);
+  word-break: break-all;
+}
+
+.ctl { display: grid; gap: 0.45rem; }
+.ctl label { cursor: pointer; }
+.ctl-val {
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  text-transform: none;
+  margin-left: 0.5rem;
+  font-size: 0.82rem;
+}
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 24px;
+  background: transparent; cursor: pointer; margin: 0;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px; background: var(--rule); border-radius: 2px;
+}
+input[type="range"]::-moz-range-track {
+  height: 2px; background: var(--rule); border-radius: 2px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 15px; height: 15px; margin-top: -6.5px;
+  border-radius: 50%;
+  background: var(--porcelain);
+  border: 2px solid var(--cobalt);
+  transition: transform 0.15s ease;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  background: var(--porcelain);
+  border: 2px solid var(--cobalt);
+}
+input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
+
+.euclid-buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.35rem; }
+
+.btn {
+  font-family: var(--sans); font-size: 0.7rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink);
+  background: var(--porcelain);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0.62rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.btn:hover { border-color: var(--cobalt); color: var(--cobalt); }
+.btn--primary {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+  color: var(--surface);
+}
+.btn--primary:hover {
+  background: color-mix(in srgb, var(--cobalt) 82%, var(--ink));
+  border-color: color-mix(in srgb, var(--cobalt) 82%, var(--ink));
+  color: var(--surface);
+}
+
+.euclid-note {
+  font-size: 0.88rem; color: var(--slip);
+  margin: 0.35rem 0 0;
+}
+
+/* ------------------------------- background --------------------------- */
+
+.bg-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+@media (min-width: 880px) {
+  .bg-grid { grid-template-columns: 1.15fr 1fr; gap: clamp(2.5rem, 6vw, 5rem); }
+}
+
+.bg-prose p { color: var(--ink-soft); max-width: 56ch; }
+.pull {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 1rem + 1.4vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  color: var(--ink) !important;
+  margin-bottom: 1.4em;
+}
+
+.bg-side { display: grid; gap: clamp(1.5rem, 2.5vw, 2rem); align-content: start; }
+/* Drop the side column past the eyebrow so the portrait tops out level
+   with the section headline's cap line. */
+@media (min-width: 880px) {
+  .bg-side { padding-top: 2.6rem; }
+}
+.bg-photo { margin: 0; max-width: 240px; }
+.bg-photo img { display: block; width: 100%; height: auto; }
+/* The portrait hangs unmatted: hairline and shadow only, no surface border. */
+.bg-photo .frame { padding: 0; }
+.bg-photo .frame img { border-radius: 2px; }
+.bg-photo figcaption { margin-top: 0.6rem; }
+.bg-block .label { display: block; margin-bottom: 0.9rem; }
+.plain { display: grid; gap: 0.9rem; }
+.plain li {
+  display: grid; gap: 0.18rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+.plain li:last-child { border-bottom: 0; padding-bottom: 0; }
+.plain strong {
+  font-family: var(--sans); font-size: 0.95rem;
+  font-weight: 600; letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.plain span { font-size: 0.92rem; color: var(--slip); }
+
+/* Tools read as compact one-line entries so the whole side column fits a
+   single viewport alongside the prose. */
+.bg-block--tools .plain { gap: 0.5rem; }
+.bg-block--tools .plain li {
+  display: block;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.bg-block--tools .plain strong { display: inline; }
+.bg-block--tools .plain span { display: inline; margin-left: 0.55rem; }
+
+/* -------------------------------- contact ----------------------------- */
+
+.contact {
+  background: var(--surface);
+  border-top: 1px solid var(--rule);
+}
+.contact-title {
+  font-size: clamp(1.9rem, 1rem + 4vw, 4.2rem);
+  letter-spacing: -0.025em;
+  margin: 0.75rem 0 clamp(1.75rem, 3.5vw, 2.75rem);
+}
+.contact-list {
+  display: flex; flex-wrap: wrap;
+  gap: 1.25rem clamp(2rem, 6vw, 5rem);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 1px solid var(--rule);
+}
+.contact-list li { display: grid; gap: 0.3rem; }
+.contact-list a {
+  font-family: var(--sans);
+  font-size: clamp(1rem, 0.95rem + 0.4vw, 1.25rem);
+  letter-spacing: -0.01em;
+}
+
+/* --------------------------------- footer ----------------------------- */
+
+.site-foot {
+  border-top: 1px solid var(--rule);
+  padding-block: clamp(2rem, 4vw, 3rem);
+}
+.foot-mark {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 0.55rem;
+}
+.foot-note {
+  font-family: var(--sans); font-size: 0.66rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--slip);
+  margin: 0;
+}
+
+/* ------------------------------ scroll reveal ------------------------- */
+
+/* Opt-in: the hiding rule only applies once JS has flagged the root element,
+   so a JS failure can never leave the page blank. */
+.js-reveal .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.js-reveal .reveal.is-visible { opacity: 1; transform: none; }
+
+/* ------------------------------- responsive --------------------------- */
+
+@media (max-width: 860px) {
+  .site-nav { display: none; }
+}
+
+@media (max-width: 640px) {
+  .project-link { margin-left: 0; width: 100%; }
+  .harness-list span { margin-left: 0; width: 100%; }
+  .wordmark-role { display: none; }
+}
+
+/* ---------------------------- reduced motion -------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .d-pulse { display: none; }
+  .js-reveal .reveal { opacity: 1; transform: none; }
+}
+
+/* ========================== full-bleed media ========================== */
+/* A UI capture inside .wrap renders at 1180px minus gutters — about 1068px —
+   which is roughly two-thirds native size, so interface text stops being
+   legible. .bleed elements are therefore siblings of .wrap, not children of
+   it, and set their own wider cap.
+
+   Deliberately NOT done with a 100vw negative-margin trick: any overflow
+   declaration on <html> needed to contain the scrollbar also turns <html>
+   into a scroll container, and the sticky site header stops sticking. */
+
+.project > .bleed,
+.section > .bleed {
+  padding-inline: var(--gut);
+  max-width: 1760px;
+  margin-inline: auto;
+}
+
+/* Live apps get more vertical room once they have the full width to lay out in. */
+@media (min-width: 1100px) {
+  .bleed .embed--app { height: 860px; }
+}
+
+/* ========================= hero accordion ========================= */
+/* Seven panels in one strip. The accordion is nothing but flex-grow with a
+   transition — the focused panel takes ~13 shares, slivers take 1 — so the
+   motion is a single interruptible CSS tween, and with JS dead the strip
+   still renders with the first panel open. */
+
+.acc {
+  display: flex;
+  gap: 6px;
+  aspect-ratio: 21 / 10;
+  overflow: hidden;
+}
+
+.acc-panel {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--surface);
+  transition: flex-grow 0.72s cubic-bezier(0.3, 0.85, 0.25, 1);
+}
+.acc-panel img,
+.acc-panel video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.acc-panel.is-focus { flex-grow: 13; }
+
+/* Slivers hint at their interactivity */
+.acc-panel:not(.is-focus) { cursor: pointer; }
+.acc-panel:not(.is-focus):hover img,
+.acc-panel:not(.is-focus):hover video { opacity: 0.85; }
+.acc-panel:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+
+
+/* Name chip inside the open panel */
+.acc-label {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--porcelain) 88%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  opacity: 0;
+  /* Out fades instantly — a lingering label on a collapsing sliver reads
+     as a glitch. In waits for the panel to be most of the way open. */
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+}
+.acc-panel.is-focus .acc-label { opacity: 1; transition: opacity 0.3s ease 0.35s; }
+
+/* Caption under the strip */
+.reel-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  min-height: 1.5rem;
+}
+.reel-name {
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cobalt);
+}
+
+/* Tighter strip on small screens: fewer pixels per sliver, gentler focus
+   ratio so the open panel still reads. */
+@media (max-width: 720px) {
+  .acc { aspect-ratio: 4 / 3; gap: 4px; }
+  .acc-panel.is-focus { flex-grow: 7; }
+  .acc-label { left: 8px; bottom: 8px; font-size: 0.62rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-panel { transition: none; }
+}
+
+/* The Tombogo pair puts a portrait photograph of the printed prototype next to
+   a square render. Matching them into one box stops the row from stepping;
+   the renders carry their own white ground, so they sit frameless. */
+.shot-pair--matched .frame {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.shot-pair--matched .frame img,
+.shot-pair--matched .frame video {
+  width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain;
+  box-shadow: none;
+}
+/* the render footage carries its own ground; crop to the square rather than
+   letterboxing against the page background */
+.shot-pair--matched .frame video { object-fit: cover; background: none; }
+
+/* =============================== deck =============================== */
+/* Scroll-deck for the Work section. Enabled only when JS stamps .js-deck
+   on the root: each child of .deck-pin becomes a full-viewport slide,
+   scroll dwells inside it (internal scroll play if the content is taller
+   than the screen), then a full-display character wipe reveals the next.
+   Without .js-deck every rule here is dormant and the section reads as a
+   normal long page. */
+
+.js-deck .deck { position: relative; }
+
+.js-deck .deck-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.js-deck .deck-slide {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--porcelain);
+  /* Clear the sticky site header, and centre slides that fit — `safe`
+     falls back to top-aligned the moment content overflows, which is
+     what keeps the scroll-play reachable from the top. The ASCII wordmark
+     makes the header ~5.6rem tall, so anything less clips the title. */
+  padding-top: 6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+}
+
+/* Fit each project to the display: tighter block padding, smaller type,
+   media capped to leave room for the head and spec rows. Whatever still
+   doesn't fit is reachable through the slide's own scroll play. */
+.js-deck .deck-slide .project,
+.js-deck .deck-slide.section { padding-block: clamp(0.6rem, 2svh, 1.5rem); }
+.js-deck .deck-slide .project + .project { border-top: none; }
+
+.js-deck .deck-slide .project-head { margin-bottom: 0.6rem; }
+.js-deck .deck-slide .project-title { font-size: clamp(1.35rem, 1rem + 1.5vw, 2rem); }
+.js-deck .deck-slide .project .project-lede {
+  font-size: 1rem;
+  line-height: 1.52;
+  max-width: 68ch;
+  margin-bottom: clamp(0.9rem, 2svh, 1.5rem);
+}
+
+.js-deck .deck-slide .frame img,
+.js-deck .deck-slide .frame video {
+  max-height: 46svh;
+  object-fit: contain;
+}
+.js-deck .deck-slide .embed--app { height: min(46svh, 860px); }
+.js-deck .deck-slide .embed--fixed { height: min(46svh, 840px); }
+.js-deck .deck-slide .shot { margin-bottom: clamp(0.6rem, 1.5svh, 1.2rem); }
+.js-deck .deck-slide .embed-label { margin-bottom: 0.5rem; }
+.js-deck .deck-slide .embed-note { font-size: 0.85rem; margin: 0.6rem 0 clamp(0.9rem, 2svh, 1.5rem); }
+.js-deck .deck-slide .spec { margin-top: clamp(0.5rem, 1.5svh, 1rem); padding-top: clamp(0.9rem, 2svh, 1.4rem); }
+.js-deck .deck-slide .spec dd { font-size: 0.88rem; line-height: 1.5; }
+
+/* The wipe front */
+.deck-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+
+/* Slide counter, bottom-right of the pin */
+.deck-count {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3svh, 2rem);
+  z-index: 41;
+  padding: 0.35rem 0.7rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--porcelain) 90%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+}

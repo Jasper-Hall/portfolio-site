@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jasper Hall — AI Native Designer and Builder</title>
+<meta name="description" content="Jasper Hall is an AI-native product developer: give him a brief and he comes back with a working product in days — shipped e-commerce, client tools, audio software and hardware, built with AI agent workflows.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23e8e9e4'/%3E%3Cpath d='M6 16h14M16 10l6 6-6 6' stroke='%232547b8' stroke-width='2.5' fill='none'/%3E%3C/svg%3E">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("jh-theme");
+      if (t === "dark" || t === "light") {
+        document.documentElement.setAttribute("data-theme", t);
+      }
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="site-head-inner">
+    <a class="wordmark" href="#top">
+      <span class="visually-hidden">Jasper Hall</span>
+      <span class="wordmark-logo" aria-hidden="true">
+        <img src="public/shots/jaece-mark.png" width="320" height="320" alt="">
+      </span>
+      <span class="wordmark-text">
+      <pre class="wordmark-ascii" aria-hidden="true">   '||'                                            '||'  '||'         '||  '||
+    ||   ....    ....  ... ...    ....  ... ..      ||    ||   ....    ||   ||
+    ||  '' .||  ||. '   ||'  || .|...||  ||' ''     ||''''||  '' .||   ||   ||
+    ||  .|' ||  . '|..  ||    | ||       ||         ||    ||  .|' ||   ||   ||
+|| .|'  '|..'|' |'..|'  ||...'   '|...' .||.       .||.  .||. '|..'|' .||. .||.
+ '''                    ||
+                       ''''                                                    </pre>
+        <span class="wordmark-role">AI-Native Designer &amp; Builder</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="#method">Method</a>
+      <a href="#work">Work</a>
+      <a href="#background">Background</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
+      <span class="theme-toggle-dot" aria-hidden="true"></span>
+      <span class="theme-toggle-label" id="theme-toggle-label">Dark</span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================ HERO ============================ -->
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-lede">
+        <figure class="hero-bench">
+          <img src="public/shots/art-terminal.webp" width="900" height="1128" decoding="async"
+               alt="A laptop running a multi-agent coding harness — tiled terminal sessions and a critique file — collaged into a studio worktable of foil, brushes, and torn labels, a hand on the keyboard.">
+        </figure>
+
+        <div class="hero-lede-text">
+          <h1 class="hero-title">Designer and artist, building with agents.</h1>
+          <p class="standfirst">
+            I've spent the past 2+ years exploring and building dozens of projects with AI tools, from the days of copy-pasting between 
+            ChatGPT and an editor, to leveraging AI IDE's like Cursor, to engineering multi-agent harnesses inside Claude Code that enable me to build highly complex projects while I sleep.
+          </p>
+
+        </div>
+      </div>
+
+      <div class="hero-domains-row">
+        <span class="label">Shipped across</span>
+        <ul class="hero-domains">
+          <li><a href="#waveformed">Deployed Full-Stack Web Apps</a></li>
+          <li><a href="#ascii-cli">CLIs</a></li>
+          <li><a href="#tombogo">CAD</a></li>
+          <li><a href="#tombogo">Embedded Firmware</a></li>
+          <li><a href="#kaolin">Audio Plugins</a></li>
+          <li><a href="#kaolin">Standalone Mac Apps</a></li>
+          <li><a href="#the-fold">Bespoke Design Tools</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <figure class="hero-figure">
+      <div class="frame frame--hero">
+        <!-- Accordion of six projects: every one is visible at once as a
+             sliver, and the focused panel is wide open. Focus advances on its
+             own and follows the pointer on hover. Panels with a capture are
+             live video — posters paint instantly, and the accordion JS plays
+             only the open panel so slivers hold a still frame. -->
+        <div class="acc" id="acc" aria-label="Featured projects">
+          <a class="acc-panel is-focus" href="#the-fold" data-name="The Fold — Brand Studio">
+            <video src="public/media/fold-studio.mp4"
+                   poster="public/shots/fold-brand-studio.webp"
+                   width="1440" height="814" muted loop playsinline preload="metadata"
+                   aria-label="The Fold brand studio running: mark engines switching and parameter sliders redrawing the mark live."></video>
+            <span class="acc-label">The Fold</span>
+          </a>
+          <a class="acc-panel" href="#waveformed" data-name="waveformed">
+            <video src="public/media/waveformed-demo.mp4"
+                   poster="public/shots/waveformed-demo-poster.webp"
+                   width="1440" height="886" muted loop playsinline preload="metadata"
+                   aria-label="The waveformed configurator running: a 3D sculpture generated from an uploaded WAV file, with dimension sliders and a live estimated price."></video>
+            <span class="acc-label">waveformed</span>
+          </a>
+          <a class="acc-panel" href="#tombogo" data-name="Tombogo × Rheome gadget">
+            <video src="public/media/tombogo-exploded.mp4"
+                   poster="public/shots/tombogo-exploded.webp"
+                   width="640" height="562" muted loop playsinline preload="metadata"
+                   aria-label="Animated exploded view of the Tombogo gadget: shell, board, battery and base separating and reassembling in a loop."></video>
+            <span class="acc-label">Tombogo</span>
+          </a>
+          <a class="acc-panel" href="#kaolin" data-name="Kaolin">
+            <video src="public/media/kaolin-demo.mp4"
+                   poster="public/shots/kaolin-ui.webp"
+                   width="1440" height="806" muted loop playsinline preload="metadata"
+                   aria-label="The Kaolin plugin running: the grain cloud shifting in the evengrid view while knobs are turned below."></video>
+            <span class="acc-label">Kaolin</span>
+          </a>
+          <a class="acc-panel" href="#rheome" data-name="rheome.tools">
+            <video src="public/media/rheome-hero.mp4"
+                   poster="public/shots/rheome-home.webp"
+                   width="1440" height="810" muted loop playsinline preload="metadata"
+                   aria-label="rheome.tools scrolled top to bottom at six times speed: 3D instrument models turning as sections change."></video>
+            <span class="acc-label">rheome.tools</span>
+          </a>
+          <a class="acc-panel" href="#ballad" data-name="Ballad of the Balloons">
+            <video src="public/media/ballad-demo.mp4"
+                   poster="public/shots/ballad.webp"
+                   width="1440" height="796" muted loop playsinline preload="metadata"
+                   aria-label="Ballad of the Balloons running: radiosonde markers drifting across the plotting field as the day scrubs by, over Earth's limb from near space."></video>
+            <span class="acc-label">Ballad</span>
+          </a>
+        </div>
+      </div>
+      <figcaption>
+        <span class="reel-meta">
+          <a class="reel-name" id="reel-name" href="#the-fold">The Fold — Brand Studio</a>
+        </span>
+     
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============================ METHOD ============================ -->
+  <section class="section" id="method">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="label">01 <span aria-hidden="true">/</span> The method</p>
+        <h2 class="section-title">I build the systems that build the products</h2>
+
+      </header>
+
+      <ol class="steps">
+        <li>
+          <span class="step-num" aria-hidden="true">01</span>
+          <h3 class="step-title">Interview</h3>
+          <p>I always start a project with an in depth interview. The AI questions me,
+          grilling me on every single detail until the idea is refined to a product specification that is fully fleshed out.</p>
+        </li>
+        <li>
+          <span class="step-num" aria-hidden="true">02</span>
+          <h3 class="step-title">Plan</h3>
+          <p>A planner agent breaks the spec into sprints, each with a
+          written contract for what &ldquo;done&rdquo; means. The contract is debated back and forth between two agents until they work out all the kinks and agree. 
+          This ensures that once building starts, many of the potential failures are already accounted for in the contract.</p>
+        </li>
+        <li>
+          <span class="step-num" aria-hidden="true">03</span>
+          <h3 class="step-title">Build <span aria-hidden="true">&times;</span> fail</h3>
+          <p>One agent builds. A harsh judge launches the result and tries to fail it.
+          They go around that loop without me and fix their own mistakes, building one sprint after another until everything is finished and working.</p>
+        </li>
+        <li>
+          <span class="step-num" aria-hidden="true">04</span>
+          <h3 class="step-title">Taste</h3>
+          <p>The build reaches me with the bugs already shaken out. I test it
+          like a user. What&rsquo;s left for me is to impart my taste.</p>
+        </li>
+      </ol>
+
+      <div class="scroller" tabindex="0" role="group" aria-label="Harness loop diagram, scrollable">
+        <svg class="loop-diagram" viewBox="0 0 900 310" role="img" aria-labelledby="loop-title loop-desc">
+          <title id="loop-title">The harness loop</title>
+          <desc id="loop-desc">A planner model produces sprints, which feed a generator model that proposes a contract then builds. An evaluator model critiques and grades by launching the app. Failures loop back to the generator; passes advance to shipped.</desc>
+
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" class="d-arrowhead"></path>
+            </marker>
+            <marker id="ah-rej" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" class="d-arrowhead d-arrowhead--rej"></path>
+            </marker>
+          </defs>
+
+          <!-- brief -->
+          <text x="16" y="88" class="d-label">brief</text>
+          <line x1="16" y1="100" x2="86" y2="100" class="d-line" marker-end="url(#ah)"></line>
+
+          <!-- planner -->
+          <rect x="96" y="62" width="192" height="78" rx="2" class="d-box"></rect>
+          <text x="112" y="90" class="d-name">planner</text>
+          <text x="112" y="110" class="d-meta">Opus <tspan class="d-dim">·</tspan> one-shot</text>
+          <text x="112" y="128" class="d-meta d-dim">brief → 5–10 sprints</text>
+
+          <line x1="288" y1="100" x2="360" y2="100" class="d-line" marker-end="url(#ah)"></line>
+
+          <!-- generator -->
+          <rect x="360" y="62" width="192" height="78" rx="2" class="d-box"></rect>
+          <text x="376" y="90" class="d-name">generator</text>
+          <text x="376" y="110" class="d-meta">Sonnet <tspan class="d-dim">·</tspan> workhorse</text>
+          <text x="376" y="128" class="d-meta d-dim">proposes contract, builds</text>
+
+          <line x1="552" y1="100" x2="624" y2="100" class="d-line" marker-end="url(#ah)"></line>
+
+          <!-- evaluator -->
+          <rect x="624" y="62" width="192" height="78" rx="2" class="d-box d-box--eval"></rect>
+          <text x="640" y="90" class="d-name">evaluator</text>
+          <text x="640" y="110" class="d-meta">Opus <tspan class="d-dim">·</tspan> harsh</text>
+          <text x="640" y="128" class="d-meta d-dim">critiques, then grades</text>
+
+          <!-- pass -->
+          <line x1="720" y1="140" x2="720" y2="196" class="d-line" marker-end="url(#ah)"></line>
+          <text x="732" y="176" class="d-tag d-tag--pass">pass</text>
+          <text x="720" y="222" text-anchor="middle" class="d-name d-name--ship">shipped</text>
+
+          <!-- reject loop back -->
+          <path d="M672,140 L672,256 Q672,268 660,268 L468,268 Q456,268 456,256 L456,140" fill="none" class="d-line d-line--rej" marker-end="url(#ah-rej)"></path>
+          <path d="M672,140 L672,256 Q672,268 660,268 L468,268 Q456,268 456,256 L456,140" fill="none" class="d-pulse"></path>
+          <text x="470" y="292" class="d-tag d-tag--rej">reject — rebuild against the critique</text>
+
+          <!-- runner note -->
+          <text x="624" y="42" class="d-note">launches the app in Playwright</text>
+          <line x1="700" y1="48" x2="700" y2="60" class="d-line d-line--hair"></line>
+        </svg>
+      </div>
+
+          </div>
+  </section>
+
+  <!-- ============================ WORK ============================ -->
+  <section class="section" id="work">
+
+    <!-- The deck: every child of .deck-pin becomes a full-viewport slide.
+         Scroll dwells inside each project (with internal scroll play when
+         its content is taller than the screen), then a full-display type-band
+         wipe carries it away to reveal the next. All JS-gated: without JS
+         this wrapper is inert and the page reads as a plain long scroll.
+         The method payoff and the section head lead the deck as two title
+         slides, so the same full-window wipe carries Method out and the
+         projects in. -->
+    <div class="deck" id="deck">
+    <div class="deck-pin" id="deck-pin">
+
+    <!-- ---------------- method payoff (lead slide) ---------------- -->
+    <div class="deck-lead deck-lead--payoff">
+      <div class="wrap">
+        <p class="method-payoff">
+          This method has allowed me to remove myself as the bottleneck and move at incredible speeds,
+          while ensuring that the AI is producing high quality work by fixing its own mistakes. As a result,
+          I'm able to produce functional proofs-of-concept in hours, and fully fleshed out and completed products in days, not weeks.
+          I stay in the loop in the places where it matters, and let the AI take over for everything else.
+        </p>
+        <!-- Ambient ASCII orbit: filled by JS only when the deck is live
+             (the slide is a full viewport then); empty and invisible otherwise. -->
+        <pre class="loop-orbit" id="loop-orbit" aria-hidden="true"></pre>
+      </div>
+    </div>
+
+    <!-- ---------------- work intro (lead slide) ---------------- -->
+    <div class="deck-lead" id="work-intro">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="label">02 <span aria-hidden="true">/</span> Work</p>
+          <h2 class="section-title">Vibe-coded projects</h2>
+          <p class="section-lede">
+          Here are some examples of work I've done with AI coding tools across the realms of web apps, design tools, hardware, software, terminal tools, and multimedia experiments.
+          </p>
+        </header>
+      </div>
+    </div>
+
+    <!-- ---------------- 01 the fold ---------------- -->
+    <article class="project reveal" id="the-fold">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">01</span>
+          <h3 class="project-title">The Fold &mdash; Brand Studio</h3>
+          <span class="badge badge--shipped">Shipped to brief</span>
+        </div>
+        <p class="project-lede">
+          A generative brand-identity studio, built to assist in a design sprint for a cafe and event space in San Francisco.
+          Instead of jumping straight into static completed designs, I built a bespoke tool that enabled us to explore endless variations across a range of generative motifs tied to the brand identity.
+        </p>
+      </div>
+
+      <figure class="shot bleed">
+        <div class="frame">
+          <video class="media" width="1440" height="814"
+                 autoplay muted loop playsinline preload="metadata" controls
+                 aria-label="Screen recording of The Fold Brand Studio: switching between the nine mark engines — oscilloscope, folded ribbon, knot lab, cloth and the rest — while dragging parameter sliders, with the mark redrawing live on each change.">
+            <source src="public/media/fold-studio.mp4" type="video/mp4">
+          </video>
+        </div>
+      </figure>
+
+      <div class="wrap">
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>Vanilla JavaScript <span class="sep">·</span> Canvas <span class="sep">·</span> SVG Export <span class="sep">·</span> Three.js</dd></div>
+          <div><dt>Notes</dt><dd>This is one of my favorite use cases for vibe coding: making purpose-built generative and parametric design tools that enable you to explore complex motifs that would be very time consuming to create manually in traditional design tools, while retaining the ability to dial things exactly the way you want them.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 02 waveformed ---------------- -->
+    <article class="project reveal" id="waveformed">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">02</span>
+          <h3 class="project-title">Waveformed</h3>
+          <span class="badge badge--shipped">Shipped</span>
+          <a class="project-link" href="https://waveformed.shop" target="_blank" rel="noopener">waveformed.shop <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="project-lede">
+          Upload a song, a voice note, a heartbeat and it is instantly turned into a 3D statue. The model is fully parametric and rendered in
+          the browser, allowing the customer to tweak it to their heart's content before ordering. The design is sent to a 3D print farm API and printed and shipped on demand.
+        </p>
+      </div>
+
+      <figure class="shot bleed">
+        <div class="frame">
+          <video class="media" width="1440" height="886"
+                 autoplay muted loop playsinline preload="metadata" controls
+                 aria-label="Screen recording of the waveformed configurator: an uploaded WAV file becomes a 3D wall-bar sculpture, dimension sliders reshape it live, and the estimated price updates.">
+            <source src="public/media/waveformed-demo.mp4" type="video/mp4">
+          </video>
+        </div>
+      </figure>
+
+      <div class="wrap">
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>Next.js 15 App Router <span class="sep">·</span> TypeScript (strict) <span class="sep">·</span> Vercel <span class="sep">·</span> Supabase Postgres + Drizzle <span class="sep">·</span> Stripe <span class="sep">·</span> Slant 3D fulfilment API <span class="sep">·</span> Resend <span class="sep">·</span> Playwright + Vitest</dd></div>
+          <div><dt>Notes</dt><dd>This entire product was built from scratch using my harness system, with build sprints happening overnight while I slept. The platform is built to be modular so I can easily vibe code new user-customizable physical product businesses on top of the existing architecture.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 03 tombogo ---------------- -->
+    <article class="project reveal" id="tombogo">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">03</span>
+          <h3 class="project-title">Tombogo <span class="times" aria-hidden="true">&times;</span> Rheome gadget</h3>
+          <span class="badge badge--build">In build <span aria-hidden="true">·</span> Kickstarter Dec 2026</span>
+        </div>
+        <p class="project-lede">
+          A handheld electronic instrument, made in collaboration with the fashion label Tombogo. My most ambitious application of vibe coding, utilizing AI to aid in everything from circuit design and 3D modeling, to embedded audio firmware and a touchscreen UI. 
+        </p>
+
+        <div class="shot-pair shot-pair--matched">
+          <figure class="shot shot--half">
+            <div class="frame">
+              <img src="public/shots/tombogo-prototype.webp" width="1149" height="1369" loading="lazy" decoding="async"
+                   alt="The printed prototype, powered on: a soft pebble-shaped bone-white enclosure with a knurled encoder at the top edge and a four-way switch beside it. The circular screen shows the chord interface — Roman-numeral degrees I to VII ringed around a centre cluster of quality buttons for dim, aug, sus, 5, 7 and 9, each in a different colour.">
+            </div>
+          </figure>
+          <figure class="shot shot--half">
+            <div class="frame">
+              <video class="media" width="640" height="562"
+                     autoplay muted loop playsinline preload="metadata"
+                     aria-label="Animated exploded view of the gadget: the bone-white shell lifts away, the internal stack separates into speaker, battery, circuit board and base plate, then reassembles in a loop.">
+                <source src="public/media/tombogo-exploded.mp4" type="video/mp4">
+              </video>
+            </div>
+          </figure>
+        </div>
+
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>ESP32-S3 <span class="sep">·</span> C/C++ firmware <span class="sep">·</span> OpenSCAD <span class="sep">·</span> Blender <span class="sep">·</span> Faust <span class="sep">·</span> KiCad</dd></div>
+          <div><dt>Notes</dt><dd>The harness ran the firmware sprints under one added rule: nothing passes until a human confirms it on the powered-on device. While most projects can be tested by agents directly through browser and computer use tools, on-device hardware tests have to be done by a human.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 05 kaolin ---------------- -->
+    <article class="project reveal" id="kaolin">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">04</span>
+          <h3 class="project-title">Kaolin &mdash; by Rheome</h3>
+          <span class="badge badge--build">Pre-launch</span>
+          <a class="project-link" href="https://rheome.tools" target="_blank" rel="noopener">rheome.tools <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="project-lede">
+          Shape-shifting software synthesizer. Points on the map represent different instrument sounds, moving between them lets you morph seamlessly. Play the sound that exists in between a piano and a ukelele.
+        </p>
+      </div>
+
+      <figure class="shot bleed">
+        <div class="frame">
+          <video class="media" width="1440" height="806"
+                 autoplay muted loop playsinline preload="metadata" controls
+                 aria-label="Screen recording of the Kaolin plugin: a cloud of several hundred coloured grain nodes shifting in the evengrid view, the spectrogram strip scrolling beneath it, while knobs in the banks below are turned.">
+            <source src="public/media/kaolin-demo.mp4" type="video/mp4">
+          </video>
+        </div>
+      </figure>
+
+      <div class="wrap">
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>C++ / JUCE <span class="sep">·</span> MacOS <span class="sep">·</span> Audio DSP <span class="sep">·</span> Web Scraping </div>
+          <div><dt>Notes</dt><dd>I dreamed about an instrument like this for years. My harness system allowed me to finish it in a matter of days, including an automated web scraping process that found and downloaded samples of every instrument in the world, analyzed them, and folded them into the plug-in.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 06 rheome.tools ---------------- -->
+    <article class="project reveal" id="rheome">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">05</span>
+          <h3 class="project-title">rheome.tools</h3>
+          <span class="badge badge--shipped">Live</span>
+          <a class="project-link" href="https://rheome.tools" target="_blank" rel="noopener">rheome.tools <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="project-lede">
+          The landing page for Rheome, my music tech company. 3D worldbuilding, where the camera advances through the scene as you scroll.
+        </p>
+      </div>
+
+      <figure class="shot bleed">
+        <div class="frame">
+          <video class="media" width="1440" height="810"
+                 autoplay muted loop playsinline preload="metadata" controls
+                 aria-label="Screen recording of rheome.tools: the full site scrolled top to bottom — 3D instrument models turning and lighting shifting as sections change — played back at six times speed.">
+            <source src="public/media/rheome-hero.mp4" type="video/mp4">
+          </video>
+        </div>
+      </figure>
+
+      <div class="wrap">
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>Next.js <span class="sep">·</span> React <span class="sep">·</span> Three.js <span class="sep">·</span> GSAP <span class="sep">·</span> postprocessing <span class="sep">·</span> glTF pipeline (Draco + meshopt)</dd></div>
+          <div><dt>Notes</dt><dd>Much of this was hand-coded, as I built this project as part of a class I took at NYU called Immersive Web. 
+            AI assistance was used to build the pipeline that processes the 3D models to load efficiently, and the entire terminal-aesthetic site that loads after the intro sequence was AI-built.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 07 raybox ---------------- -->
+    <article class="project reveal" id="raybox">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">06</span>
+          <h3 class="project-title">Raybox</h3>
+          <span class="badge badge--build">In development</span>
+        </div>
+        <p class="project-lede">
+          Music in, audio reactive video out. A visual editor that allows musicians to quickly and easily create compelling beat-synced videos to their music, by composing from a library of pre-built visual effects, combined with their own photos and videos.
+        </p>
+      </div>
+
+      <figure class="shot bleed">
+        <div class="frame">
+          <video class="media" width="1280" height="702"
+                 autoplay muted loop playsinline preload="metadata" controls
+                 aria-label="Screen recording of the Raybox editor: an audio-reactive video composition being scrubbed and previewed against a BPM-aligned timeline.">
+            <source src="public/media/raybox-demo.mp4" type="video/mp4">
+            <source src="public/media/raybox-demo.webm" type="video/webm">
+          </video>
+        </div>
+      </figure>
+
+      <div class="wrap">
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>Remotion <span class="sep">·</span> AWS Lambda <span class="sep">·</span> Next.js <span class="sep">·</span> Cloudflare R2 <span class="sep">·</span> PostgreSQL</dd></div>
+          <div><dt>Notes</dt><dd>Mostly built in Cursor, before I had developed my current workflow and build systems. A highly ambitious product involving audio analysis, real time 3d effects in the browser, and deterministic cloud video rendering.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 08 ascii-cli ---------------- -->
+    <article class="project reveal" id="ascii-cli">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">07</span>
+          <h3 class="project-title">ascii-cli</h3>
+          <span class="badge badge--shipped">Shipped</span>
+        </div>
+        <p class="project-lede">
+          A little terminal tool: type a word, arrow through 326 text-art fonts, watch each one
+          render live, hit enter and it&rsquo;s on your clipboard.
+        </p>
+      </div>
+
+      <figure class="shot bleed">
+        <div class="frame">
+          <video class="media" width="1280" height="796"
+                 autoplay muted loop playsinline preload="metadata" controls
+                 aria-label="Screen recording of the ascii-cli font picker: an fzf list of FIGlet font names on one side, with the word rendered live in each font as the selection moves down the list.">
+            <source src="public/media/ascii-cli.mp4" type="video/mp4">
+          </video>
+        </div>
+      </figure>
+
+      <div class="wrap">
+                <dl class="spec">
+          <div><dt>Stack</dt><dd>Bun <span class="sep">·</span> figlet.js <span class="sep">·</span> fzf</dd></div>
+          <div><dt>Notes</dt><dd>If you couldn't tell from this website already, I'm a big fan of ascii art and was frequently pulling up web tools to generate some ascii text.
+             I love using AI to build simple little workflow improvements like this; one quick build session saves tons of compounding time as you use your own tool.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <!-- ---------------- 09 ballad ---------------- -->
+    <article class="project reveal" id="ballad">
+      <div class="wrap">
+        <div class="project-head">
+          <span class="project-num">08</span>
+          <h3 class="project-title">Ballad of the Balloons</h3>
+          <span class="badge badge--shipped">Live</span>
+          <a class="project-link" href="https://ballad-of-the-balloons.vercel.app/" target="_blank" rel="noopener">ballad-of-the-balloons.vercel.app <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="project-lede">
+          Live data from real weather balloons, turned into sound and image. Every balloon aloft
+          right now is a voice; altitude, drift and burst all become music.
+        </p>
+      </div>
+
+      <!-- No screenshot: the live frame is the same view, and this one moves.
+           No allow="autoplay" on purpose: Web Audio needs a user gesture, and
+           nothing on this page should ever make noise unasked. -->
+      <div class="bleed">
+        <p class="label embed-label">Live in this page <span aria-hidden="true">↗</span> ballad-of-the-balloons.vercel.app</p>
+        <div class="embed embed--fixed">
+          <iframe
+            src="https://ballad-of-the-balloons.vercel.app/"
+            title="Ballad of the Balloons — the live weather-balloon sonification, running inside this page"
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            referrerpolicy="no-referrer"></iframe>
+        </div>
+        <p class="embed-note">Live telemetry &mdash; every dot is a radiosonde aloft right now, and a grain of sound. Press play inside the frame.</p>
+      </div>
+
+      <div class="wrap">
+        <dl class="spec">
+          <div><dt>Stack</dt><dd>Vanilla JavaScript <span class="sep">·</span> Web Audio API <span class="sep">·</span> p5.js <span class="sep">·</span> Sondehub API</dd></div>
+          <div><dt>Notes</dt><dd>Hand-built, pre-harness. It&rsquo;s here because it&rsquo;s the clearest example of the thing I keep chasing: live data becoming material.</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    </div>
+    </div>
+
+  </section>
+
+  <!-- ============================ BACKGROUND ============================ -->
+  <section class="section" id="background">
+    <div class="wrap">
+      <div class="bg-grid">
+        <div class="bg-prose">
+          <header class="section-head">
+            <p class="label">03 <span aria-hidden="true">/</span> Background</p>
+            <h2 class="section-title">Designer and artist turned builder</h2>
+          </header>
+
+          <p>
+            A decade of brand and visual systems for musicians and labels first: album art, identities,
+            campaigns, logos people have gone and tattooed on themselves. That work taught me what a brief
+            actually is, and how to tell when something is finished.
+          </p>
+          <p>
+            The engineering came after, and the harnesses came out of the gap between the two: I wanted to keep
+            working at the pace of design decisions rather than the pace of typing. So I built systems that
+            take the brief and come back with software, and I spend my time on the parts a machine can&rsquo;t
+            grade: taste, judgement, whether it&rsquo;s any good.
+          </p>
+        </div>
+
+        <div class="bg-side">
+          <figure class="bg-photo">
+            <div class="frame">
+              <img src="public/shots/jasper.jpg" width="520" height="520" loading="lazy" decoding="async"
+                   alt="Jasper Hall: a portrait in a workshop, teal aquarium light behind.">
+            </div>
+          </figure>
+          <div class="bg-block">
+            <p class="label">Education</p>
+            <ul class="plain">
+              <li><strong>M.S. Entrepreneurship &amp; Innovation</strong><span>University of San Francisco <span aria-hidden="true"></li>
+              <li><strong>M.A. Interactive Media Arts</strong><span>NYU Tisch</span></li>
+              <li><strong>B.F.A. Fashion Design</strong><span>California College of the Arts</span></li>
+            </ul>
+          </div>
+          <div class="bg-block bg-block--tools">
+            <p class="label">Tools</p>
+            <ul class="plain">
+              <li><strong>Claude Code</strong><span>daily driver &mdash; custom skills, hooks, & agents</span></li>
+              <li><strong>Cursor</strong><span>tighter, surgical edits</span></li>
+              <li><strong>My Own Harnesses</strong><span>anything large, complex, and involved</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ CONTACT ============================ -->
+  <section class="section contact" id="contact">
+    <div class="wrap">
+      <p class="label">04 <span aria-hidden="true">/</span> Contact</p>
+      <h2 class="contact-title">I'd love to help you build whatever you're dreaming of.</h2>
+      <ul class="contact-list">
+        <li><span class="label">Email</span><a href="mailto:jasperghall@gmail.com">jasperghall@gmail.com <span aria-hidden="true">↗</span></a></li>
+        <li><span class="label">Phone</span><a href="tel:+15103848580">(510) 384-8580</a></li>
+        <li><span class="label">Previous work</span><a href="/JasperPortfolio2025.pdf" target="_blank" rel="noopener">JasperPortfolio2025.pdf <span aria-hidden="true">↗</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <p class="foot-mark" aria-hidden="true">Jasper Hall</p>
+    <p class="foot-note">San Francisco <span aria-hidden="true">·</span> 2026 <span aria-hidden="true">·</span> Hand-written HTML, CSS and JavaScript. No framework, no build step.</p>
+  </div>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>
