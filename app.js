@@ -527,7 +527,7 @@
     var TRAIN = "LLAH REPSAJ ";       // comet glyphs, head first — reads
                                       // "JASPER HALL" along the top arc
     var STAGES = ["plan", "build", "critique", "ship"];
-    var PERIOD = 14000;               // ms per orbit
+    var PERIOD = 10000;               // ms per orbit
 
     // Precompute grid cells for each sample; dots use every 3rd sample.
     var pts = [];
