@@ -456,6 +456,7 @@ a.frame:hover img { transform: scale(1.012); }
 .d-tag--pass { fill: var(--celadon); }
 .d-tag--rej { fill: color-mix(in srgb, var(--cobalt) 85%, var(--ink)); }
 .d-tag--taste { fill: var(--ink-soft); }
+.d-tag--sm { font-size: 10px; letter-spacing: 0.01em; }
 
 .d-line { stroke: color-mix(in srgb, var(--ink-soft) 65%, var(--rule)); stroke-width: 1; fill: none; }
 .d-line--rej { stroke: color-mix(in srgb, var(--cobalt) 45%, transparent); }
