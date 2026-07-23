@@ -190,7 +190,7 @@
       <div class="scroller" tabindex="0" role="group" aria-label="Harness loop diagram, scrollable">
         <svg class="loop-diagram" viewBox="0 0 900 310" role="img" aria-labelledby="loop-title loop-desc">
           <title id="loop-title">The harness loop</title>
-          <desc id="loop-desc">A planner model produces sprints, which feed a generator model that proposes a contract then builds. An evaluator model critiques and grades by launching the app. Failures loop back to the generator; passes advance to shipped.</desc>
+          <desc id="loop-desc">An interview refines the idea into a brief. The brief feeds a planner model that produces sprints, which feed a generator model that proposes a contract then builds. An evaluator model critiques and grades by launching the app. Failures loop back to the generator; passes advance to shipped.</desc>
 
           <defs>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -200,6 +200,10 @@
               <path d="M0,0 L10,5 L0,10 z" class="d-arrowhead d-arrowhead--rej"></path>
             </marker>
           </defs>
+
+          <!-- interview -->
+          <text x="16" y="40" class="d-label">interview</text>
+          <line x1="16" y1="50" x2="16" y2="76" class="d-line" marker-end="url(#ah)"></line>
 
           <!-- brief -->
           <text x="16" y="88" class="d-label">brief</text>
