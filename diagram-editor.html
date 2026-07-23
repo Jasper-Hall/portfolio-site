@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness diagram editor</title>
+<style>
+  /* ---- fonts + tokens, lifted from style.css so the canvas matches the site ---- */
+  @font-face { font-family:"Focal Maxi"; src:url("public/fonts/focal-maxi-regular.woff2") format("woff2"); font-weight:400; font-display:swap; }
+  @font-face { font-family:"Focal Maxi"; src:url("public/fonts/focal-maxi-medium.woff2") format("woff2"); font-weight:500 600; font-display:swap; }
+  @font-face { font-family:"Focal"; src:url("public/fonts/focal-regular.woff2") format("woff2"); font-weight:400; font-display:swap; }
+  @font-face { font-family:"Focal"; src:url("public/fonts/focal-medium.woff2") format("woff2"); font-weight:500 600; font-display:swap; }
+  @font-face { font-family:"Focal"; src:url("public/fonts/focal-bold.woff2") format("woff2"); font-weight:700; font-display:swap; }
+
+  :root[data-theme="dark"]{ --porcelain:#181613; --surface:#201d19; --ink:#e8e4dc; --ink-soft:#aba499; --slip:#7e786d; --rule:#332f29; --cobalt:#c9a06a; --celadon:#94b184; }
+  :root[data-theme="light"]{ --porcelain:#e8e9e4; --surface:#f3f4f0; --ink:#14171d; --ink-soft:#3d434f; --slip:#868c97; --rule:#cdcfc8; --cobalt:#2547b8; --celadon:#3e7d5a; }
+  :root{
+    --sans:"Focal","Helvetica Neue",Helvetica,Inter,Arial,sans-serif;
+    --display:"Focal Maxi","Helvetica Neue",Helvetica,Inter,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+    --ui:"Focal","Helvetica Neue",Helvetica,Arial,sans-serif;
+  }
+
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body {
+    background:var(--porcelain); color:var(--ink);
+    font-family:var(--ui); font-size:13px; line-height:1.45;
+    display:grid; grid-template-columns:1fr 320px; grid-template-rows:auto 1fr; height:100vh;
+  }
+
+  /* ---- top bar ---- */
+  .bar {
+    grid-column:1 / -1;
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+    padding:.55rem .8rem; border-bottom:1px solid var(--rule);
+    background:var(--surface);
+  }
+  .bar h1 { font-family:var(--display); font-size:.95rem; font-weight:600; margin:0 .6rem 0 0; letter-spacing:-.01em; }
+  .bar .sp { flex:1; }
+  button, select, .seg {
+    font-family:var(--ui); font-size:12px; color:var(--ink);
+    background:var(--porcelain); border:1px solid var(--rule); border-radius:5px;
+    padding:.34rem .6rem; cursor:pointer;
+  }
+  button:hover { border-color:var(--slip); }
+  button.on { background:var(--ink); color:var(--porcelain); border-color:var(--ink); }
+  .hint { color:var(--slip); font-size:11px; }
+  kbd { font-family:var(--mono); font-size:10.5px; background:var(--porcelain); border:1px solid var(--rule); border-radius:3px; padding:0 4px; }
+
+  /* ---- canvas ---- */
+  .stage { position:relative; overflow:auto; background:
+      repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb,var(--rule) 40%,transparent) 27px 28px),
+      repeating-linear-gradient(90deg, transparent 0 27px, color-mix(in srgb,var(--rule) 40%,transparent) 27px 28px);
+    display:grid; place-items:center; }
+  .stage.nogrid { background:none; }
+  .wrap-svg { position:relative; }
+  svg.diagram, svg.overlay { display:block; }
+  svg.overlay { position:absolute; inset:0; }
+
+  /* diagram styles, copied from style.css (.d-*) */
+  .d-box { fill:var(--surface); stroke:var(--rule); stroke-width:1; }
+  .d-box--eval { stroke:color-mix(in srgb,var(--cobalt) 55%,var(--rule)); }
+  .d-box--me { stroke:color-mix(in srgb,var(--ink-soft) 50%,var(--rule)); stroke-dasharray:3 4; }
+  .d-name { font-family:var(--display); font-size:16.5px; font-weight:600; letter-spacing:-.02em; fill:var(--ink); }
+  .d-name--ship { fill:var(--celadon); }
+  .d-meta { font-family:var(--sans); font-size:11.5px; fill:var(--ink-soft); letter-spacing:.02em; }
+  .d-dim { fill:var(--slip); }
+  .d-label,.d-note { font-family:var(--sans); font-size:9.5px; font-weight:600; fill:var(--slip); text-transform:uppercase; letter-spacing:.18em; }
+  .d-tag { font-family:var(--sans); font-size:11.5px; letter-spacing:.02em; fill:var(--slip); }
+  .d-tag--pass { fill:var(--celadon); }
+  .d-tag--rej { fill:color-mix(in srgb,var(--cobalt) 85%,var(--ink)); }
+  .d-tag--taste { fill:var(--ink-soft); }
+  .d-tag--sm { font-size:10px; letter-spacing:.01em; }
+  .d-line { stroke:color-mix(in srgb,var(--ink-soft) 65%,var(--rule)); stroke-width:1; fill:none; }
+  .d-line--rej { stroke:color-mix(in srgb,var(--cobalt) 45%,transparent); }
+  .d-line--hair { stroke:var(--rule); stroke-width:1; }
+  .d-line--taste { stroke:color-mix(in srgb,var(--ink-soft) 80%,transparent); stroke-width:1.25; stroke-dasharray:2 5; stroke-linecap:round; }
+  .d-arrowhead { fill:color-mix(in srgb,var(--ink-soft) 65%,var(--rule)); }
+  .d-arrowhead--rej { fill:color-mix(in srgb,var(--cobalt) 55%,transparent); }
+  .d-arrowhead--taste { fill:color-mix(in srgb,var(--ink-soft) 80%,transparent); }
+  .d-pulse { display:none; }  /* animation not needed while editing */
+
+  /* ---- overlay handles ---- */
+  .hz { cursor:grab; }
+  .hz:active { cursor:grabbing; }
+  .h-node  { fill:color-mix(in srgb,var(--cobalt) 30%,transparent); stroke:var(--cobalt); stroke-width:1; }
+  .h-label { fill:var(--celadon); opacity:.85; }
+  .h-anchor{ fill:var(--cobalt); }
+  .h-ctrl  { fill:var(--porcelain); stroke:var(--cobalt); stroke-width:1; }
+  .h-ctrl-link { stroke:color-mix(in srgb,var(--cobalt) 45%,transparent); stroke-width:.75; stroke-dasharray:2 3; }
+  .h-line  { fill:var(--celadon); }
+  .sel { outline:none; }
+  .h-sel { stroke:#e0533b; stroke-width:2; }
+
+  /* ---- inspector ---- */
+  .side { border-left:1px solid var(--rule); background:var(--surface); overflow:auto; padding:.8rem; }
+  .side h2 { font-family:var(--display); font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:var(--slip); margin:0 0 .5rem; }
+  .field { margin-bottom:.55rem; }
+  .field label { display:block; color:var(--slip); font-size:11px; margin-bottom:.15rem; }
+  .row { display:flex; gap:.4rem; }
+  input[type=text], input[type=number], textarea {
+    width:100%; font-family:var(--mono); font-size:12px; color:var(--ink);
+    background:var(--porcelain); border:1px solid var(--rule); border-radius:4px; padding:.32rem .45rem;
+  }
+  textarea { line-height:1.4; resize:vertical; }
+  .muted { color:var(--slip); font-size:11.5px; }
+  .pill { display:inline-block; font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); background:var(--porcelain); border:1px solid var(--rule); border-radius:999px; padding:.05rem .5rem; }
+  .danger { color:#e0533b; border-color:color-mix(in srgb,#e0533b 40%,var(--rule)); }
+  .export-open { position:fixed; inset:0; background:color-mix(in srgb,var(--porcelain) 82%,transparent); display:none; place-items:center; z-index:20; }
+  .export-open.show { display:grid; }
+  .export-card { width:min(760px,92vw); background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:1rem; }
+  .export-card textarea { height:340px; }
+  .export-card .row { justify-content:flex-end; margin-top:.6rem; }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <h1>Harness diagram editor</h1>
+  <button id="theme">◑ Theme</button>
+  <button id="grid" class="on">Grid</button>
+  <label class="seg">Snap <select id="snap" style="border:0;background:none;padding:0 0 0 .3rem;cursor:pointer">
+    <option value="1">1</option><option value="2" selected>2</option><option value="4">4</option><option value="0">off</option>
+  </select></label>
+  <span class="sp"></span>
+  <span class="hint">drag handles · click to select · arrows nudge (<kbd>⇧</kbd> ×10)</span>
+  <button id="reset">Reset</button>
+  <button id="export" class="on">Copy SVG…</button>
+</div>
+
+<div class="stage" id="stage">
+  <div class="wrap-svg" id="wrapSvg"></div>
+</div>
+
+<aside class="side">
+  <h2>Inspector</h2>
+  <div id="inspector"><p class="muted">Click any element on the canvas to select it. Drag its handle to move; drag the hollow handles on a loop to reshape the curve.</p></div>
+</aside>
+
+<div class="export-open" id="exportModal">
+  <div class="export-card">
+    <h2 style="margin-top:0">Paste this between the diagram’s <code>&lt;svg&gt;…&lt;/svg&gt;</code> in index.html</h2>
+    <textarea id="exportText" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="copyBtn" class="on">Copy to clipboard</button>
+      <button id="closeExport">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   The diagram, verbatim from index.html. Editing this string is all it takes
+   to re-seed the tool. The <svg> attributes are kept so export is drop-in.
+   ========================================================================== */
+const SVG_ATTRS = 'viewBox="0 0 1040 440" role="img" aria-labelledby="loop-title loop-desc"';
+const DIAGRAM = `
+  <title id="loop-title">The harness loop</title>
+  <desc id="loop-desc">An interview refines the idea into a brief. The brief feeds a planner model that produces sprints, which feed a generator model that proposes a contract then builds. An evaluator model critiques and grades by launching the app. Failures loop back to the generator. Passes hand off to me: I test the build and judge it at a macro level, and an outer loop carries anything that needs more work back to the planner. Nothing reaches shipped until I send it there.</desc>
+
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-arrowhead"></path></marker>
+    <marker id="ah-rej" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-arrowhead d-arrowhead--rej"></path></marker>
+    <marker id="ah-taste" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-arrowhead d-arrowhead--taste"></path></marker>
+  </defs>
+
+  <text x="16" y="40" class="d-label">interview</text>
+  <line x1="16" y1="50" x2="16" y2="76" class="d-line" marker-end="url(#ah)"></line>
+  <text x="16" y="88" class="d-label">brief</text>
+  <line x1="16" y1="100" x2="86" y2="100" class="d-line" marker-end="url(#ah)"></line>
+
+  <rect x="96" y="62" width="192" height="78" rx="2" class="d-box"></rect>
+  <text x="112" y="90" class="d-name">planner</text>
+  <text x="112" y="110" class="d-meta">Opus <tspan class="d-dim">·</tspan> one-shot</text>
+  <text x="112" y="128" class="d-meta d-dim">brief → 5–10 sprints</text>
+  <line x1="288" y1="100" x2="360" y2="100" class="d-line" marker-end="url(#ah)"></line>
+
+  <rect x="360" y="62" width="192" height="78" rx="2" class="d-box"></rect>
+  <text x="376" y="90" class="d-name">generator</text>
+  <text x="376" y="110" class="d-meta">Sonnet <tspan class="d-dim">·</tspan> workhorse</text>
+  <text x="376" y="128" class="d-meta d-dim">proposes contract, builds</text>
+  <line x1="552" y1="100" x2="624" y2="100" class="d-line" marker-end="url(#ah)"></line>
+
+  <rect x="624" y="62" width="192" height="78" rx="2" class="d-box d-box--eval"></rect>
+  <text x="640" y="90" class="d-name">evaluator</text>
+  <text x="640" y="110" class="d-meta">Opus <tspan class="d-dim">·</tspan> harsh</text>
+  <text x="640" y="128" class="d-meta d-dim">critiques, then grades</text>
+
+  <path d="M672,140 L672,256 Q672,268 660,268 L468,268 Q456,268 456,256 L456,140" fill="none" class="d-line d-line--rej" marker-end="url(#ah-rej)"></path>
+  <text x="400" y="292" class="d-tag d-tag--rej">reject — rebuild against the critique</text>
+
+  <line x1="720" y1="140" x2="720" y2="296" class="d-line" marker-end="url(#ah)"></line>
+  <text x="732" y="182" class="d-tag d-tag--pass">pass</text>
+
+  <rect x="624" y="300" width="192" height="78" rx="2" class="d-box d-box--me"></rect>
+  <text x="640" y="328" class="d-name">me</text>
+  <text x="640" y="348" class="d-meta">Human <tspan class="d-dim">·</tspan> taste</text>
+  <text x="640" y="366" class="d-meta d-dim">tests it, judges the whole</text>
+
+  <path d="M624,347 C600,392 512,412 396,412 C276,412 172,372 146,302 C120,232 128,178 176,143" fill="none" class="d-line d-line--taste" marker-end="url(#ah-taste)"></path>
+  <text x="300" y="432" class="d-tag d-tag--taste d-tag--sm">needs work — big changes go back to planning</text>
+
+  <path d="M506,404 C430,372 372,250 408,146" fill="none" class="d-line d-line--taste" marker-end="url(#ah-taste)"></path>
+  <text x="196" y="298" class="d-tag d-tag--taste d-tag--sm">quick fixes skip planning,</text>
+  <text x="196" y="314" class="d-tag d-tag--taste d-tag--sm">straight to the generator</text>
+
+  <line x1="816" y1="339" x2="904" y2="339" class="d-line" marker-end="url(#ah)"></line>
+  <text x="822" y="324" class="d-tag d-tag--pass">ship — my call</text>
+  <text x="920" y="345" class="d-name d-name--ship">shipped</text>
+
+  <text x="624" y="42" class="d-note">launches the app in Playwright</text>
+  <line x1="700" y1="48" x2="700" y2="60" class="d-line d-line--hair"></line>
+`;
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const wrapSvg = document.getElementById("wrapSvg");
+let diagram, overlay, VIEW = {w:1040,h:440}, SCALE = 1.4;
+let selected = null;          // {kind, el, ...}
+let handles = [];             // rendered handle records
+
+/* ---------- build ---------- */
+function build() {
+  wrapSvg.innerHTML = "";
+  const vb = SVG_ATTRS.match(/viewBox="0 0 (\d+) (\d+)"/);
+  VIEW = { w:+vb[1], h:+vb[2] };
+  // fit the stage
+  const avail = document.getElementById("stage").clientWidth - 48;
+  SCALE = Math.min(1.7, Math.max(0.7, avail / VIEW.w));
+
+  diagram = document.createElementNS(SVGNS,"svg");
+  diagram.setAttribute("class","diagram");
+  diagram.setAttribute("viewBox",`0 0 ${VIEW.w} ${VIEW.h}`);
+  diagram.setAttribute("width", VIEW.w*SCALE);
+  diagram.setAttribute("height", VIEW.h*SCALE);
+  diagram.innerHTML = DIAGRAM;
+  wrapSvg.appendChild(diagram);
+
+  overlay = document.createElementNS(SVGNS,"svg");
+  overlay.setAttribute("class","overlay");
+  overlay.setAttribute("viewBox",`0 0 ${VIEW.w} ${VIEW.h}`);
+  overlay.setAttribute("width", VIEW.w*SCALE);
+  overlay.setAttribute("height", VIEW.h*SCALE);
+  wrapSvg.appendChild(overlay);
+
+  buildHandles();
+}
+
+/* ---------- path parsing (M/L/C/Q/Z, absolute) ---------- */
+function parsePath(d) {
+  const out = [];
+  const re = /([MLCQZ])([^MLCQZ]*)/gi;
+  let m;
+  while ((m = re.exec(d))) {
+    const cmd = m[1].toUpperCase();
+    const nums = (m[2].match(/-?\d*\.?\d+/g) || []).map(Number);
+    if (cmd === "Z") { out.push({cmd,pts:[]}); continue; }
+    for (let i=0;i<nums.length;i+=(cmd==="C"?6:cmd==="Q"?4:2)) {
+      if (cmd==="C") out.push({cmd,pts:[[nums[i],nums[i+1]],[nums[i+2],nums[i+3]],[nums[i+4],nums[i+5]]]});
+      else if (cmd==="Q") out.push({cmd,pts:[[nums[i],nums[i+1]],[nums[i+2],nums[i+3]]]});
+      else out.push({cmd,pts:[[nums[i],nums[i+1]]]});
+    }
+  }
+  return out;
+}
+function serializePath(cmds) {
+  return cmds.map(c => c.cmd==="Z" ? "Z" : c.cmd + c.pts.map(p=>`${round(p[0])},${round(p[1])}`).join(" ")).join(" ");
+}
+const round = n => Math.round(n*10)/10;
+
+/* ---------- grouping: which texts belong inside a box ---------- */
+function textsInBox(rect) {
+  const x=+rect.getAttribute("x"), y=+rect.getAttribute("y"),
+        w=+rect.getAttribute("width"), h=+rect.getAttribute("height");
+  return [...diagram.querySelectorAll("text")].filter(t=>{
+    const tx=+t.getAttribute("x"), ty=+t.getAttribute("y");
+    return tx>=x-2 && tx<=x+w+2 && ty>=y && ty<=y+h+4;
+  });
+}
+
+/* ---------- handle building ---------- */
+function clearHandles(){ overlay.innerHTML=""; handles=[]; }
+function addHandle(kind, x, y, cls, meta) {
+  const c = document.createElementNS(SVGNS,"circle");
+  c.setAttribute("cx",x); c.setAttribute("cy",y);
+  c.setAttribute("r", kind==="node"?7:4.5);
+  c.setAttribute("class",`hz ${cls}`);
+  overlay.appendChild(c);
+  const rec = {kind, el:c, ...meta};
+  c.__rec = rec; handles.push(rec);
+  return rec;
+}
+function addLink(x1,y1,x2,y2){
+  const l=document.createElementNS(SVGNS,"line");
+  l.setAttribute("x1",x1);l.setAttribute("y1",y1);l.setAttribute("x2",x2);l.setAttribute("y2",y2);
+  l.setAttribute("class","h-ctrl-link"); overlay.appendChild(l); return l;
+}
+
+function buildHandles() {
+  clearHandles();
+  // boxes → node handles (top-left corner)
+  diagram.querySelectorAll("rect.d-box").forEach(rect=>{
+    const x=+rect.getAttribute("x"), y=+rect.getAttribute("y");
+    addHandle("node", x, y, "h-node", { rect, texts:textsInBox(rect) });
+  });
+  // standalone texts (not inside a box) → label handles
+  const boxed = new Set(); diagram.querySelectorAll("rect.d-box").forEach(r=>textsInBox(r).forEach(t=>boxed.add(t)));
+  diagram.querySelectorAll("text").forEach(t=>{
+    if (boxed.has(t)) return;
+    addHandle("label", +t.getAttribute("x"), +t.getAttribute("y"), "h-label", { text:t });
+  });
+  // lines → endpoint handles
+  diagram.querySelectorAll("line").forEach(ln=>{
+    addHandle("line", +ln.getAttribute("x1"), +ln.getAttribute("y1"), "h-line", { line:ln, end:"1" });
+    addHandle("line", +ln.getAttribute("x2"), +ln.getAttribute("y2"), "h-line", { line:ln, end:"2" });
+  });
+  // paths → anchor + control handles
+  diagram.querySelectorAll("path[class]").forEach(p=>{
+    if (p.closest("marker")) return;
+    const cmds = parsePath(p.getAttribute("d"));
+    // sync a twin (identical d) — the reject pulse — automatically
+    const twin = [...diagram.querySelectorAll("path[class]")].find(q=>q!==p && q.getAttribute("d")===p.getAttribute("d"));
+    let prevAnchor=null;
+    cmds.forEach((cmd,ci)=>{
+      cmd.pts.forEach((pt,pi)=>{
+        const isCtrl = (cmd.cmd==="C" && pi<2) || (cmd.cmd==="Q" && pi<1);
+        if (isCtrl && prevAnchor) addLink(prevAnchor[0],prevAnchor[1],pt[0],pt[1]);
+        addHandle(isCtrl?"ctrl":"anchor", pt[0], pt[1], isCtrl?"h-ctrl":"h-anchor",
+                  { path:p, twin, cmds, ci, pi });
+      });
+      if (cmd.pts.length) prevAnchor = cmd.pts[cmd.pts.length-1];
+    });
+  });
+  if (selected) markSelected(selected.el);
+}
+
+/* ---------- selection + inspector ---------- */
+function selectRec(rec){
+  selected = rec;
+  overlay.querySelectorAll(".h-sel").forEach(e=>e.classList.remove("h-sel"));
+  rec.el.classList.add("h-sel");
+  renderInspector(rec);
+}
+function markSelected(el){ /* re-find after rebuild not tracked; skip */ }
+
+function renderInspector(rec){
+  const ins = document.getElementById("inspector");
+  const f = [];
+  const num = (label,val,on)=>`<div class="field"><label>${label}</label><input type="number" step="1" value="${round(val)}" data-on="${on}"></div>`;
+  if (rec.kind==="node"){
+    const r=rec.rect;
+    f.push(`<span class="pill">box · ${r.getAttribute("class").replace('d-box','').trim()||'agent'}</span>`);
+    f.push(`<div class="row">${num("x",+r.getAttribute("x"),"nx")}${num("y",+r.getAttribute("y"),"ny")}</div>`);
+    f.push(`<div class="row">${num("w",+r.getAttribute("width"),"nw")}${num("h",+r.getAttribute("height"),"nh")}</div>`);
+    f.push(`<p class="muted">Its label lines move with the box. Width/height reshape just the box.</p>`);
+  } else if (rec.kind==="label"){
+    const t=rec.text;
+    f.push(`<span class="pill">text · ${t.getAttribute("class")}</span>`);
+    f.push(`<div class="field"><label>content</label><input type="text" value="${escapeAttr(t.textContent)}" data-on="text"></div>`);
+    f.push(`<div class="row">${num("x",+t.getAttribute("x"),"tx")}${num("y",+t.getAttribute("y"),"ty")}</div>`);
+  } else if (rec.kind==="line"){
+    const l=rec.line;
+    f.push(`<span class="pill">line end ${rec.end}</span>`);
+    f.push(`<div class="row">${num("x",+l.getAttribute("x"+rec.end),"lx")}${num("y",+l.getAttribute("y"+rec.end),"ly")}</div>`);
+  } else {
+    f.push(`<span class="pill">${rec.kind==="ctrl"?"control point":"anchor"}</span>`);
+    const pt=rec.cmds[rec.ci].pts[rec.pi];
+    f.push(`<div class="row">${num("x",pt[0],"px")}${num("y",pt[1],"py")}</div>`);
+    f.push(`<div class="field"><label>whole path d</label><textarea data-on="d" style="height:90px">${serializePath(rec.cmds)}</textarea></div>`);
+  }
+  ins.innerHTML = f.join("");
+  ins.querySelectorAll("input,textarea").forEach(inp=>{
+    inp.addEventListener("input",()=>applyInspector(rec, inp.dataset.on, inp.value));
+  });
+}
+function escapeAttr(s){ return s.replace(/"/g,"&quot;"); }
+
+function applyInspector(rec, on, val){
+  const v = parseFloat(val);
+  if (on==="nx"){ moveNode(rec, v-+rec.rect.getAttribute("x"), 0); }
+  else if (on==="ny"){ moveNode(rec, 0, v-+rec.rect.getAttribute("y")); }
+  else if (on==="nw"){ rec.rect.setAttribute("width", v); }
+  else if (on==="nh"){ rec.rect.setAttribute("height", v); }
+  else if (on==="text"){ rec.text.textContent = val; }
+  else if (on==="tx"){ rec.text.setAttribute("x", v); }
+  else if (on==="ty"){ rec.text.setAttribute("y", v); }
+  else if (on==="lx"){ rec.line.setAttribute("x"+rec.end, v); }
+  else if (on==="ly"){ rec.line.setAttribute("y"+rec.end, v); }
+  else if (on==="px"){ rec.cmds[rec.ci].pts[rec.pi][0]=v; commitPath(rec); }
+  else if (on==="py"){ rec.cmds[rec.ci].pts[rec.pi][1]=v; commitPath(rec); }
+  else if (on==="d"){ rec.path.setAttribute("d", val); if(rec.twin) rec.twin.setAttribute("d",val); }
+  if (on!=="d") buildHandles();
+}
+function commitPath(rec){
+  const d = serializePath(rec.cmds);
+  rec.path.setAttribute("d", d);
+  if (rec.twin) rec.twin.setAttribute("d", d);
+}
+function moveNode(rec, dx, dy){
+  rec.rect.setAttribute("x", +rec.rect.getAttribute("x")+dx);
+  rec.rect.setAttribute("y", +rec.rect.getAttribute("y")+dy);
+  rec.texts.forEach(t=>{ t.setAttribute("x",+t.getAttribute("x")+dx); t.setAttribute("y",+t.getAttribute("y")+dy); });
+}
+
+/* ---------- dragging ---------- */
+let drag=null;
+function svgPoint(evt){
+  const pt = overlay.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  return pt.matrixTransform(overlay.getScreenCTM().inverse());
+}
+function snap(v){ const s=+document.getElementById("snap").value; return s? Math.round(v/s)*s : v; }
+
+wrapSvg.addEventListener("pointerdown", e=>{
+  const rec = e.target.__rec;
+  if (!rec) return;
+  selectRec(rec);
+  const p = svgPoint(e);
+  drag = { rec, ox:p.x, oy:p.y,
+    start: rec.kind==="node" ? [+rec.rect.getAttribute("x"),+rec.rect.getAttribute("y")]
+         : rec.kind==="label"? [+rec.text.getAttribute("x"),+rec.text.getAttribute("y")]
+         : rec.kind==="line" ? [+rec.line.getAttribute("x"+rec.end),+rec.line.getAttribute("y"+rec.end)]
+         : [...rec.cmds[rec.ci].pts[rec.pi]] };
+  e.target.setPointerCapture(e.pointerId);
+});
+wrapSvg.addEventListener("pointermove", e=>{
+  if (!drag) return;
+  const p = svgPoint(e);
+  const nx = snap(drag.start[0] + (p.x-drag.ox));
+  const ny = snap(drag.start[1] + (p.y-drag.oy));
+  const rec = drag.rec;
+  if (rec.kind==="node"){ moveNode(rec, nx-+rec.rect.getAttribute("x"), ny-+rec.rect.getAttribute("y")); rec.el.setAttribute("cx",nx); rec.el.setAttribute("cy",ny); }
+  else if (rec.kind==="label"){ rec.text.setAttribute("x",nx); rec.text.setAttribute("y",ny); rec.el.setAttribute("cx",nx); rec.el.setAttribute("cy",ny); }
+  else if (rec.kind==="line"){ rec.line.setAttribute("x"+rec.end,nx); rec.line.setAttribute("y"+rec.end,ny); rec.el.setAttribute("cx",nx); rec.el.setAttribute("cy",ny); }
+  else { rec.cmds[rec.ci].pts[rec.pi][0]=nx; rec.cmds[rec.ci].pts[rec.pi][1]=ny; commitPath(rec); rec.el.setAttribute("cx",nx); rec.el.setAttribute("cy",ny); }
+  liveReadout(rec);
+});
+wrapSvg.addEventListener("pointerup", ()=>{ if(drag){ const r=drag.rec; drag=null; buildHandles(); if(r) reselect(r); } });
+
+function reselect(oldRec){
+  // find the closest handle of the same kind to restore selection after rebuild
+  const key = handleKey(oldRec);
+  const again = handles.find(h=>handleKey(h)===key);
+  if (again){ selected=again; again.el.classList.add("h-sel"); renderInspector(again); }
+}
+function handleKey(r){
+  if (r.kind==="node") return "node:"+r.rect.getAttribute("class")+":"+r.texts.length;
+  if (r.kind==="label") return "label:"+(r.text.getAttribute("class"))+":"+r.text.textContent.slice(0,12);
+  if (r.kind==="line") return "line:"+r.line.getAttribute("marker-end")+":"+r.end+":"+r.line.getAttribute("x1")+r.line.getAttribute("y1");
+  return r.kind+":"+r.ci+":"+r.pi+":"+r.path.getAttribute("class");
+}
+function liveReadout(rec){
+  const box = document.querySelector('#inspector .row input'); // cheap: just refresh inspector numbers
+  renderInspector(rec);
+}
+
+/* ---------- keyboard nudge ---------- */
+window.addEventListener("keydown", e=>{
+  if (!selected) return;
+  if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  const step = e.shiftKey?10:1;
+  let dx=0,dy=0;
+  if (e.key==="ArrowLeft") dx=-step; else if (e.key==="ArrowRight") dx=step;
+  else if (e.key==="ArrowUp") dy=-step; else if (e.key==="ArrowDown") dy=step; else return;
+  e.preventDefault();
+  const rec=selected;
+  if (rec.kind==="node") moveNode(rec,dx,dy);
+  else if (rec.kind==="label"){ rec.text.setAttribute("x",+rec.text.getAttribute("x")+dx); rec.text.setAttribute("y",+rec.text.getAttribute("y")+dy); }
+  else if (rec.kind==="line"){ rec.line.setAttribute("x"+rec.end,+rec.line.getAttribute("x"+rec.end)+dx); rec.line.setAttribute("y"+rec.end,+rec.line.getAttribute("y"+rec.end)+dy); }
+  else { rec.cmds[rec.ci].pts[rec.pi][0]+=dx; rec.cmds[rec.ci].pts[rec.pi][1]+=dy; commitPath(rec); }
+  buildHandles(); reselect(rec);
+});
+
+/* ---------- export ---------- */
+function exportSVG(){
+  // clone diagram, drop editor-only bits, pretty-print the children
+  const clone = diagram.cloneNode(true);
+  clone.removeAttribute("width"); clone.removeAttribute("height"); clone.removeAttribute("class");
+  let out = clone.innerHTML
+    .replace(/></g, ">\n<")
+    .replace(/\s*\n\s*/g, "\n")
+    .split("\n").map(l=>"          "+l.trim()).join("\n");
+  document.getElementById("exportText").value = out;
+  document.getElementById("exportModal").classList.add("show");
+}
+
+/* ---------- wiring ---------- */
+document.getElementById("theme").onclick = ()=>{
+  const r=document.documentElement;
+  r.setAttribute("data-theme", r.getAttribute("data-theme")==="dark"?"light":"dark");
+};
+document.getElementById("grid").onclick = e=>{
+  document.getElementById("stage").classList.toggle("nogrid");
+  e.target.classList.toggle("on");
+};
+document.getElementById("reset").onclick = ()=>{ selected=null; document.getElementById("inspector").innerHTML='<p class="muted">Reset to the last-loaded diagram.</p>'; build(); };
+document.getElementById("export").onclick = exportSVG;
+document.getElementById("closeExport").onclick = ()=>document.getElementById("exportModal").classList.remove("show");
+document.getElementById("copyBtn").onclick = async ()=>{
+  const t=document.getElementById("exportText"); t.select();
+  try{ await navigator.clipboard.writeText(t.value); document.getElementById("copyBtn").textContent="Copied ✓"; setTimeout(()=>document.getElementById("copyBtn").textContent="Copy to clipboard",1200);}catch(_){document.execCommand("copy");}
+};
+document.getElementById("snap").onchange = ()=>{};
+window.addEventListener("resize", ()=>{ const s=selected; build(); if(s) reselect(s); });
+
+document.documentElement.setAttribute("data-theme","dark");
+build();
+</script>
+</body>
+</html>
