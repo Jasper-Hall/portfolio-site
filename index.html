@@ -251,10 +251,17 @@
           <text x="640" y="348" class="d-meta">Human <tspan class="d-dim">·</tspan> taste</text>
           <text x="640" y="366" class="d-meta d-dim">tests it, judges the whole</text>
 
-          <!-- the outer loop: anything that needs more work goes back to planning -->
-          <path d="M624,339 C606,382 520,404 400,404 C280,404 178,368 150,300 C122,232 128,180 176,143"
+          <!-- my loops. Both leave the me node: big changes go all the way
+               back to planning, small fixes skip it and hand straight to the
+               generator. Same dotted stroke so they read as one pair. -->
+          <path d="M624,347 C600,392 512,412 396,412 C276,412 172,372 146,302 C120,232 128,178 176,143"
                 fill="none" class="d-line d-line--taste" marker-end="url(#ah-taste)"></path>
-          <text x="300" y="424" class="d-tag d-tag--taste">needs work — back to planning</text>
+          <text x="300" y="432" class="d-tag d-tag--taste">needs work — big changes go back to planning</text>
+
+          <!-- quick-fix loop: me → generator, skipping the planner -->
+          <path d="M624,320 C556,300 512,244 512,150"
+                fill="none" class="d-line d-line--taste" marker-end="url(#ah-taste)"></path>
+          <text x="238" y="238" class="d-tag d-tag--taste">quick fixes skip planning, straight to generator</text>
 
           <!-- shipped, on my call -->
           <line x1="816" y1="339" x2="904" y2="339" class="d-line" marker-end="url(#ah)"></line>
