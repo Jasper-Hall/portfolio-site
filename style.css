@@ -1408,14 +1408,19 @@ input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
 
 .js-deck .deck-slide {
   position: absolute;
-  inset: 0;
+  /* The slide starts *below* the sticky header rather than padding itself
+     clear of it. Padding scrolls away with the content, so a scroll-playing
+     slide used to carry its project head up under the header — where the
+     header still took the clicks, leaving the visible project link dead.
+     Insetting the box means the slide's scrollport ends at the header and
+     nothing it owns can ever sit behind it. --deck-top is measured from the
+     real header in deck(); the 6rem fallback is the no-JS-yet value. */
+  inset: var(--deck-top, 6rem) 0 0 0;
   overflow: hidden;
   background: var(--porcelain);
-  /* Clear the sticky site header, and centre slides that fit — `safe`
-     falls back to top-aligned the moment content overflows, which is
-     what keeps the scroll-play reachable from the top. The ASCII wordmark
-     makes the header ~5.6rem tall, so anything less clips the title. */
-  padding-top: 6rem;
+  /* Centre slides that fit — `safe` falls back to top-aligned the moment
+     content overflows, which is what keeps the scroll-play reachable from
+     the top. */
   display: flex;
   flex-direction: column;
   justify-content: safe center;

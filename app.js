@@ -383,8 +383,15 @@
     function measure() {
       var vh = window.innerHeight;
       transPx = TRANS_FRAC * vh;
+
+      /* Slides are inset below the sticky header (see .js-deck .deck-slide),
+         so publish its measured height and budget each dwell against the
+         slide's own scrollport rather than the full viewport. */
+      var head = document.querySelector(".site-head");
+      pin.style.setProperty("--deck-top", (head ? head.getBoundingClientRect().height : 96) + "px");
+
       dwells = slides.map(function (slide) {
-        var overflow = Math.max(0, slide.scrollHeight - vh);
+        var overflow = Math.max(0, slide.scrollHeight - slide.clientHeight);
         return overflow + HOLD_FRAC * vh;
       });
       starts = []; total = 0;
@@ -447,14 +454,19 @@
         var cur = slides[idx];
         if (!inTrans) {
           setMask(cur, "none");
-          cur.scrollTop = Math.min(segP, Math.max(0, cur.scrollHeight - vh));
+          cur.scrollTop = Math.min(segP, Math.max(0, cur.scrollHeight - cur.clientHeight));
           paintBand(-1); // clear
         } else {
           /* A gradient mask instead of a clip-path: the outgoing slide fades
              out across a feathered zone behind the character band, so the
              wipe front is a soft edge, not a hard line. */
           var remapped = -SPREAD_ABOVE + segP * TRAVEL;
-          var p = remapped * 100;
+          /* remapped is a fraction of the pin, but a mask resolves against the
+             slide box — which starts below the header. Re-base it, or the soft
+             edge drifts away from the painted band by the header's height. */
+          var pinH = pin.clientHeight;
+          var slideH = cur.clientHeight || pinH;
+          var p = ((remapped * pinH - (pinH - slideH)) / slideH) * 100;
           setMask(cur,
             "linear-gradient(180deg, transparent " + (p - 14) + "%, #000 " + (p + 4) + "%)");
           paintBand(remapped);
