@@ -369,6 +369,16 @@ strong { font-weight: 600; }
   max-width: 58ch;
 }
 
+/* Primary offer for the visitor, sitting with the standfirst so both are
+   above the fold. .btn is shared with the euclidean toy; anchors need the
+   inline-block box and the hover underline suppressed. */
+.hero-cta {
+  display: flex; flex-wrap: wrap; gap: 0.6rem;
+  margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+a.btn { display: inline-block; line-height: 1; }
+a.btn:hover { text-decoration: none; }
+
 .hero-figure {
   margin: clamp(2.5rem, 5vw, 4.5rem) auto 0;
   width: 100%;
@@ -620,6 +630,39 @@ a.frame:hover img { transform: scale(1.012); }
   .steps { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
+/* The three offers. Same designed-step treatment as the method steps, and
+   they borrow .step-num / .step-title outright so the two sections read as
+   one family. Three up instead of four. */
+.offers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem clamp(1.5rem, 3vw, 2.75rem);
+  list-style: none;
+  margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  padding: 0;
+}
+.offers li {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.2rem;
+}
+.offers p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.offers .offer-proof {
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
+}
+.offer-proof .label { margin-right: 0.55rem; }
+@media (max-width: 900px) {
+  .offers { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 620px) {
+  .offers { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
 .method-payoff {
   max-width: 58ch;
   margin: clamp(2rem, 4vw, 3rem) auto 0;
@@ -697,6 +740,31 @@ a.frame:hover img { transform: scale(1.012); }
   border-bottom-color: var(--cobalt);
 }
 .row--human th { padding-left: 0.7rem; }
+
+/* Engagement tiers, set as the same ledger as the grading table. Rates are
+   mono and cobalt so the figures read as the answer to the question. */
+.tier-table {
+  min-width: 620px;
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+.tier-table tbody th { white-space: nowrap; padding-right: clamp(1.5rem, 3vw, 3rem); }
+.tier-table td { color: var(--ink-soft); }
+.tier-table .tier-rate {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--cobalt);
+  white-space: nowrap;
+}
+
+.availability {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.5rem 0.85rem;
+  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+.availability-arrow { color: var(--slip); }
 
 /* -------------------------------- projects ---------------------------- */
 
@@ -1195,6 +1263,19 @@ input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
   padding-top: clamp(1.5rem, 3vw, 2.25rem);
   border-top: 1px solid var(--rule);
 }
+/* Booking sits above the raw contact details: the primary path first, the
+   fallbacks under it. */
+.contact-cta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.5rem 0.85rem;
+  margin: 0 0 clamp(1.5rem, 3vw, 2.25rem);
+}
+.contact-cta-note {
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
 .contact-list li { display: grid; gap: 0.3rem; }
 .contact-list a {
   font-family: var(--sans);
