@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Hardware prototyping portfolio: a wire harness tester, a handheld instrument, a performance instrument and a hall-effect MIDI keyboard.">
+<title>Jasper Hall · Hardware Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #141414;
+    --ink-2: #2e2e2c;
+    --ink-3: #5d5d59;
+    --rule: #a9a8a3;
+    --paper: #e3e2de;
+    --plate: #ecebe8;
+    --accent: #141414;
+    --mono: "Geist Mono", ui-monospace, monospace;
+    --sans: "Geist", system-ui, sans-serif;
+  }
+  @page { size: 11in 8.5in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page {
+    width: 11in; height: 8.5in; padding: 0.5in 0.6in 0.6in;
+    position: relative; overflow: hidden; page-break-after: always; break-after: page;
+    display: flex; flex-direction: column;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+
+  /* running header / footer */
+  .run { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 7.4pt; line-height: 1.6; color: var(--ink-3); padding-bottom: 8pt; border-bottom: 1px solid var(--rule); }
+  .run b { color: var(--ink); font-weight: 500; }
+  .foot { position: absolute; left: .6in; right: .6in; bottom: .3in; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 7pt; color: var(--ink-3); letter-spacing: .04em; }
+
+  .kicker { font-family: var(--mono); font-size: 7.6pt; color: var(--ink-3); margin-bottom: 6pt; }
+  h1 { font-size: 30pt; font-weight: 500; letter-spacing: -.025em; line-height: 1.02; }
+  h2 { font-size: 26pt; font-weight: 500; letter-spacing: -.025em; line-height: 1.04; }
+  h3 { font-size: 11pt; font-weight: 500; letter-spacing: -.01em; color: var(--ink); margin-bottom: 4pt; }
+  p, li { font-size: 9.3pt; line-height: 1.42; color: var(--ink-2); }
+  p strong, li strong { color: var(--ink); font-weight: 600; }
+  .lede { font-size: 11.5pt; line-height: 1.4; color: var(--ink-2); margin-top: 8pt; max-width: 6.2in; }
+  ul.list { list-style: none; }
+  ul.list li { padding-left: 11pt; position: relative; margin-bottom: 4.5pt; }
+  ul.list li::before { content: "–"; position: absolute; left: 0; top: 0; color: #7a7a76; }
+
+  figure { display: flex; flex-direction: column; overflow: hidden; }
+  figure .img { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 8pt; background: var(--plate); overflow: hidden; }
+  figure img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  figure.white .img { background: #fff; }
+  figure.bleed .img { padding: 0; }
+  figure.bleed img { width: 100%; height: 100%; object-fit: cover; max-width: none; max-height: none; }
+  figcaption { font-family: var(--mono); font-size: 6.9pt; line-height: 1.45; color: var(--ink-3); padding: 4pt 0 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .stat { padding: 8pt 10pt 9pt 0; }
+  .stat + .stat { padding-left: 10pt; border-left: 1px solid var(--rule); }
+  .stat .n { font-size: 22pt; font-weight: 500; letter-spacing: -.02em; color: var(--ink); line-height: 1.1; }
+  .stat .l { font-size: 8.4pt; line-height: 1.35; color: var(--ink-2); margin-top: 2pt; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 4pt; margin-top: 10pt; }
+  .tags span { font-family: var(--mono); font-size: 7pt; letter-spacing: .03em; border: 1px solid var(--rule); padding: 2pt 5pt; color: var(--ink-2); }
+
+  /* ---------- cover ---------- */
+  .cover { padding: .6in .6in .45in; }
+  .ctop { display: grid; grid-template-columns: 1fr auto auto; gap: 30pt; font-family: var(--mono); font-size: 8pt; line-height: 1.6; color: #3d3d3b; }
+  .ctop .r { text-align: right; }
+  .chero { display: flex; align-items: flex-end; gap: 30pt; margin-top: .5in; padding-bottom: 14pt; border-bottom: 1px solid var(--rule); }
+  .crole { font-size: 15pt; color: var(--ink-3); margin-top: 4pt; letter-spacing: -.005em; }
+  .crow { display: grid; grid-template-columns: 1.3in 1fr; gap: 14pt; padding: 9pt 0 10pt; border-bottom: 1px solid var(--rule); }
+  .crow h3 { margin: 0; }
+  .crow p { font-size: 9.6pt; }
+  .cover h1 { font-size: 50pt; white-space: nowrap; }
+  .cover .sub { font-family: var(--mono); font-size: 10pt; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-top: 10pt; }
+  .cover .intro { font-size: 12pt; line-height: 1.42; color: var(--ink-2); max-width: 4.3in; margin-left: auto; }
+  .contact { font-family: var(--mono); font-size: 8.5pt; line-height: 1.9; color: var(--ink-2); align-self: end; border-left: 1px solid var(--rule); padding-left: 14pt; }
+  .contact b { color: var(--ink); font-weight: 500; display: block; font-size: 7pt; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-top: 6pt; }
+  .contact b:first-child { margin-top: 0; }
+  .index { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12pt; margin-top: auto; margin-bottom: .22in; }
+  .card { display: flex; flex-direction: column; }
+  .card .thumb { height: 2.05in; background: var(--plate); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 8pt; }
+  .card .thumb img { max-width: 92%; max-height: 92%; object-fit: contain; }
+  .card .thumb.cover-img img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; }
+  .card .num { font-family: var(--mono); font-size: 7.4pt; color: var(--ink-3); }
+  .card .t { font-size: 13pt; font-weight: 500; letter-spacing: -.01em; margin-top: 2pt; }
+  .card .d { font-size: 8.4pt; line-height: 1.4; color: var(--ink-2); margin-top: 3pt; }
+  .card .m { font-family: var(--mono); font-size: 7pt; color: var(--ink-3); margin-top: 5pt; }
+
+  /* ---------- layouts ---------- */
+  .body { flex: 1; min-height: 0; margin-top: 14pt; }
+  .split { display: grid; gap: .3in; height: 100%; }
+  .col { display: flex; flex-direction: column; min-height: 0; }
+  .figs { display: grid; gap: 10pt; min-height: 0; }
+
+  /* harness 1 */
+  .h1grid { grid-template-columns: 3.75in 1fr; }
+  .h1figs { grid-template-rows: 1.15fr 1fr; height: 100%; }
+
+  /* harness 2: revisions */
+  .revs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12pt; }
+  .rev { display: flex; flex-direction: column; border-top: 1px solid var(--rule); padding-top: 8pt; }
+  .rev .tag { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 7.4pt; }
+  .rev .tag .a { color: var(--accent); font-weight: 500; }
+  .rev .tag .d { color: var(--ink-3); }
+  .rev .t { font-size: 14pt; font-weight: 500; letter-spacing: -.01em; margin: 3pt 0 7pt; }
+  .rev figure { height: 2.3in; margin-bottom: 8pt; }
+  .rev li, .rev p { font-size: 8.8pt; }
+  .pkg { display: grid; grid-template-columns: 1.4fr 1fr; gap: .3in; margin-top: 12pt; border-top: 1px solid var(--rule); padding-top: 10pt; }
+  .checks { columns: 2; column-gap: 16pt; }
+  .checks li { font-size: 8.6pt; break-inside: avoid; }
+  .next { border-top: 1px solid var(--rule); padding: 8pt 0 0; }
+  .next p { font-size: 9pt; color: var(--ink); }
+
+  /* diagram */
+  svg.dia text { font-family: var(--mono); }
+
+  /* project pages */
+  .pgrid { grid-template-columns: 1fr 4.6in; }
+  .pgrid.rev-order { grid-template-columns: 4.85in 1fr; }
+  .spec { margin-top: auto; border-top: 1px solid var(--rule); }
+  .spec table { width: 100%; border-collapse: collapse; }
+  .spec th, .spec td { font-size: 8.2pt; text-align: left; padding: 3.6pt 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .spec th { font-family: var(--mono); font-weight: 400; font-size: 7.4pt; color: var(--ink-3); width: 1in; padding-top: 4.4pt; }
+  .spec td { color: var(--ink); }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 10pt; }
+  .steps div { padding: 6pt 8pt; font-size: 8pt; color: var(--ink-2); line-height: 1.35; }
+  .steps div + div { border-left: 1px solid var(--rule); }
+  .steps div:first-child { padding-left: 0; }
+  .steps b { display: block; font-size: 9.5pt; color: var(--ink); font-weight: 500; margin-bottom: 2pt; }
+
+  @media screen {
+    html, body { background: #cbcac6; }
+    .hbar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 10px 16px; background: #cbcac6; border-bottom: 1px solid #a9a8a3; font-family: var(--mono); font-size: 12px; color: #3d3d3b; }
+    .hbar b { color: var(--ink); font-weight: 500; }
+    .hbar nav { display: flex; gap: 16px; }
+    .hbar a { color: var(--ink); text-underline-offset: 3px; }
+    .hbar a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .pages { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 16px 48px; }
+    .page { background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 10px 30px rgba(0,0,0,.12); flex: none; }
+  }
+  @media print { .hbar { display: none; } }
+</style>
+</head>
+<body>
+<header class="hbar"><span><b>Jasper Hall</b> · Hardware portfolio</span><nav><a href="/">jasperhall.work</a><a href="/public/hardware/Jasper_Hall_Hardware_Portfolio.pdf">Download PDF</a></nav></header>
+<main class="pages" id="pages">
+
+<!-- ================= COVER ================= -->
+<section class="page cover">
+  <div class="ctop"><div>Portfolio<br>Hardware prototyping</div><div>(510) 384-8580<br>jasperghall@gmail.com<br>San Francisco Bay Area</div><div class="r">jasperhall.work<br>rheome.tools</div></div>
+  <div class="chero"><div><h1>Jasper Hall</h1><div class="crole">Hardware prototyper</div></div>
+    <p class="intro">I design, build and document electromechanical devices end to end: CAD, PCB layout, 3D-printed enclosures, wire harnesses, soldering and embedded firmware. These four projects range from a test fixture built on a production floor to handheld instruments.</p></div>
+  <div class="crow"><h3>Tools</h3><p>KiCad · Fusion 360 · OpenSCAD · Rhino + Grasshopper · Blender · FDM printing · laser cutting · soldering · crimping · C/C++ firmware</p></div>
+
+  <div class="index">
+    <div class="card">
+      <div class="thumb" style="background:#fff"><img src="/public/hardware/img/ht_enclosure.webp" alt=""></div>
+      <span class="num">01 · P.2–3</span>
+      <span class="t">Wire harness tester</span>
+      <span class="d">Bench tester for Molex Micro-Fit+ harnesses. It went from a perfboard prototype to a 10-unit pilot build.</span>
+      <span class="m">Tesla (contract) · 2026</span>
+    </div>
+    <div class="card">
+      <div class="thumb"><img src="/public/hardware/img/tg_proto.webp" alt=""></div>
+      <span class="num">02 · P.4</span>
+      <span class="t">Tombogo × Rheome</span>
+      <span class="d">Handheld audio instrument: ESP32-S3, round touch display, custom daughterboard, nine enclosure revisions.</span>
+      <span class="m">Rheome · 2025–26</span>
+    </div>
+    <div class="card">
+      <div class="thumb cover-img"><img src="/public/hardware/img/mutax_rig.webp" alt=""></div>
+      <span class="num">03 · P.5</span>
+      <span class="t">Mutax</span>
+      <span class="d">Gesture-controlled performance instrument on a Teensy 4.1, hand-wired across key matrices and encoder banks.</span>
+      <span class="m">NYU Tisch thesis · 2024–25</span>
+    </div>
+    <div class="card">
+      <div class="thumb"><img src="/public/hardware/img/kyme.webp" alt=""></div>
+      <span class="num">04 · P.6</span>
+      <span class="t">kymecreo</span>
+      <span class="d">Velocity-sensitive split MIDI keyboard using hall-effect switches. The enclosure was sculpted, scanned and remodeled in CAD.</span>
+      <span class="m">Rheome · 2024</span>
+    </div>
+  </div>
+  <div class="foot"><span>Jasper Hall · jasperhall.work</span><span>01</span></div>
+</section>
+
+<!-- ================= HARNESS TESTER 1 ================= -->
+<section class="page">
+  <div class="run"><span><b>01 · Wire harness tester</b> · Tesla (contract)</span><span>Sep–Oct 2026</span></div>
+  <div class="body">
+    <div class="split h1grid">
+      <div class="col">
+        <div class="kicker">Test fixture · built on my own initiative</div>
+        <h2>Wire harness tester</h2>
+        <p class="lede">I built a bench tester, out of my own parts, that catches wiring faults in harnesses before they leave the line.</p>
+
+        <div class="stats" style="margin-top:14pt">
+          <div class="stat"><div class="n">2</div><div class="l">faulty harnesses caught in its first batch</div></div>
+          <div class="stat"><div class="n">3</div><div class="l">hardware revisions in my first 3 weeks</div></div>
+          <div class="stat"><div class="n">10</div><div class="l">units in the pilot build</div></div>
+        </div>
+
+        <div style="margin-top:13pt">
+          <h3>What one plug-in checks</h3>
+          <ul class="list">
+            <li><strong>Continuity, opens and shorts</strong> on every wire</li>
+            <li><strong>Crossed pins:</strong> a wire landing on the wrong position</li>
+            <li><strong>Resistance</strong> against a zeroed, known-good harness. It fails anything more than 3 Ω over baseline</li>
+            <li><strong>Intermittent crimps:</strong> wiggle the harness while it's plugged in and any dropout is flagged</li>
+          </ul>
+        </div>
+
+        <div style="margin-top:9pt">
+          <h3>Using it</h3>
+          <p>Plug in both ends. The screen shows the four positions as they sit on the connector face, and the tester beeps pass or fail. Settle and hold timers keep the act of plugging in from registering as a failure. The housings on each side are wired in parallel, so it accepts either harness end.</p>
+        </div>
+      </div>
+
+      <div class="figs h1figs">
+        <figure class="white">
+          <div class="img"><img src="/public/hardware/img/ht_enclosure.webp" alt="Rendered enclosure with translucent lid"></div>
+          <figcaption>Fig. 1 · Parametric OpenSCAD enclosure: A/B connector ports, flush OLED window, buzzer grille, wall-mount ears</figcaption>
+        </figure>
+        <figure class="white">
+          <div class="img"><img src="/public/hardware/img/ht_pcb.webp" alt="KiCad render of the PCB"></div>
+          <figcaption>Fig. 2 · 2-layer PCB, 99 × 65 mm, laid out in KiCad: QT Py RP2040, Micro-Fit+ headers, pigtail pads with cable-tie strain relief</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Jasper Hall · jasperhall.work</span><span>02</span></div>
+</section>
+
+<!-- ================= HARNESS TESTER 2 ================= -->
+<section class="page">
+  <div class="run"><span><b>01 · Wire harness tester</b> · From prototype to a buildable batch</span><span>Sep–Oct 2026</span></div>
+  <div class="body" style="display:flex;flex-direction:column">
+    <div class="revs">
+      <div class="rev">
+        <div class="tag"><span class="a">Rev A</span><span class="d">Late Sep 2026</span></div>
+        <div class="t">Proof of concept</div>
+        <figure class="white">
+          <div class="img">
+            <svg class="dia" viewBox="0 0 300 170" width="100%" height="100%" role="img" aria-label="Drive and sense diagram">
+              <text x="6" y="14" font-size="8" fill="#85858c" letter-spacing=".5">SIDE A · DRIVE</text>
+              <text x="222" y="14" font-size="8" fill="#85858c" letter-spacing=".5">SIDE B · SENSE</text>
+              <g font-size="8" fill="#17171a">
+                <rect x="10" y="28" width="38" height="120" fill="none" stroke="#17171a"/>
+                <rect x="250" y="28" width="38" height="120" fill="none" stroke="#17171a"/>
+                <text x="18" y="52">A1</text><text x="18" y="80">A2</text><text x="18" y="108">A3</text><text x="18" y="136">A4</text>
+                <text x="258" y="52">B1</text><text x="258" y="80">B2</text><text x="258" y="108">B3</text><text x="258" y="136">B4</text>
+              </g>
+              <line x1="48" y1="49" x2="250" y2="49" stroke="#141414" stroke-width="2.2"/>
+              <line x1="48" y1="77" x2="250" y2="77" stroke="#b9b8b2" stroke-width="1.4"/>
+              <line x1="48" y1="105" x2="250" y2="133" stroke="#b9b8b2" stroke-width="1.4" stroke-dasharray="3 2"/>
+              <line x1="48" y1="133" x2="250" y2="105" stroke="#b9b8b2" stroke-width="1.4" stroke-dasharray="3 2"/>
+              <text x="122" y="44" font-size="7.5" fill="#141414">driven LOW</text>
+              <text x="112" y="161" font-size="7" fill="#85858c">crossed pair = caught</text>
+            </svg>
+          </div>
+        </figure>
+        <ul class="list">
+          <li>Arduino Nano 33 IoT and an SSD1306 OLED on perfboard, built from parts I had on hand.</li>
+          <li><strong>Method:</strong> drive one A pin low while the others float. Each B pin has a 4.7 kΩ pull-up into an ADC, so whichever B pins drop show where that wire lands, and the voltage gives its resistance. A single scan catches opens, shorts and crossed pins.</li>
+        </ul>
+      </div>
+
+      <div class="rev">
+        <div class="tag"><span class="a">Rev B</span><span class="d">Oct 2026</span></div>
+        <div class="t">Custom PCB + enclosure</div>
+        <figure class="white">
+          <div class="img"><img src="/public/hardware/img/ht_open.webp" alt="PCB seated in the open enclosure base"></div>
+        </figure>
+        <ul class="list">
+          <li>QT Py RP2040 on a KiCad PCB. I generated the project, libraries and 3D models from Python scripts so I could regenerate them after each change.</li>
+          <li>Parametric OpenSCAD enclosure with a back-wall pigtail port, heat-set inserts, a printed button cap, and the PCB's STEP export as the fit reference.</li>
+          <li>Produced fab-ready Gerbers, and an EE looked over the layout.</li>
+        </ul>
+      </div>
+
+      <div class="rev">
+        <div class="tag"><span class="a">Rev C</span><span class="d">Oct 2026 · ordering</span></div>
+        <div class="t">10-unit pilot build</div>
+        <figure class="white">
+          <div class="img"><img src="/public/hardware/img/ht_feather.webp" alt="Protoboard mockup with TFT Feather"></div>
+        </figure>
+        <ul class="list">
+          <li>I recommended protoboard over the PCB for the pilot. That way the tester proves its value before anyone spends engineering review time on a board.</li>
+          <li>Moved to an ESP32-S3 Reverse TFT Feather with the display and buttons onboard. That cut the part count for hand assembly.</li>
+          <li>Laid out the protoboard in KiCad on a 0.1 in grid and handed off a 10-unit DigiKey order.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pkg">
+      <div>
+        <h3>Build package delivered with each revision</h3>
+        <ul class="list checks">
+          <li>Gerbers + drill files, zipped for any fab</li>
+          <li>BOM with DigiKey part numbers, unit price and stock</li>
+          <li>STL print files with orientation and support notes</li>
+          <li>Pigtail crimping instructions (Micro-Fit+ 206460)</li>
+          <li>Step-by-step assembly guide</li>
+          <li>Firmware, pin map and flashing steps</li>
+          <li>Calibration: zero against a known-good harness</li>
+          <li>Open issues list, so nothing is hidden</li>
+        </ul>
+      </div>
+      <div class="next">
+        <h3>Next</h3>
+        <p>Mount testers along the line so every harness is checked as part of the build.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Jasper Hall · jasperhall.work</span><span>03</span></div>
+</section>
+
+<!-- ================= TOMBOGO ================= -->
+<section class="page">
+  <div class="run"><span><b>02 · Tombogo × Rheome handheld</b> · Collaboration with the fashion label Tombogo</span><span>2025–26 · In build</span></div>
+  <div class="body">
+    <div class="split pgrid">
+      <div class="col">
+        <div class="kicker">Handheld audio instrument</div>
+        <h2>Tombogo × Rheome handheld</h2>
+        <p class="lede">A pocket instrument with a retroactive looper, a resonator, a chopper and a drum machine, all played on a round touch display. It's scheduled for a Kickstarter launch in December 2026.</p>
+        <div style="margin-top:14pt">
+          <h3>What I built</h3>
+          <ul class="list">
+            <li><strong>Daughterboard (KiCad):</strong> through-hole board with an MCP23017 I/O expander, rotary encoder, 5-way nav switch, and a switched headphone jack with output conditioning. It went through two revisions with DRC passes and a written design review. The production mainboard is now in placement.</li>
+            <li><strong>Enclosure:</strong> modeled in OpenSCAD and rendered in Blender, over nine revisions so far. They added battery-wire access, connector relief, seam closure and button fit.</li>
+            <li><strong>Firmware:</strong> C/C++ on an ESP32-S3 with a 466 × 466 AMOLED, IMU and onboard mics. DSP is in Faust and the UI in LVGL.</li>
+            <li><strong>Process:</strong> 600+ commits. Every feature you can hear, feel or see has to pass a hands-on check on the powered device before it counts as done.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <table>
+            <tr><th>MCU</th><td>ESP32-S3, 8 MB PSRAM, 16 MB flash</td></tr>
+            <tr><th>Display</th><td>1.75 in round AMOLED, capacitive touch</td></tr>
+            <tr><th>I/O</th><td>Encoder, nav switch, 3 side buttons, IMU, mics, headphone out</td></tr>
+            <tr><th>Tools</th><td>KiCad · OpenSCAD · Blender · Faust · LVGL · PlatformIO</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="figs" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1.15fr;height:100%">
+        <figure class="white">
+          <div class="img"><img src="/public/hardware/img/tg_proto.webp" alt="Working prototype with chord UI on the round display"></div>
+          <figcaption>Fig. 3 · Working prototype, chord UI</figcaption>
+        </figure>
+        <figure style="grid-column:2;grid-row:1">
+          <div class="img" style="padding:0;background:#d0d0d0"><img src="/public/hardware/img/tg_exploded.webp" alt="Exploded render of enclosure, PCB and battery"></div>
+          <figcaption>Fig. 4 · Exploded assembly render</figcaption>
+        </figure>
+        <figure class="bleed" style="grid-column:1 / span 2;grid-row:2">
+          <div class="img"><img style="object-position:50% 55%" src="/public/hardware/img/tombogo_kit.webp" alt="Rev 01 board, printed shell and components laid out before assembly"></div>
+          <figcaption>Fig. 5 · Rev 01 daughterboard back from fab, with the encoder, switches, printed caps and passives laid out before assembly</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Jasper Hall · jasperhall.work</span><span>04</span></div>
+</section>
+
+<!-- ================= MUTAX ================= -->
+<section class="page">
+  <div class="run"><span><b>03 · Mutax</b> · NYU Tisch IMA low-residency thesis</span><span>2024–25</span></div>
+  <div class="body">
+    <div class="split pgrid rev-order">
+      <div class="col">
+        <figure class="bleed" style="aspect-ratio:3/2.18">
+          <div class="img"><img src="/public/hardware/img/mutax_rig.webp" alt="Mutax prototype rig with key matrices, encoder boards, display and Wii Nunchuk"></div>
+          <figcaption>Fig. 6 · Thesis rig: Teensy 4.1 baseboard, 3 key matrices, 9 quad-encoder boards, Nunchuk gesture input</figcaption>
+        </figure>
+        <div class="steps" style="grid-template-columns:1fr 1fr;margin-top:12pt">
+          <div><b>Looper</b>Every note is timestamped into a PSRAM ring buffer. Hit a length key and the last few bars loop, with no need to arm recording.</div>
+          <div><b>Sequencer</b>Euclidean pattern per track, plus a distribution parameter that pushes hits toward the front or back of the bar.</div>
+          <div style="border-left:0;border-top:1px solid var(--rule);padding-left:0"><b>Change engine</b>A menu of harmonic moves (scale degree, chord type) and energy moves (build, drop, breakdown).</div>
+          <div style="border-top:1px solid var(--rule)"><b>Gesture</b>Hold Z: the accelerometer plays fills and the joystick shifts octaves. Release: the cued change lands on every track.</div>
+        </div>
+        <div class="spec" style="margin-top:12pt">
+          <table>
+            <tr><th>Brain</th><td>Teensy 4.1 with PSRAM, internal clock or external MIDI sync</td></tr>
+            <tr><th>Controls</th><td>3× 5×6 key matrices · 9 quad encoder boards · Wii Nunchuk (I²C)</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="col">
+        <div class="kicker">Performance instrument</div>
+        <h2>Mutax</h2>
+        <p class="lede">An instrument for improvising live electronic music. One player can shift rhythm, harmony and energy across every track at once, with a hand gesture.</p>
+        <div style="margin-top:12pt">
+          <ul class="list">
+            <li><strong>Spec from field notes:</strong> I improvised for 20 minutes a day and logged every moment the existing gear got in the way. That log became the requirements.</li>
+            <li><strong>Hardware:</strong> scaled up to three key matrices on three scanner ICs and nine quad-encoder boards, all hand-soldered across two perfboards.</li>
+            <li><strong>Debugging:</strong> I tracked down I²C ghosting caused by a matrix split across two scanners, and encoder boards reporting addresses that changed overnight.</li>
+            <li><strong>Porting:</strong> moved my browser Euclidean sequencer from JavaScript to C++ for the microcontroller.</li>
+            <li><strong>PCB:</strong> consolidated the controls into a sub-module board (below) with 74HC4051 analog multiplexers and SK6812 addressable LEDs, then exported Gerbers, BOM and placement files for JLCPCB assembly.</li>
+          </ul>
+        </div>
+        <figure class="white" style="margin-top:10pt">
+          <div class="img" style="display:grid;grid-template-columns:1.05fr 1fr;gap:6pt;padding:6pt;height:1.85in">
+            <img src="/public/hardware/img/mutax_pcb.webp" alt="KiCad 3D view of the Mutax sub-module PCB" style="width:100%;height:100%;object-fit:contain">
+            <img src="/public/hardware/img/mutax_layout.webp" alt="Routed two-layer layout of the Mutax sub-module PCB" style="width:100%;height:100%;object-fit:cover">
+          </div>
+          <figcaption>Fig. 7 · Sub-module PCB in KiCad: 4×4 keybed, 12 encoders, 8 buttons, joystick, OLED</figcaption>
+        </figure>
+        <div class="next" style="margin-top:auto">
+          <h3>Watch</h3>
+          <p>Live improvisation and thesis talk: <a href="https://www.youtube.com/watch?v=Fc16EAlU_OQ" style="color:var(--ink)">youtube.com/watch?v=Fc16EAlU_OQ</a><br>Build log: <a href="https://rheome.tools/instruments/mutax" style="color:var(--ink)">rheome.tools/instruments/mutax</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Jasper Hall · jasperhall.work</span><span>05</span></div>
+</section>
+
+<!-- ================= KYMECREO ================= -->
+<section class="page">
+  <div class="run"><span><b>04 · kymecreo</b> · Working title</span><span>2024 · Prototype</span></div>
+  <div class="body">
+    <div class="split pgrid">
+      <div class="col">
+        <div class="kicker">Velocity-sensitive MIDI controller</div>
+        <h2>kymecreo</h2>
+        <p class="lede">An ergonomic split MIDI keyboard with hall-effect switches. Each key reports how far it's pressed, not just whether it's down, so it can send velocity.</p>
+        <div style="margin-top:12pt">
+          <ul class="list">
+            <li><strong>Proof of concept:</strong> one analog magnetic switch over an OH49E hall sensor, wired into an Arduino Nano. The serial plotter showed a clean analog curve for key depth.</li>
+            <li><strong>Layout by hand:</strong> I put my hand on the perfboard and marked where my fingers landed, then soldered the sensor array in two nights. The joystick got its own sub-board so power and ground couldn't short on a shared trace.</li>
+            <li><strong>Debugging:</strong> one key read high at rest. It sat under a 5 V trace, and the trace's field was reaching its hall sensor.</li>
+            <li><strong>Aftertouch:</strong> a silicone O-ring inside the keycap gives extra travel to read after the key bottoms out.</li>
+          </ul>
+        </div>
+        <div class="steps">
+          <div><b>Print</b>Printed the open-source Skeletyl split and cut off the thumb cluster</div>
+          <div><b>Sculpt</b>Built Sculpey around it to fit my hand and the joystick</div>
+          <div><b>Scan</b>3D-scanned the clay with an iPad</div>
+          <div><b>Model</b>Remodeled it in Fusion 360 with the scan as reference</div>
+        </div>
+        <div class="spec" style="margin-top:12pt">
+          <table>
+            <tr><th>Switches</th><td>Analog hall-effect magnetic (Lekker / Gateron)</td></tr>
+            <tr><th>Brain</th><td>Teensy 4.1, USB MIDI</td></tr>
+            <tr><th>Extra</th><td>Joystick as an XY thumb mod wheel</td></tr>
+          </table>
+        </div>
+        <div class="next" style="margin-top:auto">
+          <h3>Watch</h3>
+          <p>Demo: <a href="https://youtu.be/md1QRLIQi-M" style="color:var(--ink)">youtu.be/md1QRLIQi-M</a> · Build log: <a href="https://rheome.tools/archive/kymecreo" style="color:var(--ink)">rheome.tools/archive/kymecreo</a></p>
+        </div>
+      </div>
+      <div class="figs" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr auto;height:100%">
+        <figure class="white" style="grid-column:1 / span 2">
+          <div class="img" style="padding:12pt"><img src="/public/hardware/img/kyme.webp" alt="kymecreo prototype with sculpted printed enclosure and blue keycaps"></div>
+          <figcaption>Fig. 8 · Printed enclosure, modeled in Fusion 360 from the scanned clay sculpt</figcaption>
+        </figure>
+        <figure class="bleed">
+          <div class="img" style="flex:none;aspect-ratio:4/3"><img src="/public/hardware/img/kyme_perf.webp" alt="Underside of the perfboard with hand-wired hall-effect sensors"></div>
+          <figcaption>Fig. 9 · Hand-wired hall sensor array</figcaption>
+        </figure>
+        <figure class="bleed">
+          <div class="img" style="flex:none;aspect-ratio:4/3"><img src="/public/hardware/img/kyme_sketch.webp" alt="Sensor sub-boards and joystick next to a hand-drawn wiring diagram"></div>
+          <figcaption>Fig. 10 · Sub-boards and the wiring map I drew first</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Jasper Hall · jasperhall.work</span><span>06</span></div>
+</section>
+
+</main>
+<script>
+(function(){
+  var pages=document.getElementById('pages');
+  function fit(){ var z=Math.min(1,(document.documentElement.clientWidth-32)/1056); pages.style.zoom=z; }
+  fit(); window.addEventListener('resize',fit);
+  window.addEventListener('beforeprint',function(){pages.style.zoom=1}); window.addEventListener('afterprint',fit);
+})();
+</script>
+</body>
+</html>
