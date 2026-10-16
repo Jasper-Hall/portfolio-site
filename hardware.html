@@ -49,7 +49,7 @@
   figure { display: flex; flex-direction: column; overflow: hidden; }
   figure .img { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 8pt; background: var(--plate); overflow: hidden; }
   figure img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-  figure.white .img { background: #fff; }
+  figure.white .img { background: transparent; }
   figure.bleed .img { padding: 0; }
   figure.bleed img { width: 100%; height: 100%; object-fit: cover; max-width: none; max-height: none; }
   figcaption { font-family: var(--mono); font-size: 6.9pt; line-height: 1.45; color: var(--ink-3); padding: 4pt 0 0; }
@@ -80,7 +80,7 @@
   .contact b:first-child { margin-top: 0; }
   .index { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12pt; margin-top: auto; margin-bottom: .22in; }
   .card { display: flex; flex-direction: column; }
-  .card .thumb { height: 2.05in; background: var(--plate); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 8pt; }
+  .card .thumb { height: 2.05in; background: transparent; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 8pt; }
   .card .thumb img { max-width: 92%; max-height: 92%; object-fit: contain; }
   .card .thumb.cover-img img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; }
   .card .num { font-family: var(--mono); font-size: 7.4pt; color: var(--ink-3); }
@@ -157,7 +157,7 @@
 
   <div class="index">
     <div class="card">
-      <div class="thumb" style="background:#fff"><img src="/public/hardware/img/ht_enclosure.webp" alt=""></div>
+      <div class="thumb"><img src="/public/hardware/img/ht_enclosure.webp" alt=""></div>
       <span data-e="9" class="num">01 · P.2–3</span>
       <span data-e="10" class="t">Wire harness tester</span>
       <span data-e="11" class="d">Bench tester for Molex Micro-Fit+ harnesses. It went from a perfboard prototype to a 10-unit pilot build.</span>
