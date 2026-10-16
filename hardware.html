@@ -141,6 +141,67 @@
     .pages { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 16px 48px; }
     .page { background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 10px 30px rgba(0,0,0,.12); flex: none; }
   }
+
+  /* ---------- phone / narrow screens: reflow each page into one column ---------- */
+  @media screen and (max-width: 820px) {
+    .pages { gap: 16px; padding: 12px 0 40px; zoom: 1 !important; }
+    .page { width: 100%; height: auto; padding: 20px 16px 44px; overflow: visible; box-shadow: none; }
+    .foot { left: 16px; right: 16px; bottom: 14px; }
+    .run { flex-wrap: wrap; gap: 2px 12px; }
+    .body { margin-top: 12px; }
+    .split, .h1grid, .pgrid, .pgrid.rev-order { display: flex !important; flex-direction: column; gap: 18px; height: auto !important; }
+    .col { min-height: 0; }
+    .figs { display: flex !important; flex-direction: column; gap: 14px; height: auto !important; }
+    .figs > figure { grid-column: auto !important; grid-row: auto !important; }
+    figure .img { flex: none; padding: 6px; }
+    figure .img img, figure.bleed .img img { width: 100%; height: auto !important; max-height: none; object-fit: contain !important; }
+    figure[style*="aspect-ratio"], figure .img[style*="aspect-ratio"] { aspect-ratio: auto !important; }
+    figure .img[style*="height:1.85in"] { height: auto !important; grid-template-columns: 1fr !important; }
+    .rev figure { height: auto; }
+    .spec { margin-top: 16px; }
+    .next[style*="margin-top:auto"] { margin-top: 16px !important; }
+    h2 { font-size: 26px; }
+    .lede { font-size: 16px; }
+    p, li { font-size: 14.5px; line-height: 1.5; }
+    figcaption { font-size: 11px; }
+    .kicker, .run, .foot, .rev .tag, .card .num, .card .m, .spec th, .ctop { font-size: 11px; }
+    .spec td { font-size: 13px; }
+    .spec th { width: 92px; }
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .stat .n { font-size: 26px; }
+    .stat .l { font-size: 12px; }
+    .revs { display: flex; flex-direction: column; gap: 24px; }
+    .rev li, .rev p { font-size: 14px; }
+    .next p { font-size: 14px; }
+    .pkg { grid-template-columns: 1fr; gap: 18px; }
+    .checks { columns: 1; }
+    .checks li { font-size: 14px; }
+    .steps { grid-template-columns: 1fr 1fr !important; }
+    .steps div { font-size: 13px; padding: 8px 10px 8px 0 !important; border-left: 0 !important; }
+    .steps div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    .steps b { font-size: 14px; }
+    /* cover */
+    .ctop { grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+    .ctop > div:first-child { grid-column: 1 / -1; }
+    .ctop .r { text-align: left; }
+    .chero { flex-direction: column; align-items: flex-start; gap: 14px; margin-top: 24px; }
+    .cover h1 { font-size: 44px; white-space: normal; }
+    .cover .intro { margin-left: 0; max-width: none; font-size: 16px; }
+    .crow { grid-template-columns: 1fr; gap: 6px; }
+    .crow p { font-size: 14px; }
+    .index { grid-template-columns: 1fr 1fr; gap: 20px 14px; margin-top: 24px; margin-bottom: 0; }
+    .card .thumb { height: 150px; }
+    .card .t { font-size: 17px; }
+    .card .d { font-size: 13px; }
+    .hbar { font-size: 12px; }
+    .hbar nav { gap: 14px; }
+  }
+  @media screen and (max-width: 420px) {
+    .stats { grid-template-columns: 1fr 1fr 1fr; }
+    .stat .n { font-size: 22px; }
+    .steps { grid-template-columns: 1fr !important; }
+    .steps div:nth-child(n+2) { border-top: 1px solid var(--rule); }
+  }
   @media print { .hbar { display: none; } }
 </style>
 </head>
@@ -476,7 +537,7 @@
 <script>
 (function(){
   var pages=document.getElementById('pages');
-  function fit(){ var z=Math.min(1,(document.documentElement.clientWidth-32)/1056); pages.style.zoom=z; }
+  function fit(){ var w=document.documentElement.clientWidth; pages.style.zoom = w<=820 ? 1 : Math.min(1,(w-32)/1056); }
   fit(); window.addEventListener('resize',fit);
   window.addEventListener('beforeprint',function(){pages.style.zoom=1}); window.addEventListener('afterprint',fit);
 })();
